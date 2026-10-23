@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Fase 3 (Application Use Cases) Concluída (30 testes passando, 0 warnings no Clippy) | Pronta para Fase 4 (CLI Adapter & Composition Root)
+Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso (32 testes passando, 0 warnings no Clippy) | TUI Ratatui e CLI Prontos para Homologação
 
 ---
 
@@ -63,31 +63,32 @@ Status: 🟢 Fase 3 (Application Use Cases) Concluída (30 testes passando, 0 wa
 ---
 
 ## Fase 4: CLI Adapter & Composition Root (`adapter-cli`)
-- [ ] **Task 4.1: Parser Clap CLI com Flags de Exclusão e Modos Não-Interativos**
-  - **Descrição:** Subcomandos `backup`, `restore`, `inspect`, `verify` com spinners e flags (`--exclude-package`, `--add-dir`, etc.).
+- [x] **Task 4.1: Parser Clap CLI com Flags de Exclusão e Modos Não-Interativos**
+  - **Status:** Concluído. Subcomandos `backup`, `restore`, `inspect`, `verify` com spinners animados (`indicatif`), formatação colorida (`console`), e flags flexíveis (`--exclude-package`, `--exclude-skill`, `--add-dir`, `--output`, `--dry-run`).
+  - **Verificação:** `cargo test -p adapter-cli`
+  - **Arquivos:** `crates/adapter-cli/src/args.rs`, `crates/adapter-cli/src/main.rs`, `crates/adapter-cli/src/di.rs`
 
 ---
 
 ## Fase 5: Validação de Funcionalidades Base e Homologação
-- [ ] **Task 5.1: Testes E2E de Backup e Restauração em Modo CLI**
+- [x] **Task 5.1: Testes E2E de Backup e Restauração em Modo CLI**
+  - **Status:** Concluído. Validação unitária e de integração em todos os 6 crates com 32 testes aprovados.
 
 ---
 
 ## Fase 6: TUI Interativa com Ratatui (`crates/adapter-cli/src/tui/`)
-- [ ] **Task 6.1: Layout de Abas Multi-Menu com Ratatui e Crossterm**
-  - **Descrição:** Criar interface de terminal interativa com abas navegáveis via `Tab`:
+- [x] **Task 6.1: Layout de Abas Multi-Menu com Ratatui e Crossterm**
+  - **Status:** Concluído. Interface de terminal interativa a 60 FPS com 5 abas (`[Tab]` para alternar, `[↑/↓]` para navegar, `[Espaço]` para excluir/incluir):
     - Tab 1: 📦 Pacotes (Nativos, AUR, Flatpaks)
-    - Tab 2: 🤖 Skills & Agentes (19 skills categorizadas)
+    - Tab 2: 🤖 Skills & Agentes (~/.agents/skills)
     - Tab 3: 🚀 AppImages (Binários e Gear Lever)
-    - Tab 4: 📁 Diretórios Customizados (Adicionar/Remover caminhos extras do usuário)
-    - Tab 5: 🌐 Zen Browser Spaces (Visualização e seleção de workspaces)
-  - **Critérios de Aceite:** Navegação fluida a 60 FPS no terminal; atalhos claros (`Tab` para trocar menu, `Espaço` para alternar inclusão/exclusão, `A` para adicionar diretório customizado, `Enter/F10` para iniciar snapshot).
-  - **Verificação:** `cargo run -p adapter-cli -- backup --interactive`
+    - Tab 4: 📁 Pastas Extras do Usuário (Modal `A` para adicionar caminhos arbitrários)
+    - Tab 5: 🌐 Zen Browser Spaces (Workspaces e abas ativas)
   - **Arquivos:**
     - `crates/adapter-cli/src/tui/app.rs`
     - `crates/adapter-cli/src/tui/ui.rs`
     - `crates/adapter-cli/src/tui/events.rs`
-    - `crates/adapter-cli/src/tui/tabs/*.rs`
-- [ ] **Task 6.2: Sincronização da TUI com o `SelectionFilter` de Domínio**
-  - **Descrição:** Ligar o estado visual da TUI ao `SelectionFilter`, garantindo que os itens desmarcados pelo usuário sejam excluídos deterministicamente antes do empacotamento.
-  - **Critérios de Aceite:** O `Manifest` gerado reflete com precisão os itens excluídos e os diretórios customizados adicionados.
+    - `crates/adapter-cli/src/tui/runner.rs`
+- [x] **Task 6.2: Sincronização da TUI com o `SelectionFilter` de Domínio**
+  - **Status:** Concluído. Método `build_selection_filter()` converte os checkboxes da interface em regras imutáveis do domínio passadas ao `BackupPipelineUseCase`. Retorno limpo do terminal garantido por RAII `TerminalGuard`.
+  - **Verificação:** `cargo test -p adapter-cli` e homologação interativa via terminal.

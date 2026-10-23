@@ -104,14 +104,16 @@ impl RestorePipelineUseCase {
             for prof in &manifest.zen_profiles {
                 let prof_staging_path = staging_browser.join(prof.id.as_str());
                 if prof_staging_path.exists() {
-                    self.browser_port.restore_profile_state(
-                        &staging_browser,
-                        &req.target_config_root,
-                    )?;
-                    self.browser_port.normalize_installation_hash(
-                        &req.target_config_root,
-                        &prof.id,
-                    )?;
+                    if !req.dry_run {
+                        self.browser_port.restore_profile_state(
+                            &staging_browser,
+                            &req.target_config_root,
+                        )?;
+                        self.browser_port.normalize_installation_hash(
+                            &req.target_config_root,
+                            &prof.id,
+                        )?;
+                    }
                     profiles_restored.push(prof.id.as_str().to_string());
                 }
             }
@@ -120,7 +122,7 @@ impl RestorePipelineUseCase {
         // 4. Restore Agent Governance
         let staging_agents = staging_dir.path().join("agents");
         let skills_count = manifest.agent_governance.skills.len();
-        if staging_agents.exists() {
+        if staging_agents.exists() && !req.dry_run {
             self.agent_port.restore_governance(&staging_agents, &req.target_home)?;
         }
 
@@ -171,10 +173,12 @@ impl RestorePipelineUseCase {
                     custom_d.source_path.clone()
                 };
 
-                if let Some(parent) = target_dest.parent() {
-                    let _ = fs::create_dir_all(parent);
+                if !req.dry_run {
+                    if let Some(parent) = target_dest.parent() {
+                        let _ = fs::create_dir_all(parent);
+                    }
+                    let _ = copy_dir_recursively(&custom_staging, &target_dest);
                 }
-                let _ = copy_dir_recursively(&custom_staging, &target_dest);
             }
         }
 

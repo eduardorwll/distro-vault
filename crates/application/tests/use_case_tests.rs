@@ -109,7 +109,7 @@ fn test_full_backup_and_restore_pipeline() {
 
     let restore_req = RestoreRequest::new(&output_archive, &restore_target_config, &restore_target_home)
         .with_custom_base(&restore_target_custom)
-        .with_packages(false, true);
+        .with_packages(false, false);
 
     let restore_report = restore_use_case.execute(restore_req).expect("Restore execution failed");
 

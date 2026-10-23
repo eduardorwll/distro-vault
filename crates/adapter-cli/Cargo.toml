@@ -1,6 +1,34 @@
 [package]
 name = "adapter-cli"
-version = "0.1.0"
-edition = "2024"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "distro-vault"
+path = "src/main.rs"
+
+[lib]
+name = "adapter_cli"
+path = "src/lib.rs"
 
 [dependencies]
+domain = { workspace = true }
+application = { workspace = true }
+adapter-browser = { workspace = true }
+adapter-storage = { workspace = true }
+adapter-agents = { workspace = true }
+adapter-system = { workspace = true }
+
+clap = { workspace = true }
+indicatif = { workspace = true }
+console = { workspace = true }
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }

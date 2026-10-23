@@ -179,12 +179,24 @@ impl AgentScanner {
 
             let target_dest = dst.join(rel);
 
+            // If target_dest already exists as a symlink, unlink it so we can create/write real files
+            if let Ok(meta) = fs::symlink_metadata(&target_dest) {
+                if meta.is_symlink() {
+                    let _ = fs::remove_file(&target_dest);
+                }
+            }
+
             if entry_path.is_dir() {
                 fs::create_dir_all(&target_dest).map_err(|e| DomainError::AgentGovernanceError {
                     message: format!("Failed to create dir {:?}: {}", target_dest, e),
                 })?;
             } else if entry_path.is_file() {
                 if let Some(parent) = target_dest.parent() {
+                    if let Ok(meta) = fs::symlink_metadata(parent) {
+                        if meta.is_symlink() {
+                            let _ = fs::remove_file(parent);
+                        }
+                    }
                     if !parent.exists() {
                         fs::create_dir_all(parent).map_err(|e| DomainError::AgentGovernanceError {
                             message: format!("Failed to create parent dir {:?}: {}", parent, e),
