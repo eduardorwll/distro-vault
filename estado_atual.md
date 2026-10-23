@@ -32,12 +32,14 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso | 32 Testes Passando
 - [x] Rota padrão para backups: `~/Antigravity/backups/distro-vault-<timestamp>.tar.zst`.
 
 ### Fase 6: TUI Interativa com Ratatui (`crates/adapter-cli/src/tui/`)
-- [x] Interface de terminal a 60 FPS com 5 abas organizadas:
-  - `[1] Pacotes`: lista pacotes instalados com opção de exclusão.
-  - `[2] Skills`: lista skills de IA e governança.
-  - `[3] Apps`: lista AppImages e apps gerenciados.
-  - `[4] Pastas Extras`: listagem e modal interativo (`A`) para adicionar pastas customizadas com cálculo dinâmico de arquivos e MB.
-  - `[5] Zen Spaces`: visualização de workspaces e abas ativas.
+- [x] Interface de terminal a 60 FPS com 6 abas navegáveis, categorizando pacotes do sistema vs. usuário:
+  - `[1] Apps & Usuário`: softwares instalados pelo usuário (apps desktop como Discord, navegadores, ferramentas CLI como ripgrep/bat, runtimes dev como Docker, Flatpaks).
+  - `[2] Sistema Low-Level`: pacotes essenciais do sistema operacional (Kernel & Firmware, Base & Boot, Drivers & GPU, Filesystems como Btrfs, Rede & Daemons).
+  - `[3] Skills`: skills de IA e governança de agentes (`~/.agents/skills`).
+  - `[4] Apps`: aplicativos AppImage e Gear Lever.
+  - `[5] Pastas Extras`: listagem e modal interativo (`A`) para adicionar pastas customizadas com cálculo dinâmico de arquivos e MB.
+  - `[6] Zen Spaces`: visualização de workspaces e abas ativas do Zen Browser.
+- [x] Categorizador Heurístico no Domínio ([`PackageCategory`](file:///home/eduardorwll/Projects/distro-vault/crates/domain/src/entities/package.rs)): classificação automática por nome, grupo e gerenciador (`DesktopApp`, `CliTool`, `Development`, `FontsThemes`, `KernelFirmware`, `BaseBoot`, `DriversHardware`, `AudioVideoStack`, `NetworkDaemons`, `FileSystems`, `CompositorPlumbing`).
 - [x] Teclas de navegação: `[Tab]` para alternar aba, `[↑/↓]` para navegar, `[Espaço]` para alternar inclusão/exclusão, `[A]` para adicionar pasta, `[Enter/F10]` para iniciar snapshot, `[Q/Esc]` para sair.
 - [x] Gerenciamento RAII com `TerminalGuard` garantindo restauração automática do terminal mesmo em pânicos ou SIGINT.
 
@@ -58,7 +60,7 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso | 32 Testes Passando
 ---
 
 ## 2. Métricas de Qualidade e Compilação
-- `cargo test --workspace` -> **32 testes passando (100% de sucesso)**
+- `cargo test --workspace` -> **33 testes passando (100% de sucesso)**
 - `cargo clippy --all-targets --workspace -- -D warnings` -> **Zero Warnings**
 - `cargo audit` -> **0 vulnerabilidades / 0 CVEs em 263 dependências**
 - Compilação Release em `target/release/distro-vault` e instalação em `~/.local/bin/distro-vault`.

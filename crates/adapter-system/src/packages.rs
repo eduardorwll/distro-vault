@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use domain::entities::package::{PackageScope, PackageSource};
+use domain::entities::package::{PackageCategory, PackageSource};
 use domain::entities::PackageEntry;
 use domain::errors::DomainError;
 use domain::ports::PackagePort;
@@ -44,7 +44,9 @@ impl PackagePort for PacmanAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
-                    let mut entry = PackageEntry::new(pkg_name, PackageSource::PacmanNative, PackageScope::System);
+                    let (scope, category) = PackageCategory::classify(name_str, PackageSource::PacmanNative);
+                    let mut entry = PackageEntry::new(pkg_name, PackageSource::PacmanNative, scope)
+                        .with_category(category);
                     if let Some(&ver) = parts.get(1) {
                         entry = entry.with_version(ver);
                     }
@@ -160,7 +162,9 @@ impl PackagePort for AurAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
-                    let mut entry = PackageEntry::new(pkg_name, PackageSource::Aur, PackageScope::System);
+                    let (scope, category) = PackageCategory::classify(name_str, PackageSource::Aur);
+                    let mut entry = PackageEntry::new(pkg_name, PackageSource::Aur, scope)
+                        .with_category(category);
                     if let Some(&ver) = parts.get(1) {
                         entry = entry.with_version(ver);
                     }
@@ -245,7 +249,9 @@ impl PackagePort for FlatpakAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&app_id) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(app_id) {
-                    let mut entry = PackageEntry::new(pkg_name, PackageSource::Flatpak, PackageScope::System);
+                    let (scope, category) = PackageCategory::classify(app_id, PackageSource::Flatpak);
+                    let mut entry = PackageEntry::new(pkg_name, PackageSource::Flatpak, scope)
+                        .with_category(category);
                     if let Some(&ver) = parts.get(1) {
                         entry = entry.with_version(ver);
                     }

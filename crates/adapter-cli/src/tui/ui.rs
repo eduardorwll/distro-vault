@@ -33,11 +33,12 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
 
     // 2. Tabs
     let tab_titles = vec![
-        format!("[1] Pacotes ({})", app.packages.len()),
-        format!("[2] Skills ({})", app.skills.len()),
-        format!("[3] AppImages ({})", app.appimages.len()),
-        format!("[4] Pastas Extras ({})", app.custom_dirs.len()),
-        format!("[5] Zen Spaces ({})", app.zen_spaces.len()),
+        format!("[1] Apps & Usuário ({})", app.user_packages.len()),
+        format!("[2] Sistema Low-Level ({})", app.system_packages.len()),
+        format!("[3] Skills ({})", app.skills.len()),
+        format!("[4] AppImages ({})", app.appimages.len()),
+        format!("[5] Pastas Extras ({})", app.custom_dirs.len()),
+        format!("[6] Zen Spaces ({})", app.zen_spaces.len()),
     ];
 
     let tabs = Tabs::new(tab_titles)
@@ -57,7 +58,7 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     let (list_items, title) = match app.current_tab {
         0 => {
             let items: Vec<ListItem> = app
-                .packages
+                .user_packages
                 .iter()
                 .enumerate()
                 .map(|(i, item)| {
@@ -65,9 +66,21 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
                     render_item(&item.name, &item.details, item.included, is_selected)
                 })
                 .collect();
-            (items, " Pacotes Instalados (Nativos, AUR, Flatpaks) ")
+            (items, " 📦 Pacotes Instalados pelo Usuário (Apps, Ferramentas CLI, Dev & Flatpaks) ")
         }
         1 => {
+            let items: Vec<ListItem> = app
+                .system_packages
+                .iter()
+                .enumerate()
+                .map(|(i, item)| {
+                    let is_selected = i == current_cursor;
+                    render_item(&item.name, &item.details, item.included, is_selected)
+                })
+                .collect();
+            (items, " ⚙️ Pacotes de Sistema Low-Level (Kernel, Drivers, Base, Filesystems & Daemons) ")
+        }
+        2 => {
             let items: Vec<ListItem> = app
                 .skills
                 .iter()
@@ -77,9 +90,9 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
                     render_item(&item.name, &item.details, item.included, is_selected)
                 })
                 .collect();
-            (items, " Skills de IA & Governança (~/.agents/skills) ")
+            (items, " 🤖 Skills de IA & Governança (~/.agents/skills) ")
         }
-        2 => {
+        3 => {
             let items: Vec<ListItem> = app
                 .appimages
                 .iter()
@@ -89,9 +102,9 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
                     render_item(&item.name, &item.details, item.included, is_selected)
                 })
                 .collect();
-            (items, " Aplicativos AppImage & Gear Lever ")
+            (items, " 🚀 Aplicativos AppImage & Gear Lever ")
         }
-        3 => {
+        4 => {
             let items: Vec<ListItem> = app
                 .custom_dirs
                 .iter()
@@ -103,9 +116,9 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
                     render_item(&label, &details, true, is_selected)
                 })
                 .collect();
-            (items, " Pastas Extras do Usuário (Pressione 'A' para adicionar) ")
+            (items, " 📁 Pastas Extras do Usuário (Pressione 'A' para adicionar) ")
         }
-        4 => {
+        5 => {
             let items: Vec<ListItem> = app
                 .zen_spaces
                 .iter()
@@ -115,7 +128,7 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
                     render_item(&item.name, &item.details, item.included, is_selected)
                 })
                 .collect();
-            (items, " Zen Browser Spaces & Workspaces ")
+            (items, " 🌐 Zen Browser Spaces & Workspaces ")
         }
         _ => (Vec::new(), ""),
     };

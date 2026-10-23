@@ -86,17 +86,25 @@ fn test_cli_parsing_subcommands() {
 fn test_tui_app_state_and_filter_generation() {
     let mut app = TuiApp::new();
 
-    // Setup dummy packages
-    app.packages.push(TuiItem {
+    // Setup dummy user packages
+    app.user_packages.push(TuiItem {
         id: "ripgrep".to_string(),
         name: "ripgrep".to_string(),
-        details: "fast grep".to_string(),
+        details: "[CliTool] • fast grep".to_string(),
         included: true,
     });
-    app.packages.push(TuiItem {
+    app.user_packages.push(TuiItem {
         id: "git".to_string(),
         name: "git".to_string(),
-        details: "vcs".to_string(),
+        details: "[Development] • vcs".to_string(),
+        included: true,
+    });
+
+    // Setup dummy system packages
+    app.system_packages.push(TuiItem {
+        id: "linux".to_string(),
+        name: "linux".to_string(),
+        details: "[KernelFirmware] • core kernel".to_string(),
         included: true,
     });
 
@@ -108,7 +116,7 @@ fn test_tui_app_state_and_filter_generation() {
         included: true,
     });
 
-    // 1. Navigation
+    // 1. Navigation across tabs
     assert_eq!(app.current_tab, 0);
     app.next_tab();
     assert_eq!(app.current_tab, 1);
@@ -122,12 +130,13 @@ fn test_tui_app_state_and_filter_generation() {
 
     // 3. Toggle selection (exclude git)
     app.toggle_selected();
-    assert!(!app.packages[1].included);
+    assert!(!app.user_packages[1].included);
 
     // 4. Build filter
     let filter = app.build_selection_filter();
     assert!(filter.is_package_included(&PackageName::new("ripgrep").unwrap()));
     assert!(!filter.is_package_included(&PackageName::new("git").unwrap()));
+    assert!(filter.is_package_included(&PackageName::new("linux").unwrap()));
     assert!(filter.is_skill_included("clean-code"));
 
     // 5. Custom Directory Addition

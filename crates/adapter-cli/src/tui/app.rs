@@ -15,12 +15,13 @@ pub struct TuiItem {
 
 pub struct TuiApp {
     pub current_tab: usize,
-    pub packages: Vec<TuiItem>,
+    pub user_packages: Vec<TuiItem>,
+    pub system_packages: Vec<TuiItem>,
     pub skills: Vec<TuiItem>,
     pub appimages: Vec<TuiItem>,
     pub custom_dirs: Vec<CustomDirectoryEntry>,
     pub zen_spaces: Vec<TuiItem>,
-    pub cursors: [usize; 5],
+    pub cursors: [usize; 6],
     pub input_mode: bool,
     pub input_buffer: String,
     pub status_message: Option<String>,
@@ -32,12 +33,13 @@ impl TuiApp {
     pub fn new() -> Self {
         Self {
             current_tab: 0,
-            packages: Vec::new(),
+            user_packages: Vec::new(),
+            system_packages: Vec::new(),
             skills: Vec::new(),
             appimages: Vec::new(),
             custom_dirs: Vec::new(),
             zen_spaces: Vec::new(),
-            cursors: [0; 5],
+            cursors: [0; 6],
             input_mode: false,
             input_buffer: String::new(),
             status_message: None,
@@ -47,12 +49,12 @@ impl TuiApp {
     }
 
     pub fn next_tab(&mut self) {
-        self.current_tab = (self.current_tab + 1) % 5;
+        self.current_tab = (self.current_tab + 1) % 6;
     }
 
     pub fn prev_tab(&mut self) {
         if self.current_tab == 0 {
-            self.current_tab = 4;
+            self.current_tab = 5;
         } else {
             self.current_tab -= 1;
         }
@@ -60,11 +62,12 @@ impl TuiApp {
 
     pub fn current_list_len(&self) -> usize {
         match self.current_tab {
-            0 => self.packages.len(),
-            1 => self.skills.len(),
-            2 => self.appimages.len(),
-            3 => self.custom_dirs.len(),
-            4 => self.zen_spaces.len(),
+            0 => self.user_packages.len(),
+            1 => self.system_packages.len(),
+            2 => self.skills.len(),
+            3 => self.appimages.len(),
+            4 => self.custom_dirs.len(),
+            5 => self.zen_spaces.len(),
             _ => 0,
         }
     }
@@ -88,30 +91,35 @@ impl TuiApp {
         let idx = self.cursors[self.current_tab];
         match self.current_tab {
             0 => {
-                if let Some(item) = self.packages.get_mut(idx) {
+                if let Some(item) = self.user_packages.get_mut(idx) {
                     item.included = !item.included;
                 }
             }
             1 => {
-                if let Some(item) = self.skills.get_mut(idx) {
+                if let Some(item) = self.system_packages.get_mut(idx) {
                     item.included = !item.included;
                 }
             }
             2 => {
-                if let Some(item) = self.appimages.get_mut(idx) {
+                if let Some(item) = self.skills.get_mut(idx) {
                     item.included = !item.included;
                 }
             }
             3 => {
-                // If on custom dirs tab, pressing space removes the selected custom dir
-                if idx < self.custom_dirs.len() {
-                    self.custom_dirs.remove(idx);
-                    if self.cursors[3] > 0 && self.cursors[3] >= self.custom_dirs.len() {
-                        self.cursors[3] -= 1;
-                    }
+                if let Some(item) = self.appimages.get_mut(idx) {
+                    item.included = !item.included;
                 }
             }
             4 => {
+                // If on custom dirs tab, pressing space removes the selected custom dir
+                if idx < self.custom_dirs.len() {
+                    self.custom_dirs.remove(idx);
+                    if self.cursors[4] > 0 && self.cursors[4] >= self.custom_dirs.len() {
+                        self.cursors[4] -= 1;
+                    }
+                }
+            }
+            5 => {
                 if let Some(item) = self.zen_spaces.get_mut(idx) {
                     item.included = !item.included;
                 }
@@ -133,7 +141,15 @@ impl TuiApp {
     pub fn build_selection_filter(&self) -> SelectionFilter {
         let mut filter = SelectionFilter::new();
 
-        for pkg in &self.packages {
+        for pkg in &self.user_packages {
+            if !pkg.included {
+                if let Ok(name) = PackageName::new(&pkg.id) {
+                    filter.toggle_package(name);
+                }
+            }
+        }
+
+        for pkg in &self.system_packages {
             if !pkg.included {
                 if let Ok(name) = PackageName::new(&pkg.id) {
                     filter.toggle_package(name);

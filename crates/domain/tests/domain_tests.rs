@@ -209,3 +209,46 @@ fn test_manifest_roundtrip_serialization() {
     assert_eq!(deserialized.custom_directories.len(), 1);
     assert_eq!(deserialized.custom_directories[0].label, "Meus Estudos");
 }
+
+#[test]
+fn test_package_category_classification() {
+    use domain::entities::package::{PackageCategory, PackageScope, PackageSource};
+
+    // Low-level system components
+    let (s, c) = PackageCategory::classify("linux", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::KernelFirmware);
+
+    let (s, c) = PackageCategory::classify("base-devel", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::BaseBoot);
+
+    let (s, c) = PackageCategory::classify("btrfs-progs", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::FileSystems);
+
+    let (s, c) = PackageCategory::classify("vulkan-radeon", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::DriversHardware);
+
+    let (s, c) = PackageCategory::classify("networkmanager", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::NetworkDaemons);
+
+    // User-installed components
+    let (s, c) = PackageCategory::classify("discord", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::User);
+    assert_eq!(c, PackageCategory::DesktopApp);
+
+    let (s, c) = PackageCategory::classify("ripgrep", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::User);
+    assert_eq!(c, PackageCategory::CliTool);
+
+    let (s, c) = PackageCategory::classify("docker", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::User);
+    assert_eq!(c, PackageCategory::Development);
+
+    let (s, c) = PackageCategory::classify("org.mozilla.firefox", PackageSource::Flatpak);
+    assert_eq!(s, PackageScope::User);
+    assert_eq!(c, PackageCategory::DesktopApp);
+}

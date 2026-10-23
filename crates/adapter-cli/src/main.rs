@@ -9,6 +9,7 @@ use adapter_cli::di::AppContainer;
 use adapter_cli::tui::{run_tui, TuiApp, TuiItem};
 use adapter_storage::CustomDirsHandler;
 use application::{BackupRequest, RestoreRequest};
+use domain::entities::package::PackageScope;
 use domain::entities::selection_filter::SelectionFilter;
 use domain::ports::{AgentPort, BrowserPort};
 use domain::value_objects::PackageName;
@@ -61,12 +62,17 @@ fn handle_backup(container: &AppContainer, args: BackupArgs) -> Result<(), Box<d
         for port in &container.package_ports {
             if let Ok(pkgs) = port.query_installed() {
                 for p in pkgs {
-                    tui_app.packages.push(TuiItem {
+                    let item = TuiItem {
                         id: p.name.as_str().to_string(),
                         name: p.name.as_str().to_string(),
-                        details: format!("{:?} • {}", p.source, p.version.as_deref().unwrap_or("latest")),
+                        details: format!("{:?} • [{}] • {}", p.source, p.category.label(), p.version.as_deref().unwrap_or("latest")),
                         included: true,
-                    });
+                    };
+                    if p.scope == PackageScope::User {
+                        tui_app.user_packages.push(item);
+                    } else {
+                        tui_app.system_packages.push(item);
+                    }
                 }
             }
         }
