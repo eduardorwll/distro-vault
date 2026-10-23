@@ -92,3 +92,11 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso (32 testes passando,
 - [x] **Task 6.2: Sincronização da TUI com o `SelectionFilter` de Domínio**
   - **Status:** Concluído. Método `build_selection_filter()` converte os checkboxes da interface em regras imutáveis do domínio passadas ao `BackupPipelineUseCase`. Retorno limpo do terminal garantido por RAII `TerminalGuard`.
   - **Verificação:** `cargo test -p adapter-cli` e homologação interativa via terminal.
+
+---
+
+## Fase 7: Auditoria de Segurança & Análise de Vulnerabilidades
+- [x] **Task 7.1: Auditoria de Dependências com `cargo-audit` e RustSec Advisory Database**
+  - **Status:** Concluído. 263 dependências auditadas contra 1.351 avisos oficiais da RustSec. Zero vulnerabilidades / 0 CVEs.
+- [x] **Task 7.2: Auditoria SAST de Vetores de Ataque (CWE-22, CWE-409, CWE-78, CWE-59, CWE-732)**
+  - **Status:** Concluído. Cobertura estrita com Zip-Slip guard, teto de 128 MB contra decompression bombs, execução sem shell interpolation e modos de arquivo POSIX 0700/0600.

@@ -45,12 +45,23 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso | 32 Testes Passando
 - [x] `apollographql/skills@rust-best-practices` e `rust-api-guidelines` ativas como Quality Gate mandatório.
 - [x] Nomenclaturas canônicas (`as_`, `to_`, `into_`), zero `unwrap` em produção, deep modules, RAII guards.
 
+### Auditoria de Segurança & Análise de Vulnerabilidades
+- [x] **Skill de Auditoria Ativada:** `~/.agents/skills/security-audit` instalada e aplicada.
+- [x] **Auditoria de Dependências (`cargo-audit` v0.22.2):** Varredura de 263 dependências contra a base oficial RustSec (1.351 advisories). **Zero vulnerabilidades/CVEs detectadas.**
+- [x] **Auditoria de Código & SAST:**
+  - *CWE-22 (Zip-Slip / Path Traversal):* `ZipSlipGuard` valida e rejeita `..`, caminhos absolutos, escapes de symlinks ancestrais e devices especiais.
+  - *CWE-409 (Decompression Bomb):* `MozLz4Codec` impõe teto de segurança estrito de 128 MB antes da alocação de memória.
+  - *CWE-78 (Command Injection):* Chamadas a `pacman`/`paru`/`yay`/`flatpak` utilizam `execve` direto (sem shell `sh -c`) e sanitização estrita via regex do Value Object `PackageName`.
+  - *CWE-59 (Symlink Traversal):* Desreferenciamento seguro na exportação e substituição segura de symlinks em caso de conflitos durante o restore.
+  - *CWE-732 (Permissões Excessivas):* Preservação e imposição estrita de modos POSIX `0700` (pastas) e `0600` (arquivos sensíveis).
+
 ---
 
 ## 2. Métricas de Qualidade e Compilação
 - `cargo test --workspace` -> **32 testes passando (100% de sucesso)**
 - `cargo clippy --all-targets --workspace -- -D warnings` -> **Zero Warnings**
-- Compilação Release em `target/release/distro-vault` testada e validada.
+- `cargo audit` -> **0 vulnerabilidades / 0 CVEs em 263 dependências**
+- Compilação Release em `target/release/distro-vault` e instalação em `~/.local/bin/distro-vault`.
 
 ---
 
