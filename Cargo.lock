@@ -78,6 +78,17 @@ checksum = "940b3a0ca603d1eade50a4846a2afffd5ef57a9feac2c0e2ec2e14f9ead76000"
 [[package]]
 name = "application"
 version = "0.1.0"
+dependencies = [
+ "adapter-agents",
+ "adapter-browser",
+ "adapter-storage",
+ "adapter-system",
+ "domain",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "thiserror",
+]
 
 [[package]]
 name = "bitflags"

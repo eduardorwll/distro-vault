@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Fase 2 (Low-Level Adapters) Concluída (28 testes passando, 0 warnings no Clippy) | Pronta para Fase 3 (Application Use Cases)
+Status: 🟢 Fase 3 (Application Use Cases) Concluída (30 testes passando, 0 warnings no Clippy) | Pronta para Fase 4 (CLI Adapter & Composition Root)
 
 ---
 
@@ -43,10 +43,22 @@ Status: 🟢 Fase 2 (Low-Level Adapters) Concluída (28 testes passando, 0 warni
 ---
 
 ## Fase 3: Application Use Cases & Pipelines (`application`)
-- [ ] **Task 3.1: BackupPipelineUseCase com Suporte a Filtros e Custom Dirs**
-- [ ] **Task 3.2: RestorePipelineUseCase**
-- [ ] **Task 3.3: InspectSnapshotUseCase**
-- [ ] **Task 3.4: VerifyIntegrityUseCase**
+- [x] **Task 3.1: BackupPipelineUseCase com Suporte a Filtros e Custom Dirs**
+  - **Status:** Concluído. Orquestração completa com validação de .parentlock, scan de perfis Zen, agregação de pacotes, governança de agentes, custom dirs, aplicação de SelectionFilter e compressão via StoragePort.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/src/backup.rs`
+- [x] **Task 3.2: RestorePipelineUseCase**
+  - **Status:** Concluído. Extração segura em staging com Zip-Slip guard, restauração de perfis Zen com sweep & bind CityHash64 em installs.ini/profiles.ini, restauração de agentes desreferenciados, despacho inteligente de pacotes (mesma distro vs. distro-hop) e verificação de libfuse2.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/src/restore.rs`
+- [x] **Task 3.3: InspectSnapshotUseCase**
+  - **Status:** Concluído. Leitura em alta velocidade em streaming apenas do manifest.json do cabeçalho sem descompactar os arquivos.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/src/inspect.rs`
+- [x] **Task 3.4: VerifyIntegrityUseCase**
+  - **Status:** Concluído. Validação do checksum SHA-256 e teste de legibilidade estrutural do snapshot.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/src/verify.rs`
 
 ---
 

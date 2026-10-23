@@ -69,3 +69,5 @@ Se for estritamente necessário abrir um arquivo com `read_file`, **use sempre o
      cargo clippy --all-targets --workspace -- -D warnings
      ```
    - Nenhum `.unwrap()` em código de produção dos adapters ou domain. Sempre propague erros tipados via `Result<T, DomainError>`.
+3. **Conformidade com os Livros Oficiais de Rust (`rust-api-guidelines`):**
+   - Todas as estruturas públicas, métodos de conversão (`as_`, `to_`, `into_`), traits comuns (`Debug`, `Clone`, `Eq`, `Hash`, `Send`, `Sync`) e ausência de clones desnecessários devem seguir estritamente o `rust-api-guidelines` e o *The Rust Programming Language*.

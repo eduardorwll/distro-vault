@@ -36,6 +36,8 @@ Em qualquer interação onde o usuário solicitar ou mencionar alterações em c
   - `security-and-hardening` (permissões POSIX 0700/0600 em chaves, integridade SHA-256)
   - `release-it` (resiliência a corrupção de sessão, timeouts e recuperação)
   - `test-driven-development` (testes de unidade de domínio com mocks antes da infraestrutura real)
+  - `rust-api-guidelines` (regras dos livros oficiais do Rust: C-NAMING, C-CONV, C-COMMON-TRAITS, C-ERRORS, Newtype, Typestate, Send+Sync, semântica de ownership e borrowing sem clones supérfluos)
+  - `rust-best-practices` (padrões de produção Apollo: workspace lints, zero unwrap em produção, thiserror em crates e testes concisos)
   - `code-review-and-quality` (inspeção de padrões, clippy, ausência de unwrap em código de produção)
   - `planning-and-task-breakdown` (elaboração ou atualização do `tasks/todo.md`)
 - **Obrigatoriedade de Checklist de Tarefas (`planning-and-task-breakdown`):**

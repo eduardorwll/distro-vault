@@ -1,14 +1,9 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+pub mod backup;
+pub mod inspect;
+pub mod restore;
+pub mod verify;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use backup::{BackupPipelineUseCase, BackupReport, BackupRequest};
+pub use inspect::{InspectSnapshotUseCase, SnapshotSummary};
+pub use restore::{RestorePipelineUseCase, RestoreReport, RestoreRequest};
+pub use verify::{IntegrityReport, VerifyIntegrityUseCase};
