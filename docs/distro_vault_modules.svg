@@ -1,0 +1,211 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1600" width="100%" height="100%">
+  <defs>
+    <style>
+      .bg { fill: #0d1117; }
+      .layer-bg { fill: #161b22; stroke: #30363d; stroke-width: 1.5; rx: 8px; }
+      .module-card { fill: #21262d; stroke: #30363d; stroke-width: 1.2; rx: 6px; }
+      .core-card { fill: #1c2128; stroke: #58a6ff; stroke-width: 1.5; rx: 6px; }
+      .title-main { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif; font-size: 26px; font-weight: 700; fill: #f0f6fc; }
+      .subtitle-main { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 14px; fill: #8b949e; }
+      .layer-header { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 16px; font-weight: 700; fill: #c9d1d9; letter-spacing: 0.5px; }
+      .layer-desc { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; fill: #8b949e; }
+      .card-title { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif; font-size: 15px; font-weight: 600; fill: #58a6ff; }
+      .card-title-core { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, monospace, sans-serif; font-size: 15px; font-weight: 600; fill: #79c0ff; }
+      .card-body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 12px; fill: #c9d1d9; line-height: 1.4; }
+      .card-bullet { fill: #8b949e; }
+      .flow-arrow { stroke: #58a6ff; stroke-width: 1.5; stroke-dasharray: 4,4; fill: none; }
+      .tag { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; font-size: 10px; font-weight: 600; fill: #3fb950; }
+    </style>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#58a6ff"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="100%" height="100%" class="bg" />
+
+  <!-- Main Header -->
+  <g transform="translate(60, 45)">
+    <text x="0" y="24" class="title-main">distro-vault :: Arquitetura de Módulos</text>
+    <text x="0" y="48" class="subtitle-main">Diagrama modular completo com separação estrita Clean Architecture (Rust 2021 Workspace)</text>
+  </g>
+
+  <!-- ==================== CAMADA 1: INTERFACE (CLI & TUI) ==================== -->
+  <g transform="translate(60, 110)">
+    <rect width="1080" height="230" class="layer-bg" />
+    <text x="24" y="32" class="layer-header">1. CAMADA DE INTERFACE &amp; APRESENTAÇÃO (crates/adapter-cli)</text>
+    <text x="24" y="50" class="layer-desc">Ponto de entrada do usuário. Captura comandos, gerencia o terminal interativo e emite filtros de exclusão.</text>
+
+    <!-- Card 1.1: CLI Parser -->
+    <g transform="translate(24, 70)">
+      <rect width="500" height="135" class="module-card" />
+      <text x="16" y="24" class="card-title">CLI Parser (Clap 4.5)</text>
+      <text x="440" y="24" class="tag">MODO CLI</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Subcomandos:</tspan> backup, restore, inspect e verify.</text>
+      <text x="16" y="70" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Automação:</tspan> Flags declarativas (--exclude-pkg, --add-dir, --json).</text>
+      <text x="16" y="92" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Feedback:</tspan> Spinners animados e barras de progresso via indicatif.</text>
+      <text x="16" y="114" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Não-interativo:</tspan> Ideal para cron, timers systemd e scripts de migração.</text>
+    </g>
+
+    <!-- Card 1.2: TUI Interativa -->
+    <g transform="translate(556, 70)">
+      <rect width="500" height="135" class="module-card" />
+      <text x="16" y="24" class="card-title">TUI Interativa (Ratatui 0.30 + Crossterm)</text>
+      <text x="430" y="24" class="tag">MODO TUI</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Abas com Tab:</tspan> [1] Pacotes | [2] Skills | [3] Apps | [4] Pastas | [5] Zen.</text>
+      <text x="16" y="70" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Seleção com Espaço:</tspan> Marcação/desmarcação rápida de itens.</text>
+      <text x="16" y="92" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Pastas Extras:</tspan> Atalho 'A' para adicionar diretórios customizados.</text>
+      <text x="16" y="114" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Saída:</tspan> Constrói o SelectionFilter repassado aos Use Cases.</text>
+    </g>
+  </g>
+
+  <!-- Seta Conectora 1 -> 2 -->
+  <line x1="600" y1="340" x2="600" y2="380" class="flow-arrow" marker-end="url(#arrow)" />
+  <text x="615" y="365" font-family="sans-serif" font-size="11" fill="#8b949e">Invoca Use Cases com DTOs e Filtros</text>
+
+  <!-- ==================== CAMADA 2: APPLICATION ==================== -->
+  <g transform="translate(60, 380)">
+    <rect width="1080" height="290" class="layer-bg" />
+    <text x="24" y="32" class="layer-header">2. CAMADA DE APLICAÇÃO &amp; CASOS DE USO (crates/application)</text>
+    <text x="24" y="50" class="layer-desc">Coordenação de fluxos de negócio. Isolada de bibliotecas de terceiros; comunica-se apenas através das Portas.</text>
+
+    <!-- Card 2.1: Backup Pipeline -->
+    <g transform="translate(24, 70)">
+      <rect width="500" height="95" class="module-card" />
+      <text x="16" y="24" class="card-title">BackupPipelineUseCase</text>
+      <text x="16" y="46" class="card-body"><tspan class="card-bullet">• </tspan>Checa .parentlock do Zen e encerra processos graciosamente.</text>
+      <text x="16" y="66" class="card-body"><tspan class="card-bullet">• </tspan>Varre navegadores, pacotes, agentes e pastas customizadas.</text>
+      <text x="16" y="86" class="card-body"><tspan class="card-bullet">• </tspan>Aplica SelectionFilter, gera Manifest e grava o snapshot .tar.zst.</text>
+    </g>
+
+    <!-- Card 2.2: Restore Pipeline -->
+    <g transform="translate(556, 70)">
+      <rect width="500" height="95" class="module-card" />
+      <text x="16" y="24" class="card-title">RestorePipelineUseCase</text>
+      <text x="16" y="46" class="card-body"><tspan class="card-bullet">• </tspan>Extrai snapshot com proteção estrita Zip-Slip na pasta de destino.</text>
+      <text x="16" y="66" class="card-body"><tspan class="card-bullet">• </tspan>Normaliza perfis Zen (installs.ini/profiles.ini) forçando Default=1.</text>
+      <text x="16" y="86" class="card-body"><tspan class="card-bullet">• </tspan>Restaura skills e despacha pacotes de acordo com a distro atual.</text>
+    </g>
+
+    <!-- Card 2.3: Inspect Snapshot -->
+    <g transform="translate(24, 180)">
+      <rect width="500" height="90" class="module-card" />
+      <text x="16" y="24" class="card-title">InspectSnapshotUseCase</text>
+      <text x="16" y="46" class="card-body"><tspan class="card-bullet">• </tspan>Leitura em alta velocidade apenas do manifest.json do cabeçalho.</text>
+      <text x="16" y="66" class="card-body"><tspan class="card-bullet">• </tspan>Emite sumário de pacotes, abas do Zen e agentes sem descompactar.</text>
+    </g>
+
+    <!-- Card 2.4: Verify Integrity -->
+    <g transform="translate(556, 180)">
+      <rect width="500" height="90" class="module-card" />
+      <text x="16" y="24" class="card-title">VerifyIntegrityUseCase</text>
+      <text x="16" y="46" class="card-body"><tspan class="card-bullet">• </tspan>Calcula hash SHA-256 do arquivo e compara com o manifesto.</text>
+      <text x="16" y="66" class="card-body"><tspan class="card-bullet">• </tspan>Testa descompressão e integridade dos blocos Zstandard.</text>
+    </g>
+  </g>
+
+  <!-- Seta Conectora 2 -> 3 -->
+  <line x1="600" y1="670" x2="600" y2="710" class="flow-arrow" marker-end="url(#arrow)" />
+  <text x="615" y="695" font-family="sans-serif" font-size="11" fill="#8b949e">Depende e Implementa Contratos Hexagonais</text>
+
+  <!-- ==================== CAMADA 3: DOMAIN ==================== -->
+  <g transform="translate(60, 710)">
+    <rect width="1080" height="280" class="layer-bg" />
+    <text x="24" y="32" class="layer-header">3. NÚCLEO DE DOMÍNIO &amp; PORTAS (crates/domain)</text>
+    <text x="24" y="50" class="layer-desc">O centro da aplicação. Não possui dependências de I/O, rede ou SO. Contém entidades puras e contratos (traits).</text>
+
+    <!-- Card 3.1: Entidades de Domínio -->
+    <g transform="translate(24, 70)">
+      <rect width="330" height="190" class="core-card" />
+      <text x="16" y="24" class="card-title-core">Entidades Principais</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Manifest:</tspan> Metadados globais.</text>
+      <text x="16" y="70" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">ZenProfile:</tspan> Spaces, abas, containers.</text>
+      <text x="16" y="92" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">PackageEntry:</tspan> Pacotes declarativos.</text>
+      <text x="16" y="114" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">AppImageEntry:</tspan> Binários portáveis.</text>
+      <text x="16" y="136" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">AgentGovernance:</tspan> Skills e regras.</text>
+      <text x="16" y="158" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">CustomDirectoryEntry:</tspan> Pastas extras.</text>
+      <text x="16" y="180" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">SelectionFilter:</tspan> Exclusões ativas.</text>
+    </g>
+
+    <!-- Card 3.2: Value Objects -->
+    <g transform="translate(374, 70)">
+      <rect width="330" height="190" class="core-card" />
+      <text x="16" y="24" class="card-title-core">Value Objects Fortes</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">ProfileId:</tspan> Identificador único de perfil.</text>
+      <text x="16" y="72" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">PackageName:</tspan> Nome normalizado.</text>
+      <text x="16" y="96" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">DistroFamily:</tspan> Arch, Fedora, Debian, etc.</text>
+      <text x="16" y="120" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Checksum:</tspan> Hash SHA-256 de 64 hex.</text>
+      <text x="16" y="144" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">UnixMode:</tspan> Permissões POSIX (0700/0600).</text>
+      <text x="16" y="168" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">SkillCategory:</tspan> Categorias de IA.</text>
+    </g>
+
+    <!-- Card 3.3: Portas Hexagonais (Traits) -->
+    <g transform="translate(724, 70)">
+      <rect width="332" height="190" class="core-card" />
+      <text x="16" y="24" class="card-title-core">Portas do Hexágono (Traits)</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">BrowserPort:</tspan> Trava, scan, codec, normaliza.</text>
+      <text x="16" y="72" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">StoragePort:</tspan> Cria, lê e extrai snapshots.</text>
+      <text x="16" y="96" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">AgentPort:</tspan> Varre, desreferencia e restaura.</text>
+      <text x="16" y="120" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">PackagePort:</tspan> Consulta e instala pacotes.</text>
+      <text x="16" y="144" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">SystemPort:</tspan> SO, processos, FUSE2.</text>
+      <text x="16" y="172" class="card-body" fill="#3fb950">✓ 100% livre de referências a SO e I/O</text>
+    </g>
+  </g>
+
+  <!-- Seta Conectora 4 -> 3 (Adapters implementam Ports) -->
+  <line x1="600" y1="1030" x2="600" y2="990" class="flow-arrow" marker-end="url(#arrow)" />
+  <text x="615" y="1015" font-family="sans-serif" font-size="11" fill="#8b949e">Adapters Concretos Implementam as Portas</text>
+
+  <!-- ==================== CAMADA 4: ADAPTERS ==================== -->
+  <g transform="translate(60, 1030)">
+    <rect width="1080" height="520" class="layer-bg" />
+    <text x="24" y="32" class="layer-header">4. CAMADA DE ADAPTADORES DE INFRAESTRUTURA (crates/adapter-*)</text>
+    <text x="24" y="50" class="layer-desc">Implementações profundas que conversam diretamente com o sistema operacional, arquivos e bibliotecas.</text>
+
+    <!-- Adapter 4.1: Browser Adapter -->
+    <g transform="translate(24, 70)">
+      <rect width="500" height="205" class="module-card" />
+      <text x="16" y="24" class="card-title">adapter-browser (Zen Browser / Mozilla)</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">MozLz4Codec:</tspan> Decodifica/codifica blocos LZ4 raw com magic header b"mozLz40\0" e tamanho LE de 4 bytes.</text>
+      <text x="16" y="74" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Bomb Guard:</tspan> Rejeita payloads &gt; 128 MB antes da alocação de memória.</text>
+      <text x="16" y="98" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">CityHash64:</tspan> Calcula hashes dos diretórios de instalação de forma nativa.</text>
+      <text x="16" y="122" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Profiles Normalizer:</tspan> Sweep &amp; bind em installs.ini e profiles.ini, forçando Default=1 e StartWithLastProfile=1.</text>
+      <text x="16" y="148" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">WAL &amp; Lock:</tspan> Detecta .parentlock e exporta SQLite preservando integridade.</text>
+      <text x="16" y="180" class="tag">Implementa BrowserPort • 8 Testes Passando</text>
+    </g>
+
+    <!-- Adapter 4.2: Storage Adapter -->
+    <g transform="translate(556, 70)">
+      <rect width="500" height="205" class="module-card" />
+      <text x="16" y="24" class="card-title">adapter-storage (Zstandard &amp; Tarball)</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">TarZstdPacker:</tspan> Compactação streaming de alta velocidade (.tar.zst) com nível 3 de zstd.</text>
+      <text x="16" y="74" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">ZipSlipGuard:</tspan> Sanitiza caminhos de entrada contra directory traversal (..), rotas absolutas e symlinks maliciosos.</text>
+      <text x="16" y="100" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">POSIX Modes:</tspan> Preserva permissões 0700 em diretórios e chaves privadas.</text>
+      <text x="16" y="124" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">CustomDirsHandler:</tspan> Empacota pastas extras sob o namespace custom/&lt;slug&gt;.</text>
+      <text x="16" y="148" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Integridade:</tspan> Cálculo atômico de checksum SHA-256 via crate sha2.</text>
+      <text x="16" y="180" class="tag">Implementa StoragePort • 3 Testes Passando</text>
+    </g>
+
+    <!-- Adapter 4.3: Agents Adapter -->
+    <g transform="translate(24, 295)">
+      <rect width="500" height="205" class="module-card" />
+      <text x="16" y="24" class="card-title">adapter-agents (Governança e Skills de IA)</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">AgentScanner:</tspan> Varre ~/.agents/skills/, GEMINI.md e AGENTS.md.</text>
+      <text x="16" y="74" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">YAML Frontmatter:</tspan> Extrai metadados, categorias e descrições de SKILL.md.</text>
+      <text x="16" y="98" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Desreferenciador de Symlinks:</tspan> Resolve links simbólicos de skills ligadas ao Omarchy (/usr/share/omarchy/) e cria cópias físicas reais.</text>
+      <text x="16" y="132" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Portabilidade Total:</tspan> Garante que os agentes continuem funcionando após migração para Fedora, Debian, Ubuntu ou NixOS.</text>
+      <text x="16" y="180" class="tag">Implementa AgentPort • 3 Testes Passando</text>
+    </g>
+
+    <!-- Adapter 4.4: System & Package Adapter -->
+    <g transform="translate(556, 295)">
+      <rect width="500" height="205" class="module-card" />
+      <text x="16" y="24" class="card-title">adapter-system (SO e Gerenciadores de Pacote)</text>
+      <text x="16" y="48" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">OsReleaseParser:</tspan> Lê /etc/os-release identificando a família da distro.</text>
+      <text x="16" y="74" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">ProcessManager:</tspan> Monitora /proc e finaliza processos via SIGTERM.</text>
+      <text x="16" y="98" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Verificação FUSE2:</tspan> Checa libfuse2 para execução confiável de AppImages.</text>
+      <text x="16" y="122" class="card-body"><tspan class="card-bullet">• </tspan><tspan font-weight="600">Dispatchers:</tspan> PacmanAdapter (nativos), AurAdapter (paru/yay) e FlatpakAdapter para inventário declarativo e instalação em lote.</text>
+      <text x="16" y="180" class="tag">Implementa SystemPort e PackagePort • 3 Testes Passando</text>
+    </g>
+  </g>
+</svg>
