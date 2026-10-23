@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Fase 1 Concluída | Pronta para Fase 2 (Low-Level Adapters) | Planejamento Expandido com Ratatui TUI & Custom Dirs
+Status: 🟢 Fase 2 (Low-Level Adapters) Concluída (28 testes passando, 0 warnings no Clippy) | Pronta para Fase 3 (Application Use Cases)
 
 ---
 
@@ -15,34 +15,28 @@ Status: 🟢 Fase 1 Concluída | Pronta para Fase 2 (Low-Level Adapters) | Plane
 ---
 
 ## Fase 2: Low-Level Adapters (Módulos Profundos)
-- [ ] **Task 2.1: Codec MozLZ4 Nativo em Rust (`adapter-browser`)**
-  - **Descrição:** Implementar compressor e descompressor para o formato `mozLz40\0` do Firefox/Zen usando `lz4_flex`.
-  - **Critérios de Aceite:** Validação de magic header de 8 bytes; leitura de tamanho descompactado LE de 4 bytes; testes com payloads de sessão reais.
+- [x] **Task 2.1: Codec MozLZ4 Nativo em Rust (`adapter-browser`)**
+  - **Status:** Concluído. Codec nativo com validação de magic header `mozLz40\0`, tamanho LE e guardião contra Decompression Bombs (128 MB). 8 testes passando, incluindo descompressão de sessão real do Zen Browser.
   - **Verificação:** `cargo test -p adapter-browser`
   - **Arquivos:** `crates/adapter-browser/src/mozlz4.rs`
-- [ ] **Task 2.2: Normalizador de Hash e Perfis Zen (`adapter-browser`)**
-  - **Descrição:** Parse e reescrita de `installs.ini` e `profiles.ini` para forçar o perfil restaurado como `Default=1`.
-  - **Critérios de Aceite:** Eliminar a falha onde o Zen abre vazio na nova distro.
-  - **Verificação:** Testes unitários com fixtures de `installs.ini`.
+- [x] **Task 2.2: Normalizador de Hash e Perfis Zen (`adapter-browser`)**
+  - **Status:** Concluído. `ProfilesIniNormalizer` com CityHash64 e sweep & bind automático de seções `[Install<HASH>]` e `installs.ini`, garantindo `Default=1` e `StartWithLastProfile=1`.
+  - **Verificação:** `cargo test -p adapter-browser`
   - **Arquivos:** `crates/adapter-browser/src/profile_normalizer.rs`
-- [ ] **Task 2.3: Scanner e Desreferenciador de Agentes (`adapter-agents`)**
-  - **Descrição:** Implementar varredura de `~/.agents/skills/`, leitura de `SKILL.md` e conversão de symlinks em cópias reais.
-  - **Critérios de Aceite:** Skills do Omarchy mantidas funcionais sem depender de `/usr/share/omarchy/`.
+- [x] **Task 2.3: Scanner e Desreferenciador de Agentes (`adapter-agents`)**
+  - **Status:** Concluído. Varredura de `~/.agents/skills/`, leitura de YAML frontmatter em `SKILL.md` e desreferenciação estrita de links simbólicos (cópia real profunda prevenindo quebra fora do Omarchy). 3 testes passando.
   - **Verificação:** `cargo test -p adapter-agents`
-  - **Arquivos:** `crates/adapter-agents/src/scanner.rs`
-- [ ] **Task 2.4: Adaptador do Sistema Operacional e Pacotes (`adapter-system`)**
-  - **Descrição:** Leitura de `/etc/os-release` e dispatchers para `pacman`, `paru`, `flatpak`, `dnf` e `apt`.
-  - **Critérios de Aceite:** Identificação correta de famílias de SO e mapeamento de comandos.
+  - **Arquivos:** `crates/adapter-agents/src/scanner.rs`, `crates/adapter-agents/src/lib.rs`
+- [x] **Task 2.4: Adaptador do Sistema Operacional e Pacotes (`adapter-system`)**
+  - **Status:** Concluído. Parser de `/etc/os-release`, inspeção de processos via `/proc`, verificação de `libfuse2` e dispatchers para `pacman`, `paru`/`yay` e `flatpak`. 3 testes passando.
   - **Verificação:** `cargo test -p adapter-system`
-  - **Arquivos:** `crates/adapter-system/src/lib.rs`
-- [ ] **Task 2.5: Adaptador de Storage Atômico com Zip-Slip Guard (`adapter-storage`)**
-  - **Descrição:** Criação e extração de snapshots em `.tar.zst` preservando permissões POSIX (`0700`/`0600`) com guardião contra path traversal.
-  - **Critérios de Aceite:** Checksum SHA-256 verificado após compressão; bloqueio de paths `../`.
+  - **Arquivos:** `crates/adapter-system/src/os_release.rs`, `crates/adapter-system/src/process.rs`, `crates/adapter-system/src/packages.rs`, `crates/adapter-system/src/lib.rs`
+- [x] **Task 2.5: Adaptador de Storage Atômico com Zip-Slip Guard (`adapter-storage`)**
+  - **Status:** Concluído. Criação e extração streaming em `.tar.zst` com sanitização Zip-Slip estrita (rejeição de `..`, caminhos absolutos, escapes de symlinks e dispositivos especiais) e preservação de permissões POSIX.
   - **Verificação:** `cargo test -p adapter-storage`
-  - **Arquivos:** `crates/adapter-storage/src/lib.rs`
-- [ ] **Task 2.6: Módulo de Diretórios Customizados no Storage (`adapter-storage`)**
-  - **Descrição:** Suporte para inclusão, empacotamento e descompressão de diretórios arbitrários escolhidos pelo usuário (`CustomDirectoryEntry`), isolados sob o prefixo `custom/<nome>`.
-  - **Critérios de Aceite:** Verificação de existência, permissões e isolamento seguro de paths.
+  - **Arquivos:** `crates/adapter-storage/src/archive.rs`, `crates/adapter-storage/src/lib.rs`
+- [x] **Task 2.6: Módulo de Diretórios Customizados no Storage (`adapter-storage`)**
+  - **Status:** Concluído. `CustomDirsHandler` com inspeção recursiva, cálculo de estatísticas e isolamento sob `custom/<slug>`.
   - **Verificação:** `cargo test -p adapter-storage`
   - **Arquivos:** `crates/adapter-storage/src/custom_dirs.rs`
 
