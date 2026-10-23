@@ -5,20 +5,53 @@ Para especificações detalhadas de arquitetura, subagentes, guardrails e suíte
 
 ---
 
-## ⚡ Regra Mandatória: Eficiência Extrema de Tokens e Busca Estruturada
+## ⚡ Regra Mandatória: Eficiência Extrema de Tokens e Busca em Grafos (Graphify & Graft First)
 
-Para acelerar o desenvolvimento, reduzir a latência e eliminar o consumo desnecessário de tokens de contexto:
+Para acelerar o desenvolvimento, reduzir a latência e eliminar o consumo desnecessário de tokens de contexto, **TODO agente operando neste projeto DEVE seguir o protocolo de 2 níveis em grafos antes de ler arquivos inteiros ou executar buscas brutas:**
 
 ### 🚫 O QUE É ESTRITAMENTE PROIBIDO:
 1. **Leitura Cega de Arquivos:** Nunca execute `read_file` em arquivos inteiros ou dezenas de arquivos sequencialmente para tentar entender fluxos ou encontrar definições.
 2. **Grep Recursivo Descontrolado:** Nunca execute cascatas de `grep -rn` ou `find` na raiz do projeto para localizar funções, variáveis ou interfaces.
 
-### 🎯 PROTOCOLO DE TRABALHO:
-1. **Nível Macro:** Consulte a documentação viva:
-   * `estado_atual.md`
-   * `estado_arquitetural_atual.md`
-   * `tasks/todo.md`
-2. **Nível Micro:** Use leituras cirúrgicas com `StartLine` e `EndLine` para inspecionar apenas as assinaturas e linhas de código estritamente necessárias.
+---
+
+### 🎯 PROTOCOLO DE BUSCA EM 2 NÍVEIS (MACRO ➔ MICRO):
+
+#### 1. Nível Macro — Arquitetura, Subsistemas e Relações ([Graphify](file:///home/eduardorwll/.gemini/config/skills/graphify/SKILL.md))
+Para entender a floresta, o fluxo de dados entre camadas e as conexões entre subsistemas:
+* **Consultar contexto relacional:**
+  ```bash
+  graphify query "<pergunta sobre fluxo/subsistema>"
+  ```
+* **Mapear menor caminho entre dois componentes:**
+  ```bash
+  graphify path "ComponenteA" "ComponenteB"
+  ```
+* **Explicar um conceito ou módulo:**
+  ```bash
+  graphify explain "<ModuloOuConceito>"
+  ```
+
+#### 2. Nível Micro — Localização Cirúrgica de Linha e Símbolo ([Graft](file:///home/eduardorwll/.agents/skills/graft/SKILL.md))
+Para localizar a linha exata de código, interfaces, classes ou chamadores:
+* **Entender ou localizar código rapidamente (com código inlined no resultado):**
+  ```bash
+  graft ask "<sua pergunta ou nome do símbolo>" --source
+  ```
+* **Busca exata de símbolos e usos (agrupada por função/módulo):**
+  ```bash
+  graft grep "<nome_do_simbolo>"
+  ```
+* **Inspecionar a API/assinaturas de um arquivo sem gastar tokens com o corpo:**
+  ```bash
+  graft skeleton <caminho/do/arquivo>
+  ```
+* **Mapear quem chama ou depende de uma função antes de alterar:**
+  ```bash
+  graft callers <nome_da_funcao>
+  ```
+
+Se for estritamente necessário abrir um arquivo com `read_file`, **use sempre o `StartLine` e `EndLine`** apontados pelo Graft para inspecionar apenas as linhas relevantes.
 
 ---
 
@@ -33,6 +66,6 @@ Para acelerar o desenvolvimento, reduzir a latência e eliminar o consumo desnec
      ```bash
      cargo check --workspace
      cargo test --workspace
-     cargo clippy --workspace -- -D warnings
+     cargo clippy --all-targets --workspace -- -D warnings
      ```
    - Nenhum `.unwrap()` em código de produção dos adapters ou domain. Sempre propague erros tipados via `Result<T, DomainError>`.
