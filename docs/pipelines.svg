@@ -1,0 +1,231 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1400 900" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradients -->
+    <linearGradient id="pipe-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#0f172a"/>
+    </linearGradient>
+
+    <!-- Step Gradients -->
+    <linearGradient id="step-blue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7"/>
+      <stop offset="100%" stop-color="#0369a1"/>
+    </linearGradient>
+    <linearGradient id="step-green" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="step-purple" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#6d28d9"/>
+    </linearGradient>
+    <linearGradient id="step-amber" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#d97706"/>
+      <stop offset="100%" stop-color="#b45309"/>
+    </linearGradient>
+
+    <!-- Filters -->
+    <filter id="shadow-pipe" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-color="#000000" flood-opacity="0.5"/>
+    </filter>
+
+    <!-- Markers -->
+    <marker id="arrow-flow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#38bdf8"/>
+    </marker>
+    <marker id="arrow-green-flow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 8 5 L 0 9 z" fill="#34d399"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1400" height="900" fill="url(#pipe-bg)"/>
+
+  <!-- Header -->
+  <g transform="translate(60, 45)">
+    <text x="0" y="24" fill="#ffffff" font-family="system-ui, sans-serif" font-size="28" font-weight="800" letter-spacing="-0.5">distro-vault</text>
+    <text x="175" y="24" fill="#34d399" font-family="system-ui, sans-serif" font-size="14" font-weight="600" letter-spacing="1">EXECUTION PIPELINES</text>
+    <text x="0" y="48" fill="#94a3b8" font-family="system-ui, sans-serif" font-size="14">Fluxos de Trabalho Determinísticos para Backup Atômico e Restauração Zero-to-Hero</text>
+  </g>
+
+  <!-- SECTION 1: BACKUP PIPELINE -->
+  <g transform="translate(60, 115)" filter="url(#shadow-pipe)">
+    <rect width="1280" height="340" rx="14" fill="#0f172a" stroke="#1e293b" stroke-width="1.5"/>
+    <rect x="0" y="0" width="1280" height="340" rx="14" fill="none" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.3"/>
+    
+    <rect x="25" y="20" width="10" height="24" rx="5" fill="#38bdf8"/>
+    <text x="45" y="38" fill="#38bdf8" font-family="system-ui, sans-serif" font-size="15" font-weight="800" letter-spacing="0.5">PIPELINE DE BACKUP ATÔMICO (BackupPipelineUseCase)</text>
+
+    <!-- Step 1: Pre-Flight Guard -->
+    <g transform="translate(40, 75)">
+      <rect width="215" height="225" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-blue)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">1</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Pre-Flight &amp; Lock</text>
+      <path d="M 15,65 L 200,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Checa .parentlock</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Solicita SIGTERM limpo</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Commit de WAL SQLite</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Valida permissões</text>
+      <rect x="15" y="180" width="185" height="28" rx="6" fill="#0369a1" fill-opacity="0.3" stroke="#38bdf8" stroke-width="0.8"/>
+      <text x="107" y="198" text-anchor="middle" fill="#7dd3fc" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Zero Corrupção SQLite</text>
+    </g>
+
+    <!-- Step 2: Zen MozLZ4 Engine -->
+    <g transform="translate(295, 75)">
+      <rect width="215" height="225" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-blue)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">2</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Zen MozLZ4 Scan</text>
+      <path d="M 15,65 L 200,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Lê zen-sessions.jsonlz4</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Decompila mozLz40\0</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Extrai Spaces e Abas</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Mapeia containers</text>
+      <rect x="15" y="180" width="185" height="28" rx="6" fill="#0369a1" fill-opacity="0.3" stroke="#38bdf8" stroke-width="0.8"/>
+      <text x="107" y="198" text-anchor="middle" fill="#7dd3fc" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Codec Rust Puro</text>
+    </g>
+
+    <!-- Step 3: Package & AppImages -->
+    <g transform="translate(550, 75)">
+      <rect width="215" height="225" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-blue)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">3</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Packages &amp; Apps</text>
+      <path d="M 15,65 L 200,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Pacman explícito (Qqen)</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• AUR foreign (Qqem)</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Flatpak application IDs</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• AppImages + Gear Lever</text>
+      <rect x="15" y="180" width="185" height="28" rx="6" fill="#0369a1" fill-opacity="0.3" stroke="#38bdf8" stroke-width="0.8"/>
+      <text x="107" y="198" text-anchor="middle" fill="#7dd3fc" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Multi-Manager Map</text>
+    </g>
+
+    <!-- Step 4: Agents Governance -->
+    <g transform="translate(805, 75)">
+      <rect width="215" height="225" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-blue)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">4</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Agents &amp; Skills</text>
+      <path d="M 15,65 L 200,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Varre 19 skills vitais</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Desreferencia symlinks</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Salva AGENTS / GEMINI</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Quality Gates ativos</text>
+      <rect x="15" y="180" width="185" height="28" rx="6" fill="#0369a1" fill-opacity="0.3" stroke="#38bdf8" stroke-width="0.8"/>
+      <text x="107" y="198" text-anchor="middle" fill="#7dd3fc" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Autocontido de Distro</text>
+    </g>
+
+    <!-- Step 5: Tar + Zstd Snapshot -->
+    <g transform="translate(1060, 75)">
+      <rect width="180" height="225" rx="10" fill="#1e293b" stroke="#38bdf8" stroke-width="1.5"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-blue)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">5</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Tar + Zstd</text>
+      <path d="M 15,65 L 165,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Gera Manifest</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Modos 0700/0600</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Zstandard MT</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Checksum SHA256</text>
+      <rect x="15" y="180" width="150" height="28" rx="6" fill="#0284c7" stroke="#38bdf8" stroke-width="0.8"/>
+      <text x="90" y="198" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700">.tar.zst Vault</text>
+    </g>
+
+    <!-- Flow Arrows -->
+    <path d="M 255,185 L 290,185" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-flow)"/>
+    <path d="M 510,185 L 545,185" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-flow)"/>
+    <path d="M 765,185 L 800,185" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-flow)"/>
+    <path d="M 1020,185 L 1055,185" stroke="#38bdf8" stroke-width="2" marker-end="url(#arrow-flow)"/>
+  </g>
+
+  <!-- SECTION 2: RESTORE PIPELINE -->
+  <g transform="translate(60, 490)" filter="url(#shadow-pipe)">
+    <rect width="1280" height="340" rx="14" fill="#0f172a" stroke="#1e293b" stroke-width="1.5"/>
+    <rect x="0" y="0" width="1280" height="340" rx="14" fill="none" stroke="#34d399" stroke-width="1.5" stroke-opacity="0.3"/>
+    
+    <rect x="25" y="20" width="10" height="24" rx="5" fill="#34d399"/>
+    <text x="45" y="38" fill="#34d399" font-family="system-ui, sans-serif" font-size="15" font-weight="800" letter-spacing="0.5">PIPELINE DE RESTAURAÇÃO ZERO-TO-HERO (RestorePipelineUseCase)</text>
+
+    <!-- Step 1: ZipSlip & Integrity -->
+    <g transform="translate(40, 75)">
+      <rect width="215" height="225" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-green)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">1</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Integrity &amp; Safety</text>
+      <path d="M 15,65 L 200,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Valida SHA-256</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Zip-Slip Guard (../)</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Descompressão Zstd</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Carrega Manifest</text>
+      <rect x="15" y="180" width="185" height="28" rx="6" fill="#065f46" fill-opacity="0.3" stroke="#34d399" stroke-width="0.8"/>
+      <text x="107" y="198" text-anchor="middle" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Path Traversal Block</text>
+    </g>
+
+    <!-- Step 2: Target OS Detection -->
+    <g transform="translate(295, 75)">
+      <rect width="215" height="225" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-green)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">2</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">OS Detection</text>
+      <path d="M 15,65 L 200,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Lê /etc/os-release</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Identifica DistroFamily</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Arch / Fedora / Debian</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Checa se tem libfuse2</text>
+      <rect x="15" y="180" width="185" height="28" rx="6" fill="#065f46" fill-opacity="0.3" stroke="#34d399" stroke-width="0.8"/>
+      <text x="107" y="198" text-anchor="middle" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Runtime Adapter</text>
+    </g>
+
+    <!-- Step 3: Package Rehydration -->
+    <g transform="translate(550, 75)">
+      <rect width="215" height="225" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-green)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">3</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Packages Setup</text>
+      <path d="M 15,65 L 200,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Arch: pacman + paru</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Outra distro: Flatpaks</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Fallback via Distrobox</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Evita crash de nomes</text>
+      <rect x="15" y="180" width="185" height="28" rx="6" fill="#065f46" fill-opacity="0.3" stroke="#34d399" stroke-width="0.8"/>
+      <text x="107" y="198" text-anchor="middle" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="11" font-weight="600">No Package Lock-in</text>
+    </g>
+
+    <!-- Step 4: Zen Hash Fix -->
+    <g transform="translate(805, 75)">
+      <rect width="215" height="225" rx="10" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-green)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">4</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Zen Hash Normalizer</text>
+      <path d="M 15,65 L 200,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Extrai ~/.config/zen</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Normaliza installs.ini</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Força Default=1</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Restaura Spaces &amp; Tabs</text>
+      <rect x="15" y="180" width="185" height="28" rx="6" fill="#065f46" fill-opacity="0.3" stroke="#34d399" stroke-width="0.8"/>
+      <text x="107" y="198" text-anchor="middle" fill="#6ee7b7" font-family="system-ui, sans-serif" font-size="11" font-weight="600">Zero Perfil em Branco</text>
+    </g>
+
+    <!-- Step 5: Agents & System Ready -->
+    <g transform="translate(1060, 75)">
+      <rect width="180" height="225" rx="10" fill="#1e293b" stroke="#34d399" stroke-width="1.5"/>
+      <circle cx="35" cy="35" r="16" fill="url(#step-green)"/>
+      <text x="35" y="41" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="800">5</text>
+      <text x="65" y="38" fill="#ffffff" font-family="system-ui, sans-serif" font-size="14" font-weight="700">Ready to Work</text>
+      <path d="M 15,65 L 165,65" stroke="#334155" stroke-width="1"/>
+      <text x="15" y="88" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Restaura ~/.agents</text>
+      <text x="15" y="108" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Restaura GEMINI.md</text>
+      <text x="15" y="128" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Cria ~/Antigravity</text>
+      <text x="15" y="148" fill="#cbd5e1" font-family="system-ui, sans-serif" font-size="12">• Executa Sanity Test</text>
+      <rect x="15" y="180" width="150" height="28" rx="6" fill="#059669" stroke="#34d399" stroke-width="0.8"/>
+      <text x="90" y="198" text-anchor="middle" fill="#ffffff" font-family="system-ui, sans-serif" font-size="11" font-weight="700">100% Produtivo</text>
+    </g>
+
+    <!-- Flow Arrows -->
+    <path d="M 255,185 L 290,185" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green-flow)"/>
+    <path d="M 510,185 L 545,185" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green-flow)"/>
+    <path d="M 765,185 L 800,185" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green-flow)"/>
+    <path d="M 1020,185 L 1055,185" stroke="#34d399" stroke-width="2" marker-end="url(#arrow-green-flow)"/>
+  </g>
+
+</svg>
