@@ -86,51 +86,73 @@ fn test_cli_parsing_subcommands() {
 fn test_tui_app_state_and_filter_generation() {
     let mut app = TuiApp::new();
 
-    // Setup dummy user packages
-    app.user_packages.push(TuiItem {
-        id: "ripgrep".to_string(),
-        name: "ripgrep".to_string(),
-        details: "[CliTool] • fast grep".to_string(),
-        included: true,
-    });
-    app.user_packages.push(TuiItem {
-        id: "git".to_string(),
-        name: "git".to_string(),
-        details: "[Development] • vcs".to_string(),
-        included: true,
-    });
+    // Setup dummy user packages with headers
+    app.user_packages = TuiApp::group_into_rows(vec![
+        (
+            "cli".to_string(),
+            "FERRAMENTAS CLI".to_string(),
+            vec![
+                TuiItem {
+                    id: "ripgrep".to_string(),
+                    name: "ripgrep".to_string(),
+                    details: "fast grep".to_string(),
+                    included: true,
+                },
+                TuiItem {
+                    id: "git".to_string(),
+                    name: "git".to_string(),
+                    details: "vcs".to_string(),
+                    included: true,
+                },
+            ],
+        ),
+    ]);
 
-    // Setup dummy system packages
-    app.system_packages.push(TuiItem {
-        id: "linux".to_string(),
-        name: "linux".to_string(),
-        details: "[KernelFirmware] • core kernel".to_string(),
-        included: true,
-    });
+    // Setup dummy system packages with headers
+    app.system_packages = TuiApp::group_into_rows(vec![
+        (
+            "kernel".to_string(),
+            "KERNEL & FIRMWARE".to_string(),
+            vec![TuiItem {
+                id: "linux".to_string(),
+                name: "linux".to_string(),
+                details: "core kernel".to_string(),
+                included: true,
+            }],
+        ),
+    ]);
 
-    // Setup dummy skills
-    app.skills.push(TuiItem {
-        id: "clean-code".to_string(),
-        name: "clean-code".to_string(),
-        details: "Uncle Bob".to_string(),
-        included: true,
-    });
+    // Setup dummy skills with headers
+    app.skills = TuiApp::group_into_rows(vec![
+        (
+            "clean_code".to_string(),
+            "CLEAN CODE".to_string(),
+            vec![TuiItem {
+                id: "clean-code".to_string(),
+                name: "clean-code".to_string(),
+                details: "Uncle Bob".to_string(),
+                included: true,
+            }],
+        ),
+    ]);
 
-    // 1. Navigation across tabs
+    // 1. Navigation across tabs (7 tabs now)
     assert_eq!(app.current_tab, 0);
     app.next_tab();
     assert_eq!(app.current_tab, 1);
     app.prev_tab();
     assert_eq!(app.current_tab, 0);
 
-    // 2. Cursor navigation
+    // 2. Cursor navigation (row 0 is Header, row 1 is ripgrep, row 2 is git)
     assert_eq!(app.cursors[0], 0);
     app.next_item();
     assert_eq!(app.cursors[0], 1);
+    app.next_item();
+    assert_eq!(app.cursors[0], 2);
 
-    // 3. Toggle selection (exclude git)
+    // 3. Toggle selection (exclude git at row 2)
     app.toggle_selected();
-    assert!(!app.user_packages[1].included);
+    assert!(!app.user_packages[2].item().unwrap().included);
 
     // 4. Build filter
     let filter = app.build_selection_filter();
@@ -139,7 +161,19 @@ fn test_tui_app_state_and_filter_generation() {
     assert!(filter.is_package_included(&PackageName::new("linux").unwrap()));
     assert!(filter.is_skill_included("clean-code"));
 
-    // 5. Custom Directory Addition
+    // 5. Test Header toggle (toggle all in category)
+    app.cursors[0] = 0; // Header row
+    app.toggle_selected();
+    // After header toggle when git was excluded and ripgrep was included, any_included was true -> new_state false (all excluded)
+    assert!(!app.user_packages[1].item().unwrap().included);
+    assert!(!app.user_packages[2].item().unwrap().included);
+
+    // Toggle again -> all included
+    app.toggle_selected();
+    assert!(app.user_packages[1].item().unwrap().included);
+    assert!(app.user_packages[2].item().unwrap().included);
+
+    // 6. Custom Directory Addition
     let tmp = tempdir().expect("Failed to create tempdir");
     let custom_p = tmp.path().join("my_custom_folder");
     std::fs::create_dir_all(&custom_p).unwrap();

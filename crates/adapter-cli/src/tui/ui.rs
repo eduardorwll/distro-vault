@@ -6,7 +6,7 @@ use ratatui::{
     Frame,
 };
 
-use super::app::TuiApp;
+use super::app::{TuiApp, TuiRow};
 
 pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     let chunks = Layout::default()
@@ -33,12 +33,13 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
 
     // 2. Tabs
     let tab_titles = vec![
-        format!("[1] Apps & Usuário ({})", app.user_packages.len()),
-        format!("[2] Sistema Low-Level ({})", app.system_packages.len()),
-        format!("[3] Skills ({})", app.skills.len()),
-        format!("[4] AppImages ({})", app.appimages.len()),
-        format!("[5] Pastas Extras ({})", app.custom_dirs.len()),
-        format!("[6] Zen Spaces ({})", app.zen_spaces.len()),
+        format!("[1] Apps & Usuário ({})", app.count_items(0)),
+        format!("[2] Sistema Low-Level ({})", app.count_items(1)),
+        format!("[3] Dependências ({})", app.count_items(2)),
+        format!("[4] Skills ({})", app.count_items(3)),
+        format!("[5] AppImages ({})", app.count_items(4)),
+        format!("[6] Pastas Extras ({})", app.custom_dirs.len()),
+        format!("[7] Zen Spaces ({})", app.count_items(6)),
     ];
 
     let tabs = Tabs::new(tab_titles)
@@ -56,55 +57,27 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     // 3. Main List Content
     let current_cursor = app.cursors[app.current_tab];
     let (list_items, title) = match app.current_tab {
-        0 => {
-            let items: Vec<ListItem> = app
-                .user_packages
-                .iter()
-                .enumerate()
-                .map(|(i, item)| {
-                    let is_selected = i == current_cursor;
-                    render_item(&item.name, &item.details, item.included, is_selected)
-                })
-                .collect();
-            (items, " 📦 Pacotes Instalados pelo Usuário (Apps, Ferramentas CLI, Dev & Flatpaks) ")
-        }
-        1 => {
-            let items: Vec<ListItem> = app
-                .system_packages
-                .iter()
-                .enumerate()
-                .map(|(i, item)| {
-                    let is_selected = i == current_cursor;
-                    render_item(&item.name, &item.details, item.included, is_selected)
-                })
-                .collect();
-            (items, " ⚙️ Pacotes de Sistema Low-Level (Kernel, Drivers, Base, Filesystems & Daemons) ")
-        }
-        2 => {
-            let items: Vec<ListItem> = app
-                .skills
-                .iter()
-                .enumerate()
-                .map(|(i, item)| {
-                    let is_selected = i == current_cursor;
-                    render_item(&item.name, &item.details, item.included, is_selected)
-                })
-                .collect();
-            (items, " 🤖 Skills de IA & Governança (~/.agents/skills) ")
-        }
-        3 => {
-            let items: Vec<ListItem> = app
-                .appimages
-                .iter()
-                .enumerate()
-                .map(|(i, item)| {
-                    let is_selected = i == current_cursor;
-                    render_item(&item.name, &item.details, item.included, is_selected)
-                })
-                .collect();
-            (items, " 🚀 Aplicativos AppImage & Gear Lever ")
-        }
-        4 => {
+        0 => (
+            render_rows(&app.user_packages, current_cursor),
+            " 📦 Pacotes Instalados pelo Usuário (Categorizados por Função) ",
+        ),
+        1 => (
+            render_rows(&app.system_packages, current_cursor),
+            " ⚙️ Pacotes de Sistema Low-Level (Kernel, Drivers, Base, Filesystems) ",
+        ),
+        2 => (
+            render_rows(&app.dependency_packages, current_cursor),
+            " 🔗 Dependências do Sistema (Instaladas Indiretamente / pacman -Qd) ",
+        ),
+        3 => (
+            render_rows(&app.skills, current_cursor),
+            " 🤖 Skills de IA & Governança (~/.agents/skills) ",
+        ),
+        4 => (
+            render_rows(&app.appimages, current_cursor),
+            " 🚀 Aplicativos AppImage & Gear Lever ",
+        ),
+        5 => {
             let items: Vec<ListItem> = app
                 .custom_dirs
                 .iter()
@@ -118,31 +91,26 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
                 .collect();
             (items, " 📁 Pastas Extras do Usuário (Pressione 'A' para adicionar) ")
         }
-        5 => {
-            let items: Vec<ListItem> = app
-                .zen_spaces
-                .iter()
-                .enumerate()
-                .map(|(i, item)| {
-                    let is_selected = i == current_cursor;
-                    render_item(&item.name, &item.details, item.included, is_selected)
-                })
-                .collect();
-            (items, " 🌐 Zen Browser Spaces & Workspaces ")
-        }
+        6 => (
+            render_rows(&app.zen_spaces, current_cursor),
+            " 🌐 Zen Browser Spaces & Workspaces ",
+        ),
         _ => (Vec::new(), ""),
     };
 
     let list_widget = List::new(list_items)
         .block(Block::default().borders(Borders::ALL).title(title));
-    f.render_widget(list_widget, chunks[2]);
+
+    let state = &mut app.list_states[app.current_tab];
+    state.select(Some(current_cursor));
+    f.render_stateful_widget(list_widget, chunks[2], state);
 
     // 4. Footer & Keybindings
     let status = if let Some(ref msg) = app.status_message {
         Span::styled(format!(" {} ", msg), Style::default().fg(Color::Yellow))
     } else {
         Span::styled(
-            " [Tab] Próxima Aba  [↑/↓] Navegar  [Espaço] Alternar  [A] Adicionar Pasta  [Enter/F10] Gerar Snapshot  [Q] Sair ",
+            " [Tab] Próxima Aba  [↑/↓] Navegar  [Espaço] Alternar Item/Categoria  [A] Adicionar Pasta  [Enter/F10] Gerar Snapshot  [Q] Sair ",
             Style::default().fg(Color::DarkGray),
         )
     };
@@ -156,6 +124,38 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     if app.input_mode {
         render_input_popup(f, &app.input_buffer);
     }
+}
+
+fn render_rows(rows: &[TuiRow], current_cursor: usize) -> Vec<ListItem<'static>> {
+    rows.iter()
+        .enumerate()
+        .map(|(i, row)| {
+            let is_selected = i == current_cursor;
+            match row {
+                TuiRow::Header { title, count, .. } => render_header(title, *count, is_selected),
+                TuiRow::Item { item, .. } => render_item(&item.name, &item.details, item.included, is_selected),
+            }
+        })
+        .collect()
+}
+
+fn render_header(title: &str, count: usize, is_selected: bool) -> ListItem<'static> {
+    let (prefix, text_color, bg_color) = if is_selected {
+        ("▶ ", Color::Yellow, Color::Rgb(28, 38, 54))
+    } else {
+        ("  ", Color::Cyan, Color::Rgb(18, 24, 32))
+    };
+
+    let header_label = format!("── [ {} ] ({}) ", title, count);
+    let fill = "─".repeat(50usize.saturating_sub(header_label.len()));
+
+    let line = Line::from(vec![
+        Span::styled(prefix.to_string(), Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+        Span::styled(header_label, Style::default().fg(text_color).add_modifier(Modifier::BOLD)),
+        Span::styled(fill, Style::default().fg(Color::DarkGray)),
+    ]);
+
+    ListItem::new(line).style(Style::default().bg(bg_color))
 }
 
 fn render_item(name: &str, details: &str, included: bool, is_selected: bool) -> ListItem<'static> {

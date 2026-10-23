@@ -9,10 +9,10 @@ use adapter_cli::di::AppContainer;
 use adapter_cli::tui::{run_tui, TuiApp, TuiItem};
 use adapter_storage::CustomDirsHandler;
 use application::{BackupRequest, RestoreRequest};
-use domain::entities::package::PackageScope;
+use domain::entities::package::{PackageCategory, PackageScope};
 use domain::entities::selection_filter::SelectionFilter;
 use domain::ports::{AgentPort, BrowserPort};
-use domain::value_objects::PackageName;
+use domain::value_objects::{PackageName, SkillCategory};
 
 fn main() {
     let cli = Cli::parse();
@@ -58,49 +58,160 @@ fn handle_backup(container: &AppContainer, args: BackupArgs) -> Result<(), Box<d
         // Populate TuiApp with detected items
         let mut tui_app = TuiApp::new();
 
-        // 1. Scan packages
+        // 1. Scan packages (User vs Low-Level System vs Dependencies)
+        let mut user_desktop = Vec::new();
+        let mut user_cli = Vec::new();
+        let mut user_dev = Vec::new();
+        let mut user_fonts = Vec::new();
+        let mut user_other = Vec::new();
+
+        let mut sys_kernel = Vec::new();
+        let mut sys_base = Vec::new();
+        let mut sys_drivers = Vec::new();
+        let mut sys_audio = Vec::new();
+        let mut sys_fs = Vec::new();
+        let mut sys_net = Vec::new();
+        let mut sys_compositor = Vec::new();
+        let mut sys_other = Vec::new();
+
+        let mut dep_core = Vec::new();
+        let mut dep_media = Vec::new();
+        let mut dep_runtimes = Vec::new();
+        let mut dep_build = Vec::new();
+        let mut dep_other = Vec::new();
+
         for port in &container.package_ports {
+            // Explicit packages
             if let Ok(pkgs) = port.query_installed() {
                 for p in pkgs {
                     let item = TuiItem {
                         id: p.name.as_str().to_string(),
                         name: p.name.as_str().to_string(),
-                        details: format!("{:?} • [{}] • {}", p.source, p.category.label(), p.version.as_deref().unwrap_or("latest")),
+                        details: format!("{:?} • {}", p.source, p.version.as_deref().unwrap_or("latest")),
                         included: true,
                     };
                     if p.scope == PackageScope::User {
-                        tui_app.user_packages.push(item);
+                        match p.category {
+                            PackageCategory::DesktopApp => user_desktop.push(item),
+                            PackageCategory::CliTool => user_cli.push(item),
+                            PackageCategory::Development => user_dev.push(item),
+                            PackageCategory::FontsThemes => user_fonts.push(item),
+                            _ => user_other.push(item),
+                        }
                     } else {
-                        tui_app.system_packages.push(item);
+                        match p.category {
+                            PackageCategory::KernelFirmware => sys_kernel.push(item),
+                            PackageCategory::BaseBoot => sys_base.push(item),
+                            PackageCategory::DriversHardware => sys_drivers.push(item),
+                            PackageCategory::AudioVideoStack => sys_audio.push(item),
+                            PackageCategory::FileSystems => sys_fs.push(item),
+                            PackageCategory::NetworkDaemons => sys_net.push(item),
+                            PackageCategory::CompositorPlumbing => sys_compositor.push(item),
+                            _ => sys_other.push(item),
+                        }
+                    }
+                }
+            }
+
+            // Dependencies (installed indirectly)
+            if let Ok(deps) = port.query_dependencies() {
+                for p in deps {
+                    let item = TuiItem {
+                        id: p.name.as_str().to_string(),
+                        name: p.name.as_str().to_string(),
+                        details: format!("{:?} • {}", p.source, p.version.as_deref().unwrap_or("latest")),
+                        included: true,
+                    };
+                    match p.category {
+                        PackageCategory::CoreLibrary => dep_core.push(item),
+                        PackageCategory::GraphicsMediaLib => dep_media.push(item),
+                        PackageCategory::LanguageRuntimeLib => dep_runtimes.push(item),
+                        PackageCategory::ToolchainBuildLib => dep_build.push(item),
+                        _ => dep_other.push(item),
                     }
                 }
             }
         }
 
-        // 2. Scan skills
+        tui_app.user_packages = TuiApp::group_into_rows(vec![
+            ("desktop".into(), "APPS DESKTOP & GUI".into(), user_desktop),
+            ("cli".into(), "FERRAMENTAS CLI & TERMINAL".into(), user_cli),
+            ("dev".into(), "DESENVOLVIMENTO & RUNTIMES".into(), user_dev),
+            ("fonts".into(), "FONTES, ÍCONES & TEMAS".into(), user_fonts),
+            ("user_other".into(), "OUTROS SOFTWARES DO USUÁRIO".into(), user_other),
+        ]);
+
+        tui_app.system_packages = TuiApp::group_into_rows(vec![
+            ("kernel".into(), "KERNEL & FIRMWARE".into(), sys_kernel),
+            ("base".into(), "SISTEMA BASE & BOOTLOADER".into(), sys_base),
+            ("drivers".into(), "DRIVERS, GPU & HARDWARE".into(), sys_drivers),
+            ("audio".into(), "ÁUDIO & MÍDIA CORE".into(), sys_audio),
+            ("fs".into(), "SISTEMAS DE ARQUIVOS & DISCO".into(), sys_fs),
+            ("net".into(), "REDE, SEGURANÇA & DAEMONS".into(), sys_net),
+            ("compositor".into(), "COMPOSITOR & DISPLAY SERVER".into(), sys_compositor),
+            ("sys_other".into(), "OUTROS DO SISTEMA LOW-LEVEL".into(), sys_other),
+        ]);
+
+        tui_app.dependency_packages = TuiApp::group_into_rows(vec![
+            ("core_libs".into(), "BIBLIOTECAS CORE C/C++".into(), dep_core),
+            ("media_libs".into(), "GRÁFICOS, CODECS & MULTIMÍDIA".into(), dep_media),
+            ("lang_libs".into(), "LINGUAGENS, RUNTIMES & BINDINGS".into(), dep_runtimes),
+            ("build_libs".into(), "COMPILADORES & BUILD TOOLS".into(), dep_build),
+            ("other_deps".into(), "DEMAIS DEPENDÊNCIAS DO SISTEMA".into(), dep_other),
+        ]);
+
+        // 2. Scan skills by category
         if let Ok(gov) = container.agent_adapter.scan_governance(&home) {
+            let mut skill_arch = Vec::new();
+            let mut skill_design = Vec::new();
+            let mut skill_sec = Vec::new();
+            let mut skill_test = Vec::new();
+            let mut skill_proc = Vec::new();
+            let mut skill_gen = Vec::new();
+
             for s in gov.skills {
-                tui_app.skills.push(TuiItem {
+                let item = TuiItem {
                     id: s.name.clone(),
                     name: s.name.clone(),
-                    details: format!("{:?} • {}", s.category, s.description.as_deref().unwrap_or("No description")),
+                    details: s.description.unwrap_or_else(|| "Habilidade de IA".to_string()),
                     included: true,
-                });
+                };
+                match s.category {
+                    SkillCategory::Architecture => skill_arch.push(item),
+                    SkillCategory::DesignPattern => skill_design.push(item),
+                    SkillCategory::Security => skill_sec.push(item),
+                    SkillCategory::Testing => skill_test.push(item),
+                    SkillCategory::Process => skill_proc.push(item),
+                    SkillCategory::General => skill_gen.push(item),
+                }
             }
+
+            tui_app.skills = TuiApp::group_into_rows(vec![
+                ("arch".into(), "ARQUITETURA & MODELAGEM".into(), skill_arch),
+                ("design".into(), "DESIGN & CLEAN CODE".into(), skill_design),
+                ("sec".into(), "SEGURANÇA & QUALITY GATES".into(), skill_sec),
+                ("testing".into(), "TESTES & DIAGNÓSTICO".into(), skill_test),
+                ("proc".into(), "PROCESSOS & FLUXOS".into(), skill_proc),
+                ("general".into(), "DEMAIS HABILIDADES DE IA".into(), skill_gen),
+            ]);
         }
 
         // 3. Scan Zen spaces
         if let Ok(profiles) = container.browser_adapter.scan_profiles(&config) {
+            let mut spaces = Vec::new();
             for prof in profiles {
                 for space in prof.spaces {
-                    tui_app.zen_spaces.push(TuiItem {
+                    spaces.push(TuiItem {
                         id: space.id.clone(),
                         name: format!("{} ({})", space.name, prof.id.as_str()),
-                        details: format!("{} abas abertas", space.open_tabs_count),
+                        details: format!("{} abas ativas", space.open_tabs_count),
                         included: true,
                     });
                 }
             }
+            tui_app.zen_spaces = TuiApp::group_into_rows(vec![
+                ("spaces".into(), "WORKSPACES & ESPAÇOS DO NAVEGADOR".into(), spaces),
+            ]);
         }
 
         // 4. Initial custom dirs from CLI flags

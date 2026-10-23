@@ -45,6 +45,13 @@ pub enum PackageCategory {
     CompositorPlumbing,
     SystemOther,
 
+    // Dependency Scope (Installed indirectly as dependencies)
+    CoreLibrary,
+    GraphicsMediaLib,
+    LanguageRuntimeLib,
+    ToolchainBuildLib,
+    GeneralDependency,
+
     #[default]
     Other,
 }
@@ -65,7 +72,81 @@ impl PackageCategory {
             Self::FileSystems => "Sistemas de Arquivos",
             Self::CompositorPlumbing => "Compositor & Display",
             Self::SystemOther => "Sistema Low-Level",
+            Self::CoreLibrary => "Bibliotecas Core C/C++",
+            Self::GraphicsMediaLib => "Gráficos & Multimídia",
+            Self::LanguageRuntimeLib => "Linguagens & Runtimes",
+            Self::ToolchainBuildLib => "Compiladores & Build Tools",
+            Self::GeneralDependency => "Dependências Gerais",
             Self::Other => "Geral",
+        }
+    }
+
+    /// Classifies a dependency package name into a PackageCategory
+    pub fn classify_dependency(name: &str) -> PackageCategory {
+        let n = name.to_lowercase();
+        if n.starts_with("python")
+            || n.starts_with("perl")
+            || n.starts_with("ruby")
+            || n.starts_with("lua")
+            || n.contains("dotnet")
+        {
+            PackageCategory::LanguageRuntimeLib
+        } else if n.contains("ffmpeg")
+            || n.contains("gstreamer")
+            || n.contains("gst-")
+            || n.contains("libx")
+            || n.contains("wayland")
+            || n.contains("vulkan")
+            || n.contains("mesa")
+            || n.contains("cairo")
+            || n.contains("pango")
+            || n.contains("pipewire")
+            || n.contains("alsa")
+            || n.contains("font")
+            || n.contains("codec")
+            || n.contains("aom")
+            || n.contains("dav1d")
+            || n.contains("harfbuzz")
+            || n.contains("pixman")
+        {
+            PackageCategory::GraphicsMediaLib
+        } else if n.contains("gcc")
+            || n.contains("llvm")
+            || n.contains("clang")
+            || n.contains("binutils")
+            || n.contains("cmake")
+            || n.contains("make")
+            || n.contains("patch")
+            || n.contains("pkgconf")
+            || n.contains("bison")
+            || n.contains("flex")
+            || n.contains("m4")
+            || n.contains("autoconf")
+            || n.contains("automake")
+        {
+            PackageCategory::ToolchainBuildLib
+        } else if n.starts_with("lib")
+            || n.contains("glibc")
+            || n.contains("ssl")
+            || n.contains("xml")
+            || n.contains("icu")
+            || n.contains("zlib")
+            || n.contains("pcre")
+            || n.contains("sqlite")
+            || n.contains("curl")
+            || n.contains("ffi")
+            || n.contains("dbus")
+            || n.contains("json")
+            || n.contains("readline")
+            || n.contains("archive")
+            || n.contains("zstd")
+            || n.contains("acl")
+            || n.contains("attr")
+            || n.contains("audit")
+        {
+            PackageCategory::CoreLibrary
+        } else {
+            PackageCategory::GeneralDependency
         }
     }
 
@@ -307,6 +388,7 @@ pub struct PackageEntry {
     pub source: PackageSource,
     pub scope: PackageScope,
     pub category: PackageCategory,
+    pub is_dependency: bool,
     pub version: Option<String>,
     pub description: Option<String>,
 }
@@ -322,6 +404,7 @@ impl PackageEntry {
             source,
             scope,
             category,
+            is_dependency: false,
             version: None,
             description: None,
         }
@@ -329,6 +412,11 @@ impl PackageEntry {
 
     pub fn with_category(mut self, category: PackageCategory) -> Self {
         self.category = category;
+        self
+    }
+
+    pub fn as_dependency(mut self, is_dep: bool) -> Self {
+        self.is_dependency = is_dep;
         self
     }
 

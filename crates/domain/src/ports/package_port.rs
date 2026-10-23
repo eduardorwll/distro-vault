@@ -11,6 +11,11 @@ pub trait PackagePort: Send + Sync {
     /// Queries explicitly installed packages for this backend
     fn query_installed(&self) -> Result<Vec<PackageEntry>, DomainError>;
 
+    /// Queries packages installed as dependencies (not directly installed by the user)
+    fn query_dependencies(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        Ok(Vec::new())
+    }
+
     /// Installs a batch of packages
     fn install_batch(
         &self,

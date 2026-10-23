@@ -32,15 +32,26 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso | 32 Testes Passando
 - [x] Rota padrão para backups: `~/Antigravity/backups/distro-vault-<timestamp>.tar.zst`.
 
 ### Fase 6: TUI Interativa com Ratatui (`crates/adapter-cli/src/tui/`)
-- [x] Interface de terminal a 60 FPS com 6 abas navegáveis, categorizando pacotes do sistema vs. usuário:
-  - `[1] Apps & Usuário`: softwares instalados pelo usuário (apps desktop como Discord, navegadores, ferramentas CLI como ripgrep/bat, runtimes dev como Docker, Flatpaks).
-  - `[2] Sistema Low-Level`: pacotes essenciais do sistema operacional (Kernel & Firmware, Base & Boot, Drivers & GPU, Filesystems como Btrfs, Rede & Daemons).
-  - `[3] Skills`: skills de IA e governança de agentes (`~/.agents/skills`).
-  - `[4] Apps`: aplicativos AppImage e Gear Lever.
-  - `[5] Pastas Extras`: listagem e modal interativo (`A`) para adicionar pastas customizadas com cálculo dinâmico de arquivos e MB.
-  - `[6] Zen Spaces`: visualização de workspaces e abas ativas do Zen Browser.
-- [x] Categorizador Heurístico no Domínio ([`PackageCategory`](file:///home/eduardorwll/Projects/distro-vault/crates/domain/src/entities/package.rs)): classificação automática por nome, grupo e gerenciador (`DesktopApp`, `CliTool`, `Development`, `FontsThemes`, `KernelFirmware`, `BaseBoot`, `DriversHardware`, `AudioVideoStack`, `NetworkDaemons`, `FileSystems`, `CompositorPlumbing`).
-- [x] Teclas de navegação: `[Tab]` para alternar aba, `[↑/↓]` para navegar, `[Espaço]` para alternar inclusão/exclusão, `[A]` para adicionar pasta, `[Enter/F10]` para iniciar snapshot, `[Q/Esc]` para sair.
+- [x] Interface de terminal a 60 FPS com 7 abas navegáveis, categorizando pacotes do sistema vs. usuário vs. dependências:
+  - `[1] Apps & Usuário`: softwares instalados explicitamente pelo usuário (apps desktop como Discord, navegadores, ferramentas CLI como ripgrep/bat, runtimes dev como Docker, Flatpaks).
+  - `[2] Sistema Low-Level`: pacotes essenciais do sistema operacional (Kernel & Firmware, Base & Boot, Drivers & GPU, Filesystems como Btrfs, Rede & Daemons, Audio/Video core).
+  - `[3] Dependências`: dependências do sistema e de bibliotecas não instaladas diretamente pelo usuário (`pacman -Qnd` e `pacman -Qmd`), organizadas por headers:
+    - *Bibliotecas Core do Sistema (C/C++)* (glibc, openssl, systemd-libs, etc.)
+    - *Gráficos, Vídeo & Codecs* (mesa, ffmpeg, wayland, etc.)
+    - *Runtimes & Linguagens* (python, nodejs, perl, etc.)
+    - *Ferramentas de Build & Toolchain* (cmake, gcc-libs, etc.)
+    - *Dependências Gerais & Utilitários*
+  - `[4] Skills`: skills de IA e governança de agentes (`~/.agents/skills`).
+  - `[5] AppImages`: aplicativos AppImage e Gear Lever.
+  - `[6] Pastas Extras`: listagem e modal interativo (`A`) para adicionar pastas customizadas com cálculo dinâmico de arquivos e MB.
+  - `[7] Zen Spaces`: visualização de workspaces e abas ativas do Zen Browser.
+- [x] **Headers de Categoria com Alternância em Lote:**
+  - Cabeçalhos estilizados delimitando cada categoria em vez de listagem alfabética plana.
+  - Pressionar `[Espaço]` em um cabeçalho alterna em lote todos os itens daquela categoria (se algum estiver desmarcado, marca todos; se todos estiverem marcados, desmarca todos).
+- [x] **Correção do Viewport Scrolling:**
+  - Migração de renderização stateless (`render_widget`) para `render_stateful_widget` utilizando `ListState` para cada uma das 7 abas.
+  - O cursor e a lista acompanham a navegação suavemente ao rolar além do último item visível na tela.
+- [x] Teclas de navegação: `[Tab]` para alternar aba, `[↑/↓]` para navegar, `[Espaço]` para alternar seleção (item ou categoria inteira), `[A]` para adicionar pasta, `[Enter/F10]` para iniciar snapshot, `[Q/Esc]` para sair.
 - [x] Gerenciamento RAII com `TerminalGuard` garantindo restauração automática do terminal mesmo em pânicos ou SIGINT.
 
 ### Governança & Skills dos Livros Oficiais de Rust

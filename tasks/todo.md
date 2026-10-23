@@ -78,12 +78,15 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso (32 testes passando,
 
 ## Fase 6: TUI Interativa com Ratatui (`crates/adapter-cli/src/tui/`)
 - [x] **Task 6.1: Layout de Abas Multi-Menu com Ratatui e Crossterm**
-  - **Status:** Concluído. Interface de terminal interativa a 60 FPS com 5 abas (`[Tab]` para alternar, `[↑/↓]` para navegar, `[Espaço]` para excluir/incluir):
-    - Tab 1: 📦 Pacotes (Nativos, AUR, Flatpaks)
-    - Tab 2: 🤖 Skills & Agentes (~/.agents/skills)
-    - Tab 3: 🚀 AppImages (Binários e Gear Lever)
-    - Tab 4: 📁 Pastas Extras do Usuário (Modal `A` para adicionar caminhos arbitrários)
-    - Tab 5: 🌐 Zen Browser Spaces (Workspaces e abas ativas)
+  - **Status:** Concluído. Interface de terminal interativa a 60 FPS com 7 abas organizadas com cabeçalhos de categoria e rolagem dinâmica via `ListState` (`[Tab]` para alternar, `[↑/↓]` para navegar, `[Espaço]` para alternar item ou categoria em lote):
+    - Tab 1: 🖥️ Apps & Usuário (Softwares instalados explicitamente pelo usuário)
+    - Tab 2: ⚙️ Sistema Low-Level (Kernel, Firmware, Drivers, Boot, Rede, Daemons, Filesystems)
+    - Tab 3: 📦 Dependências (Bibliotecas C/C++, Codecs/Gráficos, Runtimes, Toolchains e libs auxiliares)
+    - Tab 4: 🤖 Skills & Agentes (~/.agents/skills)
+    - Tab 5: 🚀 AppImages (Binários e Gear Lever)
+    - Tab 6: 📁 Pastas Extras do Usuário (Modal `A` para adicionar caminhos arbitrários)
+    - Tab 7: 🌐 Zen Browser Spaces (Workspaces e abas ativas)
+  - **Status Scroll & Navegação:** Viewport stateful com rastreamento de cursor ativo e seleção em lote via cabeçalhos.
   - **Arquivos:**
     - `crates/adapter-cli/src/tui/app.rs`
     - `crates/adapter-cli/src/tui/ui.rs`

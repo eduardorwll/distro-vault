@@ -1,6 +1,6 @@
 use std::process::Command;
 
-use domain::entities::package::{PackageCategory, PackageSource};
+use domain::entities::package::{PackageCategory, PackageScope, PackageSource};
 use domain::entities::PackageEntry;
 use domain::errors::DomainError;
 use domain::ports::PackagePort;
@@ -97,6 +97,39 @@ impl PackagePort for PacmanAdapter {
             Err(_) => Ok(false),
         }
     }
+
+    fn query_dependencies(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        let output = Command::new("pacman")
+            .args(["-Qnd"])
+            .output()
+            .map_err(|e| DomainError::PackageError {
+                message: format!("Failed to run pacman -Qnd: {}", e),
+            })?;
+
+        if !output.status.success() {
+            return Ok(Vec::new());
+        }
+
+        let mut list = Vec::new();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if let Some(&name_str) = parts.first() {
+                if let Ok(pkg_name) = PackageName::new(name_str) {
+                    let category = PackageCategory::classify_dependency(name_str);
+                    let mut entry = PackageEntry::new(pkg_name, PackageSource::PacmanNative, PackageScope::System)
+                        .with_category(category)
+                        .as_dependency(true);
+                    if let Some(&ver) = parts.get(1) {
+                        entry = entry.with_version(ver);
+                    }
+                    list.push(entry);
+                }
+            }
+        }
+
+        Ok(list)
+    }
 }
 
 /// Adapter for AUR packages (paru or yay)
@@ -165,6 +198,39 @@ impl PackagePort for AurAdapter {
                     let (scope, category) = PackageCategory::classify(name_str, PackageSource::Aur);
                     let mut entry = PackageEntry::new(pkg_name, PackageSource::Aur, scope)
                         .with_category(category);
+                    if let Some(&ver) = parts.get(1) {
+                        entry = entry.with_version(ver);
+                    }
+                    list.push(entry);
+                }
+            }
+        }
+
+        Ok(list)
+    }
+
+    fn query_dependencies(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        let output = Command::new("pacman")
+            .args(["-Qmd"])
+            .output()
+            .map_err(|e| DomainError::PackageError {
+                message: format!("Failed to run pacman -Qmd: {}", e),
+            })?;
+
+        if !output.status.success() {
+            return Ok(Vec::new());
+        }
+
+        let mut list = Vec::new();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if let Some(&name_str) = parts.first() {
+                if let Ok(pkg_name) = PackageName::new(name_str) {
+                    let category = PackageCategory::classify_dependency(name_str);
+                    let mut entry = PackageEntry::new(pkg_name, PackageSource::Aur, PackageScope::User)
+                        .with_category(category)
+                        .as_dependency(true);
                     if let Some(&ver) = parts.get(1) {
                         entry = entry.with_version(ver);
                     }

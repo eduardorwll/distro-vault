@@ -1,4 +1,5 @@
 use std::path::PathBuf;
+use ratatui::widgets::ListState;
 
 use adapter_storage::CustomDirsHandler;
 use domain::entities::custom_directory::CustomDirectoryEntry;
@@ -13,15 +14,50 @@ pub struct TuiItem {
     pub included: bool,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum TuiRow {
+    Header {
+        category_id: String,
+        title: String,
+        count: usize,
+    },
+    Item {
+        category_id: String,
+        item: TuiItem,
+    },
+}
+
+impl TuiRow {
+    pub fn is_header(&self) -> bool {
+        matches!(self, Self::Header { .. })
+    }
+
+    pub fn item(&self) -> Option<&TuiItem> {
+        match self {
+            Self::Item { item, .. } => Some(item),
+            _ => None,
+        }
+    }
+
+    pub fn item_mut(&mut self) -> Option<&mut TuiItem> {
+        match self {
+            Self::Item { item, .. } => Some(item),
+            _ => None,
+        }
+    }
+}
+
 pub struct TuiApp {
     pub current_tab: usize,
-    pub user_packages: Vec<TuiItem>,
-    pub system_packages: Vec<TuiItem>,
-    pub skills: Vec<TuiItem>,
-    pub appimages: Vec<TuiItem>,
+    pub user_packages: Vec<TuiRow>,
+    pub system_packages: Vec<TuiRow>,
+    pub dependency_packages: Vec<TuiRow>,
+    pub skills: Vec<TuiRow>,
+    pub appimages: Vec<TuiRow>,
     pub custom_dirs: Vec<CustomDirectoryEntry>,
-    pub zen_spaces: Vec<TuiItem>,
-    pub cursors: [usize; 6],
+    pub zen_spaces: Vec<TuiRow>,
+    pub cursors: [usize; 7],
+    pub list_states: [ListState; 7],
     pub input_mode: bool,
     pub input_buffer: String,
     pub status_message: Option<String>,
@@ -35,11 +71,21 @@ impl TuiApp {
             current_tab: 0,
             user_packages: Vec::new(),
             system_packages: Vec::new(),
+            dependency_packages: Vec::new(),
             skills: Vec::new(),
             appimages: Vec::new(),
             custom_dirs: Vec::new(),
             zen_spaces: Vec::new(),
-            cursors: [0; 6],
+            cursors: [0; 7],
+            list_states: [
+                ListState::default(),
+                ListState::default(),
+                ListState::default(),
+                ListState::default(),
+                ListState::default(),
+                ListState::default(),
+                ListState::default(),
+            ],
             input_mode: false,
             input_buffer: String::new(),
             status_message: None,
@@ -49,12 +95,12 @@ impl TuiApp {
     }
 
     pub fn next_tab(&mut self) {
-        self.current_tab = (self.current_tab + 1) % 6;
+        self.current_tab = (self.current_tab + 1) % 7;
     }
 
     pub fn prev_tab(&mut self) {
         if self.current_tab == 0 {
-            self.current_tab = 5;
+            self.current_tab = 6;
         } else {
             self.current_tab -= 1;
         }
@@ -64,10 +110,25 @@ impl TuiApp {
         match self.current_tab {
             0 => self.user_packages.len(),
             1 => self.system_packages.len(),
-            2 => self.skills.len(),
-            3 => self.appimages.len(),
-            4 => self.custom_dirs.len(),
-            5 => self.zen_spaces.len(),
+            2 => self.dependency_packages.len(),
+            3 => self.skills.len(),
+            4 => self.appimages.len(),
+            5 => self.custom_dirs.len(),
+            6 => self.zen_spaces.len(),
+            _ => 0,
+        }
+    }
+
+    pub fn count_items(&self, tab_idx: usize) -> usize {
+        let count_rows = |rows: &[TuiRow]| rows.iter().filter(|r| !r.is_header()).count();
+        match tab_idx {
+            0 => count_rows(&self.user_packages),
+            1 => count_rows(&self.system_packages),
+            2 => count_rows(&self.dependency_packages),
+            3 => count_rows(&self.skills),
+            4 => count_rows(&self.appimages),
+            5 => self.custom_dirs.len(),
+            6 => count_rows(&self.zen_spaces),
             _ => 0,
         }
     }
@@ -77,6 +138,7 @@ impl TuiApp {
         if len > 0 {
             let cursor = &mut self.cursors[self.current_tab];
             *cursor = (*cursor + 1).min(len - 1);
+            self.list_states[self.current_tab].select(Some(*cursor));
         }
     }
 
@@ -84,46 +146,55 @@ impl TuiApp {
         let cursor = &mut self.cursors[self.current_tab];
         if *cursor > 0 {
             *cursor -= 1;
+            self.list_states[self.current_tab].select(Some(*cursor));
         }
     }
 
     pub fn toggle_selected(&mut self) {
         let idx = self.cursors[self.current_tab];
-        match self.current_tab {
-            0 => {
-                if let Some(item) = self.user_packages.get_mut(idx) {
-                    item.included = !item.included;
-                }
-            }
-            1 => {
-                if let Some(item) = self.system_packages.get_mut(idx) {
-                    item.included = !item.included;
-                }
-            }
-            2 => {
-                if let Some(item) = self.skills.get_mut(idx) {
-                    item.included = !item.included;
-                }
-            }
-            3 => {
-                if let Some(item) = self.appimages.get_mut(idx) {
-                    item.included = !item.included;
-                }
-            }
-            4 => {
-                // If on custom dirs tab, pressing space removes the selected custom dir
-                if idx < self.custom_dirs.len() {
-                    self.custom_dirs.remove(idx);
-                    if self.cursors[4] > 0 && self.cursors[4] >= self.custom_dirs.len() {
-                        self.cursors[4] -= 1;
+        let toggle_in_rows = |rows: &mut Vec<TuiRow>| {
+            if let Some(row) = rows.get(idx) {
+                match row {
+                    TuiRow::Item { .. } => {
+                        if let Some(TuiRow::Item { item, .. }) = rows.get_mut(idx) {
+                            item.included = !item.included;
+                        }
+                    }
+                    TuiRow::Header { category_id, .. } => {
+                        let cat = category_id.clone();
+                        let any_included = rows.iter().any(|r| match r {
+                            TuiRow::Item { category_id: c, item } if c == &cat => item.included,
+                            _ => false,
+                        });
+                        let new_state = !any_included;
+                        for r in rows.iter_mut() {
+                            if let TuiRow::Item { category_id: c, item } = r {
+                                if c == &cat {
+                                    item.included = new_state;
+                                }
+                            }
+                        }
                     }
                 }
             }
+        };
+
+        match self.current_tab {
+            0 => toggle_in_rows(&mut self.user_packages),
+            1 => toggle_in_rows(&mut self.system_packages),
+            2 => toggle_in_rows(&mut self.dependency_packages),
+            3 => toggle_in_rows(&mut self.skills),
+            4 => toggle_in_rows(&mut self.appimages),
             5 => {
-                if let Some(item) = self.zen_spaces.get_mut(idx) {
-                    item.included = !item.included;
+                if idx < self.custom_dirs.len() {
+                    self.custom_dirs.remove(idx);
+                    if self.cursors[5] > 0 && self.cursors[5] >= self.custom_dirs.len() {
+                        self.cursors[5] -= 1;
+                    }
+                    self.list_states[5].select(Some(self.cursors[5]));
                 }
             }
+            6 => toggle_in_rows(&mut self.zen_spaces),
             _ => {}
         }
     }
@@ -141,41 +212,68 @@ impl TuiApp {
     pub fn build_selection_filter(&self) -> SelectionFilter {
         let mut filter = SelectionFilter::new();
 
-        for pkg in &self.user_packages {
-            if !pkg.included {
-                if let Ok(name) = PackageName::new(&pkg.id) {
-                    filter.toggle_package(name);
+        let scan_packages = |rows: &[TuiRow], filt: &mut SelectionFilter| {
+            for row in rows {
+                if let TuiRow::Item { item, .. } = row {
+                    if !item.included {
+                        if let Ok(name) = PackageName::new(&item.id) {
+                            filt.toggle_package(name);
+                        }
+                    }
+                }
+            }
+        };
+
+        scan_packages(&self.user_packages, &mut filter);
+        scan_packages(&self.system_packages, &mut filter);
+        scan_packages(&self.dependency_packages, &mut filter);
+
+        for row in &self.skills {
+            if let TuiRow::Item { item, .. } = row {
+                if !item.included {
+                    filter.toggle_skill(item.id.clone());
                 }
             }
         }
 
-        for pkg in &self.system_packages {
-            if !pkg.included {
-                if let Ok(name) = PackageName::new(&pkg.id) {
-                    filter.toggle_package(name);
+        for row in &self.appimages {
+            if let TuiRow::Item { item, .. } = row {
+                if !item.included {
+                    filter.toggle_appimage(item.id.clone());
                 }
             }
         }
 
-        for skill in &self.skills {
-            if !skill.included {
-                filter.toggle_skill(skill.id.clone());
-            }
-        }
-
-        for app in &self.appimages {
-            if !app.included {
-                filter.toggle_appimage(app.id.clone());
-            }
-        }
-
-        for space in &self.zen_spaces {
-            if !space.included {
-                filter.toggle_space(space.id.clone());
+        for row in &self.zen_spaces {
+            if let TuiRow::Item { item, .. } = row {
+                if !item.included {
+                    filter.toggle_space(item.id.clone());
+                }
             }
         }
 
         filter
+    }
+
+    pub fn group_into_rows(groups: Vec<(String, String, Vec<TuiItem>)>) -> Vec<TuiRow> {
+        let mut rows = Vec::new();
+        for (cat_id, cat_title, items) in groups {
+            if items.is_empty() {
+                continue;
+            }
+            rows.push(TuiRow::Header {
+                category_id: cat_id.clone(),
+                title: cat_title,
+                count: items.len(),
+            });
+            for item in items {
+                rows.push(TuiRow::Item {
+                    category_id: cat_id.clone(),
+                    item,
+                });
+            }
+        }
+        rows
     }
 }
 
