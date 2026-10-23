@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::entities::agent_governance::AgentGovernance;
 use crate::entities::appimage::AppImageEntry;
+use crate::entities::custom_directory::CustomDirectoryEntry;
 use crate::entities::package::PackageEntry;
 use crate::entities::zen_profile::ZenProfile;
 use crate::value_objects::{Checksum, DistroFamily};
@@ -17,6 +18,7 @@ pub struct Manifest {
     pub zen_profiles: Vec<ZenProfile>,
     pub packages: Vec<PackageEntry>,
     pub appimages: Vec<AppImageEntry>,
+    pub custom_directories: Vec<CustomDirectoryEntry>,
     pub agent_governance: AgentGovernance,
     pub checksum: Option<Checksum>,
     pub total_files: usize,
@@ -40,6 +42,7 @@ impl Manifest {
             zen_profiles: Vec::new(),
             packages: Vec::new(),
             appimages: Vec::new(),
+            custom_directories: Vec::new(),
             agent_governance,
             checksum: None,
             total_files: 0,

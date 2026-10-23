@@ -1,9 +1,9 @@
 use std::path::PathBuf;
 
 use domain::{
-    AgentGovernance, AppImageEntry, Checksum, Container, DistroFamily, Manifest, PackageEntry,
-    PackageName, PackageScope, PackageSource, ProfileId, RuleEntry, SkillCategory, SkillEntry,
-    Space, UnixMode, ZenProfile,
+    AgentGovernance, AppImageEntry, Checksum, Container, CustomDirectoryEntry, DistroFamily,
+    Manifest, PackageEntry, PackageName, PackageScope, PackageSource, ProfileId, RuleEntry,
+    SelectionFilter, SkillCategory, SkillEntry, Space, UnixMode, ZenProfile,
 };
 
 #[test]
@@ -133,6 +133,43 @@ fn test_agent_governance_and_skills() {
 }
 
 #[test]
+fn test_selection_filter_exclusions() {
+    let mut filter = SelectionFilter::new();
+    let pkg1 = PackageName::new("ripgrep").unwrap();
+    let pkg2 = PackageName::new("bloat-package").unwrap();
+
+    assert!(filter.is_package_included(&pkg1));
+    assert!(filter.is_package_included(&pkg2));
+
+    filter.toggle_package(pkg2.clone());
+    assert!(filter.is_package_included(&pkg1));
+    assert!(!filter.is_package_included(&pkg2));
+
+    // Toggle back
+    filter.toggle_package(pkg2.clone());
+    assert!(filter.is_package_included(&pkg2));
+
+    // Test skills exclusion
+    assert!(filter.is_skill_included("clean-architecture"));
+    filter.toggle_skill("clean-architecture".to_string());
+    assert!(!filter.is_skill_included("clean-architecture"));
+}
+
+#[test]
+fn test_custom_directory_entry() {
+    let entry = CustomDirectoryEntry::new(
+        PathBuf::from("/home/user/Documents/secret-notes"),
+        PathBuf::from("custom/secret-notes"),
+        "Secret Notes",
+    )
+    .with_stats(1024 * 50, 12);
+
+    assert_eq!(entry.label, "Secret Notes");
+    assert_eq!(entry.size_bytes, 1024 * 50);
+    assert_eq!(entry.file_count, 12);
+}
+
+#[test]
 fn test_manifest_roundtrip_serialization() {
     let gov = AgentGovernance::new("~/Antigravity/");
     let mut manifest = Manifest::new(
@@ -156,6 +193,12 @@ fn test_manifest_roundtrip_serialization() {
         UnixMode::EXECUTABLE_FILE,
     ));
 
+    manifest.custom_directories.push(CustomDirectoryEntry::new(
+        PathBuf::from("/home/user/custom-dir"),
+        PathBuf::from("custom/custom-dir"),
+        "Meus Estudos",
+    ));
+
     let json = serde_json::to_string_pretty(&manifest).expect("serialize manifest");
     let deserialized: Manifest = serde_json::from_str(&json).expect("deserialize manifest");
 
@@ -163,4 +206,6 @@ fn test_manifest_roundtrip_serialization() {
     assert_eq!(manifest.source_distro, deserialized.source_distro);
     assert_eq!(deserialized.packages.len(), 1);
     assert_eq!(deserialized.appimages.len(), 1);
+    assert_eq!(deserialized.custom_directories.len(), 1);
+    assert_eq!(deserialized.custom_directories[0].label, "Meus Estudos");
 }

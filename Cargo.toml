@@ -45,10 +45,12 @@ tempfile = "3.10"
 # Database & Profiling
 rusqlite = { version = "0.31", features = ["bundled"] }
 
-# CLI & Presentation
+# CLI & TUI Interface
 clap = { version = "4.5", features = ["derive", "cargo", "env"] }
 indicatif = { version = "0.17", features = ["rayon"] }
 console = "0.15"
+ratatui = "0.30"
+crossterm = "0.29"
 
 # Testing & Mocking
 mockall = "0.12"
