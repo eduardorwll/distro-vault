@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Todas as Fases (1 a 9) Concluídas com Sucesso (38 testes passando, 0 warnings no Clippy) | TUI Ratatui e CLI Prontos para Homologação
+Status: 🟢 Todas as Fases (1 a 10) Concluídas com Sucesso (38 testes passando, 0 warnings no Clippy) | Release v0.3.0 Pronta e Publicada
 
 ---
 
@@ -140,3 +140,18 @@ Status: 🟢 Todas as Fases (1 a 9) Concluídas com Sucesso (38 testes passando,
 - [x] **Task 9.4: Renderização Visual do Modal de Exploração (`render_file_explorer`)**
   - **Status:** Concluído. Renderização limpa em Ratatui com cabeçalho de caminho atual, ícones contextuais (`📁`, `📦`), badges de tamanho em MB, highlight de cursor ativo e rodapé informativo de navegação.
   - **Arquivos:** `crates/adapter-cli/src/tui/ui.rs`
+
+---
+
+## Fase 10: Publicação da Release v0.3.0
+- [x] **Task 10.1: Elevação de Versão no Workspace**
+  - **Status:** Concluído. `version = "0.3.0"` definido no `Cargo.toml` raiz e sincronizado em `Cargo.lock` para todos os 7 crates internos.
+  - **Verificação:** `cargo check --workspace`
+  - **Arquivos:** `Cargo.toml`, `Cargo.lock`
+- [x] **Task 10.2: Compilação de Release Otimizada e Sincronização de Binários**
+  - **Status:** Concluído. Binários compilados via `cargo build --release` e sincronizados em `bin/distro-vault` e `~/distro-vault`. Verificado com `--version`.
+  - **Arquivos:** `bin/distro-vault`, `~/distro-vault`
+- [x] **Task 10.3: Documentação Viva e Registros de Arquitetura**
+  - **Status:** Concluído. `tasks/todo.md` e `estado_atual.md` sincronizados.
+- [x] **Task 10.4: Commit de Release e Tag Git v0.3.0**
+  - **Status:** Concluído. Commit anotado e tag `v0.3.0` criados e enviados para o GitHub via SSH.

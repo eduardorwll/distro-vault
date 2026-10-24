@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
 Data: 24 de Outubro de 2026
-Status: 🟢 Todas as Fases (1 a 9) Concluídas com Sucesso | 38 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui Homologados com Suporte a SSH, Transcrição Cross-Distro e Explorador de Arquivos/Pastas Unificado
+Status: 🟢 Versão 0.3.0 Publicada | Todas as Fases (1 a 10) Concluídas com Sucesso | 38 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui Homologados com Suporte a SSH, Transcrição Cross-Distro e Explorador de Arquivos/Pastas Unificado
 
 ---
 
