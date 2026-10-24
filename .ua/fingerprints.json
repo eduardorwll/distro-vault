@@ -1,0 +1,5450 @@
+{
+  "version": "1.0.0",
+  "gitCommitHash": "2e02150b9bf36133b212be10782335ac4395940b",
+  "generatedAt": "2026-10-24T00:06:46.491Z",
+  "files": {
+    ".ignore": {
+      "filePath": ".ignore",
+      "contentHash": "5b345696ac9daf0b07ce5b9c56d5ec914815e395286f4c9f9ac3ec8ec83bf507",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 6,
+      "hasStructuralAnalysis": false
+    },
+    "AGENTS.md": {
+      "filePath": "AGENTS.md",
+      "contentHash": "313df7e26002b61e082f400830cf88c5a283ef8532743d6d1398b10e017ad350",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 108,
+      "hasStructuralAnalysis": false
+    },
+    "Cargo.toml": {
+      "filePath": "Cargo.toml",
+      "contentHash": "1b14f787dba1c4ad08360f98998b411f18c3b8f8fff67ff7f1c4589113841729",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 58,
+      "hasStructuralAnalysis": false
+    },
+    "GEMINI.md": {
+      "filePath": "GEMINI.md",
+      "contentHash": "2c05f8f84133cf59f3024f351f5a313a3c47693ea40533226f86f3dd6f0f6a83",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 74,
+      "hasStructuralAnalysis": false
+    },
+    "README.md": {
+      "filePath": "README.md",
+      "contentHash": "821aa838e676c1869d88eec96f472674b76b04d5b322269201b8a3131b5f3e14",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 50,
+      "hasStructuralAnalysis": false
+    },
+    "crates/adapter-agents/Cargo.toml": {
+      "filePath": "crates/adapter-agents/Cargo.toml",
+      "contentHash": "59e21498d9627cde3b40d28c2199cadd8221c4b36924fcda26b5ee1a4d0a1427",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 17,
+      "hasStructuralAnalysis": false
+    },
+    "crates/adapter-agents/src/lib.rs": {
+      "filePath": "crates/adapter-agents/src/lib.rs",
+      "contentHash": "3a69fa0a75595ff474c6e16128d7be2fdf599c5487db589c1c966263709bccf1",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "LocalAgentAdapter",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "scan_governance",
+          "owner": null,
+          "params": [
+            "user_home"
+          ],
+          "returnType": "Result<AgentGovernance, DomainError>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "export_governance",
+          "owner": null,
+          "params": [
+            "governance",
+            "dest_dir",
+            "dereference_symlinks"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 35
+        },
+        {
+          "name": "restore_governance",
+          "owner": null,
+          "params": [
+            "source_dir",
+            "target_home"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 7
+        }
+      ],
+      "classes": [
+        {
+          "name": "LocalAgentAdapter",
+          "methods": [
+            "new",
+            "scan_governance",
+            "export_governance",
+            "restore_governance"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "domain::entities",
+          "specifiers": [
+            "AgentGovernance"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "AgentPort"
+          ]
+        },
+        {
+          "source": "scanner",
+          "specifiers": [
+            "AgentScanner"
+          ]
+        }
+      ],
+      "exports": [
+        "LocalAgentAdapter",
+        "new"
+      ],
+      "totalLines": 70,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-agents/src/scanner.rs": {
+      "filePath": "crates/adapter-agents/src/scanner.rs",
+      "contentHash": "42c2c0e19696d17802533ef748110a3222b3e5027ec00099f91546e2db706a1c",
+      "functions": [
+        {
+          "name": "scan",
+          "owner": "AgentScanner",
+          "params": [
+            "user_home"
+          ],
+          "returnType": "Result<AgentGovernance, DomainError>",
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "scan_rules",
+          "owner": "AgentScanner",
+          "params": [
+            "user_home"
+          ],
+          "returnType": "Result<Vec<RuleEntry>, DomainError>",
+          "exported": true,
+          "lineCount": 45
+        },
+        {
+          "name": "scan_skills",
+          "owner": "AgentScanner",
+          "params": [
+            "user_home"
+          ],
+          "returnType": "Result<Vec<SkillEntry>, DomainError>",
+          "exported": true,
+          "lineCount": 60
+        },
+        {
+          "name": "extract_skill_description",
+          "owner": "AgentScanner",
+          "params": [
+            "skill_md_path"
+          ],
+          "returnType": "Option<String>",
+          "exported": false,
+          "lineCount": 19
+        },
+        {
+          "name": "copy_dereferenced",
+          "owner": "AgentScanner",
+          "params": [
+            "src",
+            "dst"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": true,
+          "lineCount": 55
+        }
+      ],
+      "classes": [
+        {
+          "name": "AgentScanner",
+          "methods": [
+            "scan",
+            "scan_rules",
+            "scan_skills",
+            "extract_skill_description",
+            "copy_dereferenced"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path",
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "walkdir",
+          "specifiers": [
+            "WalkDir"
+          ]
+        },
+        {
+          "source": "domain::entities::agent_governance",
+          "specifiers": [
+            "AgentGovernance",
+            "RuleEntry",
+            "SkillEntry"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "SkillCategory"
+          ]
+        }
+      ],
+      "exports": [
+        "AgentScanner",
+        "scan",
+        "scan_rules",
+        "scan_skills",
+        "copy_dereferenced"
+      ],
+      "totalLines": 215,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-agents/tests/agent_tests.rs": {
+      "filePath": "crates/adapter-agents/tests/agent_tests.rs",
+      "contentHash": "a7125c31d4625dc88567f394274e448327e8408125ece3f536989b9681af61dd",
+      "functions": [
+        {
+          "name": "test_agent_scanner_reads_rules_and_frontmatter",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 38
+        },
+        {
+          "name": "test_agent_symlink_dereferencing",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 35
+        },
+        {
+          "name": "test_real_system_agent_scanning",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 11
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempdir"
+          ]
+        },
+        {
+          "source": "adapter_agents",
+          "specifiers": [
+            "LocalAgentAdapter"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "AgentPort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "SkillCategory"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 99,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-browser/Cargo.toml": {
+      "filePath": "crates/adapter-browser/Cargo.toml",
+      "contentHash": "a2bb84e8c7969298edd7caeeda54aa247349f49656c46f1157f5652e695729e6",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 19,
+      "hasStructuralAnalysis": false
+    },
+    "crates/adapter-browser/src/lib.rs": {
+      "filePath": "crates/adapter-browser/src/lib.rs",
+      "contentHash": "f87352e59a4948488b58b4bbfb7d245a2ebc7a34b50809555f1352b9b2324cd5",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "ZenBrowserAdapter",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "parse_session_metadata",
+          "owner": "ZenBrowserAdapter",
+          "params": [
+            "json_content",
+            "compressed_size"
+          ],
+          "returnType": "(Vec<Space>, Vec<Container>, Option<SessionInfo>)",
+          "exported": false,
+          "lineCount": 68
+        },
+        {
+          "name": "copy_profile_recursively",
+          "owner": "ZenBrowserAdapter",
+          "params": [
+            "src",
+            "dst"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 38
+        },
+        {
+          "name": "is_locked",
+          "owner": null,
+          "params": [
+            "profile_root"
+          ],
+          "returnType": "Result<bool, DomainError>",
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "scan_profiles",
+          "owner": null,
+          "params": [
+            "config_root"
+          ],
+          "returnType": "Result<Vec<ZenProfile>, DomainError>",
+          "exported": false,
+          "lineCount": 61
+        },
+        {
+          "name": "decompress_session",
+          "owner": null,
+          "params": [
+            "compressed_bytes"
+          ],
+          "returnType": "Result<String, DomainError>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "compress_session",
+          "owner": null,
+          "params": [
+            "json_payload"
+          ],
+          "returnType": "Result<Vec<u8>, DomainError>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "normalize_installation_hash",
+          "owner": null,
+          "params": [
+            "config_root",
+            "target_profile_id"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "export_profile_state",
+          "owner": null,
+          "params": [
+            "profile",
+            "dest_dir"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "restore_profile_state",
+          "owner": null,
+          "params": [
+            "source_dir",
+            "config_root"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 21
+        }
+      ],
+      "classes": [
+        {
+          "name": "ZenBrowserAdapter",
+          "methods": [
+            "new",
+            "parse_session_metadata",
+            "copy_profile_recursively",
+            "is_locked",
+            "scan_profiles",
+            "decompress_session",
+            "compress_session",
+            "normalize_installation_hash",
+            "export_profile_state",
+            "restore_profile_state"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "domain::entities::zen_profile",
+          "specifiers": [
+            "Container",
+            "SessionInfo",
+            "Space",
+            "ZenProfile"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "BrowserPort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "ProfileId"
+          ]
+        },
+        {
+          "source": "mozlz4",
+          "specifiers": [
+            "MozLz4Codec"
+          ]
+        },
+        {
+          "source": "profile_normalizer",
+          "specifiers": [
+            "mozilla_install_hash",
+            "ProfilesIniNormalizer"
+          ]
+        }
+      ],
+      "exports": [
+        "ZenBrowserAdapter",
+        "new"
+      ],
+      "totalLines": 251,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-browser/src/mozlz4.rs": {
+      "filePath": "crates/adapter-browser/src/mozlz4.rs",
+      "contentHash": "a8295197adce7b17bd4f1665d7fb0f411a7a023c8438d37e1d4e7bd118d59be5",
+      "functions": [
+        {
+          "name": "decompress",
+          "owner": "MozLz4Codec",
+          "params": [
+            "compressed_bytes"
+          ],
+          "returnType": "Result<String, DomainError>",
+          "exported": true,
+          "lineCount": 67
+        },
+        {
+          "name": "compress",
+          "owner": "MozLz4Codec",
+          "params": [
+            "json_payload"
+          ],
+          "returnType": "Result<Vec<u8>, DomainError>",
+          "exported": true,
+          "lineCount": 20
+        }
+      ],
+      "classes": [
+        {
+          "name": "MozLz4Codec",
+          "methods": [
+            "decompress",
+            "compress"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        }
+      ],
+      "exports": [
+        "MozLz4Codec",
+        "decompress",
+        "compress"
+      ],
+      "totalLines": 101,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-browser/src/profile_normalizer.rs": {
+      "filePath": "crates/adapter-browser/src/profile_normalizer.rs",
+      "contentHash": "7d769d71dc6349bc1ba96483931020a7519a63922d45cd83046e21002617a977",
+      "functions": [
+        {
+          "name": "mozilla_install_hash",
+          "owner": "",
+          "params": [
+            "binary_dir_path"
+          ],
+          "returnType": "String",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "fetch64",
+          "owner": "",
+          "params": [
+            "p"
+          ],
+          "returnType": "u64",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "fetch32",
+          "owner": "",
+          "params": [
+            "p"
+          ],
+          "returnType": "u32",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "hash_len_16",
+          "owner": "",
+          "params": [
+            "u",
+            "v"
+          ],
+          "returnType": "u64",
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "hash_len_0_to_16",
+          "owner": "",
+          "params": [
+            "bytes"
+          ],
+          "returnType": "u64",
+          "exported": false,
+          "lineCount": 32
+        },
+        {
+          "name": "hash_len_17_to_32",
+          "owner": "",
+          "params": [
+            "bytes"
+          ],
+          "returnType": "u64",
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "weak_hash_len_32_with_seeds",
+          "owner": "",
+          "params": [
+            "bytes",
+            "a",
+            "b"
+          ],
+          "returnType": "(u64, u64)",
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "cityhash64",
+          "owner": "",
+          "params": [
+            "bytes"
+          ],
+          "returnType": "u64",
+          "exported": false,
+          "lineCount": 63
+        },
+        {
+          "name": "normalize",
+          "owner": "ProfilesIniNormalizer",
+          "params": [
+            "config_root",
+            "target_profile_dir_name"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": true,
+          "lineCount": 28
+        },
+        {
+          "name": "rewrite_profiles_ini",
+          "owner": "ProfilesIniNormalizer",
+          "params": [
+            "content",
+            "target_profile"
+          ],
+          "returnType": "String",
+          "exported": true,
+          "lineCount": 120
+        },
+        {
+          "name": "rewrite_installs_ini",
+          "owner": "ProfilesIniNormalizer",
+          "params": [
+            "content",
+            "target_profile"
+          ],
+          "returnType": "String",
+          "exported": true,
+          "lineCount": 66
+        },
+        {
+          "name": "atomic_write",
+          "owner": "ProfilesIniNormalizer",
+          "params": [
+            "path",
+            "content"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 18
+        }
+      ],
+      "classes": [
+        {
+          "name": "ProfilesIniNormalizer",
+          "methods": [
+            "normalize",
+            "rewrite_profiles_ini",
+            "rewrite_installs_ini",
+            "atomic_write"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        }
+      ],
+      "exports": [
+        "mozilla_install_hash",
+        "ProfilesIniNormalizer",
+        "normalize",
+        "rewrite_profiles_ini",
+        "rewrite_installs_ini"
+      ],
+      "totalLines": 408,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-browser/tests/browser_tests.rs": {
+      "filePath": "crates/adapter-browser/tests/browser_tests.rs",
+      "contentHash": "6a21af8f151b2e37dc70727d27f5714eafcd815798cdf972d7f047aa84ce1a30",
+      "functions": [
+        {
+          "name": "test_mozlz4_roundtrip_valid_payload",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "test_mozlz4_rejects_truncated_payload",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "test_mozlz4_rejects_invalid_magic_header",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 14
+        },
+        {
+          "name": "test_mozlz4_decompression_bomb_guard",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "test_profiles_ini_normalizer_rewriting",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 37
+        },
+        {
+          "name": "test_profiles_ini_normalizer_creates_files_if_missing",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 19
+        },
+        {
+          "name": "test_browser_adapter_scan_and_lock_check",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "test_real_system_zen_sessions_lz4_if_present",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 9
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempdir"
+          ]
+        },
+        {
+          "source": "adapter_browser",
+          "specifiers": [
+            "MozLz4Codec",
+            "ProfilesIniNormalizer",
+            "ZenBrowserAdapter"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "BrowserPort"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 166,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/Cargo.toml": {
+      "filePath": "crates/adapter-cli/Cargo.toml",
+      "contentHash": "08ca0e2e2c56104013313579ae286489af3960a792fba66bdcbecdcc922d3296",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 35,
+      "hasStructuralAnalysis": false
+    },
+    "crates/adapter-cli/src/args.rs": {
+      "filePath": "crates/adapter-cli/src/args.rs",
+      "contentHash": "ed7dc3d5d87c886609282b4dfafeb880ce3584eac65f869bbbf2cb1fa2426813",
+      "functions": [],
+      "classes": [
+        {
+          "name": "Cli",
+          "methods": [],
+          "properties": [
+            "command"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "Commands",
+          "methods": [],
+          "properties": [
+            "Backup",
+            "Restore",
+            "Inspect",
+            "Verify"
+          ],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "BackupArgs",
+          "methods": [],
+          "properties": [
+            "output",
+            "interactive",
+            "exclude_packages",
+            "exclude_skills",
+            "add_dirs",
+            "dry_run",
+            "config_root",
+            "user_home"
+          ],
+          "exported": true,
+          "lineCount": 33
+        },
+        {
+          "name": "RestoreArgs",
+          "methods": [],
+          "properties": [
+            "archive",
+            "install_packages",
+            "dry_run",
+            "target_home",
+            "target_config",
+            "target_custom"
+          ],
+          "exported": true,
+          "lineCount": 24
+        },
+        {
+          "name": "InspectArgs",
+          "methods": [],
+          "properties": [
+            "archive",
+            "json"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "VerifyArgs",
+          "methods": [],
+          "properties": [
+            "archive"
+          ],
+          "exported": true,
+          "lineCount": 4
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "clap",
+          "specifiers": [
+            "Args",
+            "Parser",
+            "Subcommand"
+          ]
+        }
+      ],
+      "exports": [
+        "Cli",
+        "Commands",
+        "BackupArgs",
+        "RestoreArgs",
+        "InspectArgs",
+        "VerifyArgs"
+      ],
+      "totalLines": 107,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/src/di.rs": {
+      "filePath": "crates/adapter-cli/src/di.rs",
+      "contentHash": "429e22627c6418d6bae2e1b05e1bd8a3ff064584022f0455382ce005de0d859b",
+      "functions": [
+        {
+          "name": "bootstrap",
+          "owner": "AppContainer",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 42
+        }
+      ],
+      "classes": [
+        {
+          "name": "AppContainer",
+          "methods": [
+            "bootstrap"
+          ],
+          "properties": [
+            "backup_use_case",
+            "restore_use_case",
+            "inspect_use_case",
+            "verify_use_case",
+            "browser_adapter",
+            "storage_adapter",
+            "agent_adapter",
+            "system_adapter",
+            "package_ports"
+          ],
+          "exported": true,
+          "lineCount": 12
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc"
+          ]
+        },
+        {
+          "source": "adapter_agents",
+          "specifiers": [
+            "LocalAgentAdapter"
+          ]
+        },
+        {
+          "source": "adapter_browser",
+          "specifiers": [
+            "ZenBrowserAdapter"
+          ]
+        },
+        {
+          "source": "adapter_storage",
+          "specifiers": [
+            "ZstdStorageAdapter"
+          ]
+        },
+        {
+          "source": "adapter_system",
+          "specifiers": [
+            "AurAdapter",
+            "FlatpakAdapter",
+            "LinuxSystemAdapter",
+            "PacmanAdapter"
+          ]
+        },
+        {
+          "source": "application",
+          "specifiers": [
+            "BackupPipelineUseCase",
+            "InspectSnapshotUseCase",
+            "RestorePipelineUseCase",
+            "VerifyIntegrityUseCase"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "PackagePort"
+          ]
+        }
+      ],
+      "exports": [
+        "AppContainer",
+        "bootstrap"
+      ],
+      "totalLines": 70,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/src/lib.rs": {
+      "filePath": "crates/adapter-cli/src/lib.rs",
+      "contentHash": "93a74bf2a89577cd0919bc0b4be9b5738857b3a372098a98fb5a5d5b7a30cc74",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 4,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/src/main.rs": {
+      "filePath": "crates/adapter-cli/src/main.rs",
+      "contentHash": "68f9b824157f0a2d65846e3b6b597414519b1d30fcb3c4802dbd2dd065ce2227",
+      "functions": [
+        {
+          "name": "main",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 29
+        },
+        {
+          "name": "handle_backup",
+          "owner": "",
+          "params": [
+            "container",
+            "args"
+          ],
+          "returnType": "Result<(), Box<dyn std::error::Error>>",
+          "exported": false,
+          "lineCount": 234
+        },
+        {
+          "name": "handle_restore",
+          "owner": "",
+          "params": [
+            "container",
+            "args"
+          ],
+          "returnType": "Result<(), Box<dyn std::error::Error>>",
+          "exported": false,
+          "lineCount": 51
+        },
+        {
+          "name": "handle_inspect",
+          "owner": "",
+          "params": [
+            "container",
+            "args"
+          ],
+          "returnType": "Result<(), Box<dyn std::error::Error>>",
+          "exported": false,
+          "lineCount": 23
+        },
+        {
+          "name": "handle_verify",
+          "owner": "",
+          "params": [
+            "container",
+            "args"
+          ],
+          "returnType": "Result<(), Box<dyn std::error::Error>>",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "default_home",
+          "owner": "",
+          "params": [],
+          "returnType": "PathBuf",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "chrono_timestamp_slug",
+          "owner": "",
+          "params": [],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 5
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "std::time",
+          "specifiers": [
+            "Duration"
+          ]
+        },
+        {
+          "source": "clap",
+          "specifiers": [
+            "Parser"
+          ]
+        },
+        {
+          "source": "console",
+          "specifiers": [
+            "style"
+          ]
+        },
+        {
+          "source": "indicatif",
+          "specifiers": [
+            "ProgressBar",
+            "ProgressStyle"
+          ]
+        },
+        {
+          "source": "adapter_cli::args",
+          "specifiers": [
+            "BackupArgs",
+            "Cli",
+            "Commands",
+            "InspectArgs",
+            "RestoreArgs",
+            "VerifyArgs"
+          ]
+        },
+        {
+          "source": "adapter_cli::di",
+          "specifiers": [
+            "AppContainer"
+          ]
+        },
+        {
+          "source": "adapter_cli::tui",
+          "specifiers": [
+            "run_tui",
+            "TuiApp",
+            "TuiItem"
+          ]
+        },
+        {
+          "source": "adapter_storage",
+          "specifiers": [
+            "CustomDirsHandler"
+          ]
+        },
+        {
+          "source": "application",
+          "specifiers": [
+            "BackupRequest",
+            "RestoreRequest"
+          ]
+        },
+        {
+          "source": "domain::entities::package",
+          "specifiers": [
+            "PackageCategory",
+            "PackageScope"
+          ]
+        },
+        {
+          "source": "domain::entities::selection_filter",
+          "specifiers": [
+            "SelectionFilter"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "AgentPort",
+            "BrowserPort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "PackageName",
+            "SkillCategory"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 383,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/src/tui/app.rs": {
+      "filePath": "crates/adapter-cli/src/tui/app.rs",
+      "contentHash": "7d6eecec1a99dcf890b4b3e7a87bdcf0ea9d2eb505987916ce43dc971c1f63f4",
+      "functions": [
+        {
+          "name": "is_header",
+          "owner": "TuiRow",
+          "params": [],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "item",
+          "owner": "TuiRow",
+          "params": [],
+          "returnType": "Option<&TuiItem>",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "item_mut",
+          "owner": "TuiRow",
+          "params": [],
+          "returnType": "Option<&mut TuiItem>",
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "new",
+          "owner": "TuiApp",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 27
+        },
+        {
+          "name": "next_tab",
+          "owner": "TuiApp",
+          "params": [],
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "prev_tab",
+          "owner": "TuiApp",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "current_list_len",
+          "owner": "TuiApp",
+          "params": [],
+          "returnType": "usize",
+          "exported": true,
+          "lineCount": 12
+        },
+        {
+          "name": "count_items",
+          "owner": "TuiApp",
+          "params": [
+            "tab_idx"
+          ],
+          "returnType": "usize",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "next_item",
+          "owner": "TuiApp",
+          "params": [],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "prev_item",
+          "owner": "TuiApp",
+          "params": [],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "toggle_selected",
+          "owner": "TuiApp",
+          "params": [],
+          "exported": true,
+          "lineCount": 48
+        },
+        {
+          "name": "add_custom_directory",
+          "owner": "TuiApp",
+          "params": [
+            "path_str"
+          ],
+          "returnType": "Result<(), String>",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "build_selection_filter",
+          "owner": "TuiApp",
+          "params": [],
+          "returnType": "SelectionFilter",
+          "exported": true,
+          "lineCount": 45
+        },
+        {
+          "name": "group_into_rows",
+          "owner": "TuiApp",
+          "params": [
+            "groups"
+          ],
+          "returnType": "Vec<TuiRow>",
+          "exported": true,
+          "lineCount": 20
+        },
+        {
+          "name": "default",
+          "owner": null,
+          "params": [],
+          "returnType": "Self",
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [
+        {
+          "name": "TuiItem",
+          "methods": [],
+          "properties": [
+            "id",
+            "name",
+            "details",
+            "included"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "TuiRow",
+          "methods": [
+            "is_header",
+            "item",
+            "item_mut"
+          ],
+          "properties": [
+            "Header",
+            "Item"
+          ],
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "TuiApp",
+          "methods": [
+            "new",
+            "next_tab",
+            "prev_tab",
+            "current_list_len",
+            "count_items",
+            "next_item",
+            "prev_item",
+            "toggle_selected",
+            "add_custom_directory",
+            "build_selection_filter",
+            "group_into_rows",
+            "default"
+          ],
+          "properties": [
+            "current_tab",
+            "user_packages",
+            "system_packages",
+            "dependency_packages",
+            "skills",
+            "appimages",
+            "custom_dirs",
+            "zen_spaces",
+            "cursors",
+            "list_states",
+            "input_mode",
+            "input_buffer",
+            "status_message",
+            "should_quit",
+            "should_start_backup"
+          ],
+          "exported": true,
+          "lineCount": 17
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "ratatui::widgets",
+          "specifiers": [
+            "ListState"
+          ]
+        },
+        {
+          "source": "adapter_storage",
+          "specifiers": [
+            "CustomDirsHandler"
+          ]
+        },
+        {
+          "source": "domain::entities::custom_directory",
+          "specifiers": [
+            "CustomDirectoryEntry"
+          ]
+        },
+        {
+          "source": "domain::entities::selection_filter",
+          "specifiers": [
+            "SelectionFilter"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "PackageName"
+          ]
+        }
+      ],
+      "exports": [
+        "TuiItem",
+        "TuiRow",
+        "is_header",
+        "item",
+        "item_mut",
+        "TuiApp",
+        "new",
+        "next_tab",
+        "prev_tab",
+        "current_list_len",
+        "count_items",
+        "next_item",
+        "prev_item",
+        "toggle_selected",
+        "add_custom_directory",
+        "build_selection_filter",
+        "group_into_rows"
+      ],
+      "totalLines": 285,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/src/tui/events.rs": {
+      "filePath": "crates/adapter-cli/src/tui/events.rs",
+      "contentHash": "1982e6e6875f828d84ed3eb3b180184b26fce900ba4d0986f8e849baf2ea51fd",
+      "functions": [
+        {
+          "name": "handle_key_event",
+          "owner": "",
+          "params": [
+            "app",
+            "key"
+          ],
+          "exported": true,
+          "lineCount": 67
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "crossterm::event",
+          "specifiers": [
+            "KeyCode",
+            "KeyEvent",
+            "KeyModifiers"
+          ]
+        },
+        {
+          "source": "super::app",
+          "specifiers": [
+            "TuiApp"
+          ]
+        }
+      ],
+      "exports": [
+        "handle_key_event"
+      ],
+      "totalLines": 72,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/src/tui/mod.rs": {
+      "filePath": "crates/adapter-cli/src/tui/mod.rs",
+      "contentHash": "81e17ee7367da415404344c5c72fb2cbb5b243a098ba9bfca45aafff5fdb749e",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "app",
+          "specifiers": [
+            "TuiApp",
+            "TuiItem"
+          ]
+        },
+        {
+          "source": "runner",
+          "specifiers": [
+            "run_tui"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 8,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/src/tui/runner.rs": {
+      "filePath": "crates/adapter-cli/src/tui/runner.rs",
+      "contentHash": "f1b4a6b8b13edb42c2e1ac9f7e927ff1fd6b04f6746b17470a0caf91272c5f3d",
+      "functions": [
+        {
+          "name": "drop",
+          "owner": null,
+          "params": [],
+          "exported": false,
+          "lineCount": 4
+        },
+        {
+          "name": "run_tui",
+          "owner": "",
+          "params": [
+            "app"
+          ],
+          "returnType": "io::Result<Option<(SelectionFilter, Vec<CustomDirectoryEntry>)>>",
+          "exported": true,
+          "lineCount": 27
+        }
+      ],
+      "classes": [
+        {
+          "name": "TerminalGuard",
+          "methods": [
+            "drop"
+          ],
+          "properties": [],
+          "exported": false,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::io",
+          "specifiers": [
+            "self",
+            "stdout"
+          ]
+        },
+        {
+          "source": "std::time",
+          "specifiers": [
+            "Duration"
+          ]
+        },
+        {
+          "source": "crossterm",
+          "specifiers": [
+            "execute"
+          ]
+        },
+        {
+          "source": "ratatui",
+          "specifiers": [
+            "backend::CrosstermBackend",
+            "Terminal"
+          ]
+        },
+        {
+          "source": "domain::entities::custom_directory",
+          "specifiers": [
+            "CustomDirectoryEntry"
+          ]
+        },
+        {
+          "source": "domain::entities::selection_filter",
+          "specifiers": [
+            "SelectionFilter"
+          ]
+        },
+        {
+          "source": "super::app",
+          "specifiers": [
+            "TuiApp"
+          ]
+        },
+        {
+          "source": "super::events",
+          "specifiers": [
+            "handle_key_event"
+          ]
+        },
+        {
+          "source": "super::ui",
+          "specifiers": [
+            "draw"
+          ]
+        }
+      ],
+      "exports": [
+        "run_tui"
+      ],
+      "totalLines": 55,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/src/tui/ui.rs": {
+      "filePath": "crates/adapter-cli/src/tui/ui.rs",
+      "contentHash": "c1017624d1dd3fb15ae8ce5b61ebf78d77e6e3948b026bc16b3554ff56f4ddcf",
+      "functions": [
+        {
+          "name": "draw",
+          "owner": "",
+          "params": [
+            "f",
+            "app"
+          ],
+          "exported": true,
+          "lineCount": 117
+        },
+        {
+          "name": "render_rows",
+          "owner": "",
+          "params": [
+            "rows",
+            "current_cursor"
+          ],
+          "returnType": "Vec<ListItem<'static>>",
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "render_header",
+          "owner": "",
+          "params": [
+            "title",
+            "count",
+            "is_selected"
+          ],
+          "returnType": "ListItem<'static>",
+          "exported": false,
+          "lineCount": 18
+        },
+        {
+          "name": "render_item",
+          "owner": "",
+          "params": [
+            "name",
+            "details",
+            "included",
+            "is_selected"
+          ],
+          "returnType": "ListItem<'static>",
+          "exported": false,
+          "lineCount": 24
+        },
+        {
+          "name": "render_input_popup",
+          "owner": "",
+          "params": [
+            "f",
+            "buffer"
+          ],
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "centered_rect",
+          "owner": "",
+          "params": [
+            "percent_x",
+            "percent_y",
+            "r"
+          ],
+          "returnType": "Rect",
+          "exported": false,
+          "lineCount": 19
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "ratatui",
+          "specifiers": [
+            "Frame"
+          ]
+        },
+        {
+          "source": "super::app",
+          "specifiers": [
+            "TuiApp",
+            "TuiRow"
+          ]
+        }
+      ],
+      "exports": [
+        "draw"
+      ],
+      "totalLines": 233,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-cli/tests/cli_tests.rs": {
+      "filePath": "crates/adapter-cli/tests/cli_tests.rs",
+      "contentHash": "b19418841c78d5d7a8f90d169737c1c58c854ef015f38e836b3efa461552d488",
+      "functions": [
+        {
+          "name": "test_cli_parsing_subcommands",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 76
+        },
+        {
+          "name": "test_tui_app_state_and_filter_generation",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 101
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "adapter_cli::args",
+          "specifiers": [
+            "Cli",
+            "Commands"
+          ]
+        },
+        {
+          "source": "adapter_cli::tui",
+          "specifiers": [
+            "TuiApp",
+            "TuiItem"
+          ]
+        },
+        {
+          "source": "clap",
+          "specifiers": [
+            "Parser"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "PackageName"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempdir"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 187,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-storage/Cargo.toml": {
+      "filePath": "crates/adapter-storage/Cargo.toml",
+      "contentHash": "51a7fbab15be6f3a7417df60d3da4a4b169db374e7ba6adf3f06863b29862f40",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 18,
+      "hasStructuralAnalysis": false
+    },
+    "crates/adapter-storage/src/archive.rs": {
+      "filePath": "crates/adapter-storage/src/archive.rs",
+      "contentHash": "7d1c4de334556e9aa0905f22be01a89c1e36cfd38f7d92b1e5c6332d937200bd",
+      "functions": [
+        {
+          "name": "sanitize_entry_path",
+          "owner": "ZipSlipGuard",
+          "params": [
+            "entry_raw_path",
+            "canonical_target_root"
+          ],
+          "returnType": "Result<PathBuf, DomainError>",
+          "exported": true,
+          "lineCount": 71
+        },
+        {
+          "name": "safe_extract",
+          "owner": "ZipSlipGuard",
+          "params": [
+            "archive",
+            "target_dir"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": true,
+          "lineCount": 67
+        },
+        {
+          "name": "pack",
+          "owner": "TarZstdPacker",
+          "params": [
+            "source_items",
+            "manifest_json",
+            "output_archive"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": true,
+          "lineCount": 130
+        },
+        {
+          "name": "read_manifest_json",
+          "owner": "TarZstdPacker",
+          "params": [
+            "archive_path"
+          ],
+          "returnType": "Result<String, DomainError>",
+          "exported": true,
+          "lineCount": 35
+        },
+        {
+          "name": "unpack",
+          "owner": "TarZstdPacker",
+          "params": [
+            "archive_path",
+            "target_dir"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": true,
+          "lineCount": 14
+        }
+      ],
+      "classes": [
+        {
+          "name": "ZipSlipGuard",
+          "methods": [
+            "sanitize_entry_path",
+            "safe_extract"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "TarZstdPacker",
+          "methods": [
+            "pack",
+            "read_manifest_json",
+            "unpack"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::fs",
+          "specifiers": [
+            "self",
+            "File"
+          ]
+        },
+        {
+          "source": "std::io",
+          "specifiers": [
+            "BufReader",
+            "BufWriter",
+            "Read"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Component",
+            "Path",
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "tar",
+          "specifiers": [
+            "Archive",
+            "Builder",
+            "EntryType",
+            "Header"
+          ]
+        },
+        {
+          "source": "walkdir",
+          "specifiers": [
+            "WalkDir"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        }
+      ],
+      "exports": [
+        "ZipSlipGuard",
+        "sanitize_entry_path",
+        "safe_extract",
+        "TarZstdPacker",
+        "pack",
+        "read_manifest_json",
+        "unpack"
+      ],
+      "totalLines": 343,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-storage/src/custom_dirs.rs": {
+      "filePath": "crates/adapter-storage/src/custom_dirs.rs",
+      "contentHash": "729e9c913f6483893997d45a2c5b698e9219741fb1a3242be5934d0b42a3729a",
+      "functions": [
+        {
+          "name": "inspect_directory",
+          "owner": "CustomDirsHandler",
+          "params": [
+            "source_dir",
+            "label_override"
+          ],
+          "returnType": "Result<CustomDirectoryEntry, DomainError>",
+          "exported": true,
+          "lineCount": 43
+        },
+        {
+          "name": "to_archive_item",
+          "owner": "CustomDirsHandler",
+          "params": [
+            "entry"
+          ],
+          "returnType": "(PathBuf, PathBuf)",
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [
+        {
+          "name": "CustomDirsHandler",
+          "methods": [
+            "inspect_directory",
+            "to_archive_item"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path",
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "walkdir",
+          "specifiers": [
+            "WalkDir"
+          ]
+        },
+        {
+          "source": "domain::entities::custom_directory",
+          "specifiers": [
+            "CustomDirectoryEntry"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        }
+      ],
+      "exports": [
+        "CustomDirsHandler",
+        "inspect_directory",
+        "to_archive_item"
+      ],
+      "totalLines": 60,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-storage/src/lib.rs": {
+      "filePath": "crates/adapter-storage/src/lib.rs",
+      "contentHash": "c37f7a1b5811166899cffa9e706daac952415aa0afbeae5f82e74a20134fcbbc",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "ZstdStorageAdapter",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "create_snapshot",
+          "owner": null,
+          "params": [
+            "source_items",
+            "manifest",
+            "output_archive"
+          ],
+          "returnType": "Result<Checksum, DomainError>",
+          "exported": false,
+          "lineCount": 13
+        },
+        {
+          "name": "read_manifest",
+          "owner": null,
+          "params": [
+            "archive"
+          ],
+          "returnType": "Result<Manifest, DomainError>",
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "extract_snapshot",
+          "owner": null,
+          "params": [
+            "archive",
+            "target_dir"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "compute_checksum",
+          "owner": null,
+          "params": [
+            "path"
+          ],
+          "returnType": "Result<Checksum, DomainError>",
+          "exported": false,
+          "lineCount": 23
+        }
+      ],
+      "classes": [
+        {
+          "name": "ZstdStorageAdapter",
+          "methods": [
+            "new",
+            "create_snapshot",
+            "read_manifest",
+            "extract_snapshot",
+            "compute_checksum"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::fs",
+          "specifiers": [
+            "File"
+          ]
+        },
+        {
+          "source": "std::io",
+          "specifiers": [
+            "BufReader",
+            "Read"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path",
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "sha2",
+          "specifiers": [
+            "Digest",
+            "Sha256"
+          ]
+        },
+        {
+          "source": "domain::entities",
+          "specifiers": [
+            "Manifest"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "StoragePort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "Checksum"
+          ]
+        },
+        {
+          "source": "archive",
+          "specifiers": [
+            "TarZstdPacker",
+            "ZipSlipGuard"
+          ]
+        },
+        {
+          "source": "custom_dirs",
+          "specifiers": [
+            "CustomDirsHandler"
+          ]
+        }
+      ],
+      "exports": [
+        "ZstdStorageAdapter",
+        "new"
+      ],
+      "totalLines": 76,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-storage/tests/storage_tests.rs": {
+      "filePath": "crates/adapter-storage/tests/storage_tests.rs",
+      "contentHash": "8019fdbd10df0fddefd25e3c661da8ee5fac2f2c302b32a6b75d48ac20ee59fe",
+      "functions": [
+        {
+          "name": "test_storage_roundtrip_snapshot_and_manifest",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 51
+        },
+        {
+          "name": "test_zip_slip_rejection",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 42
+        },
+        {
+          "name": "test_checksum_computation",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 13
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "std::fs",
+          "specifiers": [
+            "self",
+            "File"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path",
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "tar",
+          "specifiers": [
+            "Builder",
+            "Header"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempdir"
+          ]
+        },
+        {
+          "source": "adapter_storage",
+          "specifiers": [
+            "CustomDirsHandler",
+            "ZipSlipGuard",
+            "ZstdStorageAdapter"
+          ]
+        },
+        {
+          "source": "domain::entities::agent_governance",
+          "specifiers": [
+            "AgentGovernance"
+          ]
+        },
+        {
+          "source": "domain::entities",
+          "specifiers": [
+            "Manifest"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "StoragePort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "DistroFamily"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 124,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-system/Cargo.toml": {
+      "filePath": "crates/adapter-system/Cargo.toml",
+      "contentHash": "0753d1211ff4e2efb0186a651d0a47721c0a6d88e18b1a9b85303ec78cb511e7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 15,
+      "hasStructuralAnalysis": false
+    },
+    "crates/adapter-system/src/lib.rs": {
+      "filePath": "crates/adapter-system/src/lib.rs",
+      "contentHash": "13d9b9e58c44cbabb2b264f02a4af07e4f29c37777c8c22c2d77b9e20c618d62",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "LinuxSystemAdapter",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "detect_distro",
+          "owner": null,
+          "params": [],
+          "returnType": "Result<DistroFamily, DomainError>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "hostname",
+          "owner": null,
+          "params": [],
+          "returnType": "Result<String, DomainError>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "is_process_running",
+          "owner": null,
+          "params": [
+            "process_name"
+          ],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "terminate_process_gracefully",
+          "owner": null,
+          "params": [
+            "process_name",
+            "timeout_secs"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "is_fuse2_available",
+          "owner": null,
+          "params": [],
+          "returnType": "bool",
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [
+        {
+          "name": "LinuxSystemAdapter",
+          "methods": [
+            "new",
+            "detect_distro",
+            "hostname",
+            "is_process_running",
+            "terminate_process_gracefully",
+            "is_fuse2_available"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "SystemPort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "DistroFamily"
+          ]
+        },
+        {
+          "source": "os_release",
+          "specifiers": [
+            "OsReleaseParser"
+          ]
+        },
+        {
+          "source": "packages",
+          "specifiers": [
+            "AurAdapter",
+            "FlatpakAdapter",
+            "PacmanAdapter"
+          ]
+        },
+        {
+          "source": "process",
+          "specifiers": [
+            "ProcessManager"
+          ]
+        }
+      ],
+      "exports": [
+        "LinuxSystemAdapter",
+        "new"
+      ],
+      "totalLines": 45,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-system/src/os_release.rs": {
+      "filePath": "crates/adapter-system/src/os_release.rs",
+      "contentHash": "cce3a63eecfa8884d65cc38245b3a93186a890cc8a143979bb59dfbb229fac75",
+      "functions": [
+        {
+          "name": "parse_file",
+          "owner": "OsReleaseParser",
+          "params": [
+            "path"
+          ],
+          "returnType": "Result<DistroFamily, DomainError>",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "parse_content",
+          "owner": "OsReleaseParser",
+          "params": [
+            "content"
+          ],
+          "returnType": "Result<DistroFamily, DomainError>",
+          "exported": true,
+          "lineCount": 25
+        },
+        {
+          "name": "check_fuse2_installed",
+          "owner": "OsReleaseParser",
+          "params": [],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 26
+        },
+        {
+          "name": "read_hostname",
+          "owner": "OsReleaseParser",
+          "params": [],
+          "returnType": "Result<String, DomainError>",
+          "exported": true,
+          "lineCount": 20
+        }
+      ],
+      "classes": [
+        {
+          "name": "OsReleaseParser",
+          "methods": [
+            "parse_file",
+            "parse_content",
+            "check_fuse2_installed",
+            "read_hostname"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "DistroFamily"
+          ]
+        }
+      ],
+      "exports": [
+        "OsReleaseParser",
+        "parse_file",
+        "parse_content",
+        "check_fuse2_installed",
+        "read_hostname"
+      ],
+      "totalLines": 102,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-system/src/packages.rs": {
+      "filePath": "crates/adapter-system/src/packages.rs",
+      "contentHash": "e26a2d78205d67ca69756c53fe413ae4c2dce2a9a7b8ef2b8eaaa19102d29e9b",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "PacmanAdapter",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "source",
+          "owner": null,
+          "params": [],
+          "returnType": "PackageSource",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "query_installed",
+          "owner": null,
+          "params": [],
+          "returnType": "Result<Vec<PackageEntry>, DomainError>",
+          "exported": false,
+          "lineCount": 36
+        },
+        {
+          "name": "install_batch",
+          "owner": null,
+          "params": [
+            "packages",
+            "dry_run"
+          ],
+          "returnType": "Result<Vec<PackageName>, DomainError>",
+          "exported": false,
+          "lineCount": 28
+        },
+        {
+          "name": "is_available",
+          "owner": null,
+          "params": [
+            "name"
+          ],
+          "returnType": "Result<bool, DomainError>",
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "query_dependencies",
+          "owner": null,
+          "params": [],
+          "returnType": "Result<Vec<PackageEntry>, DomainError>",
+          "exported": false,
+          "lineCount": 32
+        },
+        {
+          "name": "new",
+          "owner": "AurAdapter",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "aur_helper",
+          "owner": "AurAdapter",
+          "params": [],
+          "returnType": "&'static str",
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "source",
+          "owner": null,
+          "params": [],
+          "returnType": "PackageSource",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "query_installed",
+          "owner": null,
+          "params": [],
+          "returnType": "Result<Vec<PackageEntry>, DomainError>",
+          "exported": false,
+          "lineCount": 38
+        },
+        {
+          "name": "query_dependencies",
+          "owner": null,
+          "params": [],
+          "returnType": "Result<Vec<PackageEntry>, DomainError>",
+          "exported": false,
+          "lineCount": 32
+        },
+        {
+          "name": "install_batch",
+          "owner": null,
+          "params": [
+            "packages",
+            "dry_run"
+          ],
+          "returnType": "Result<Vec<PackageName>, DomainError>",
+          "exported": false,
+          "lineCount": 28
+        },
+        {
+          "name": "is_available",
+          "owner": null,
+          "params": [
+            "name"
+          ],
+          "returnType": "Result<bool, DomainError>",
+          "exported": false,
+          "lineCount": 11
+        },
+        {
+          "name": "new",
+          "owner": "FlatpakAdapter",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "source",
+          "owner": null,
+          "params": [],
+          "returnType": "PackageSource",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "query_installed",
+          "owner": null,
+          "params": [],
+          "returnType": "Result<Vec<PackageEntry>, DomainError>",
+          "exported": false,
+          "lineCount": 29
+        },
+        {
+          "name": "install_batch",
+          "owner": null,
+          "params": [
+            "packages",
+            "dry_run"
+          ],
+          "returnType": "Result<Vec<PackageName>, DomainError>",
+          "exported": false,
+          "lineCount": 27
+        },
+        {
+          "name": "is_available",
+          "owner": null,
+          "params": [
+            "name"
+          ],
+          "returnType": "Result<bool, DomainError>",
+          "exported": false,
+          "lineCount": 10
+        }
+      ],
+      "classes": [
+        {
+          "name": "PacmanAdapter",
+          "methods": [
+            "new",
+            "source",
+            "query_installed",
+            "install_batch",
+            "is_available",
+            "query_dependencies"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "AurAdapter",
+          "methods": [
+            "new",
+            "aur_helper",
+            "source",
+            "query_installed",
+            "query_dependencies",
+            "install_batch",
+            "is_available"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "FlatpakAdapter",
+          "methods": [
+            "new",
+            "source",
+            "query_installed",
+            "install_batch",
+            "is_available"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::process",
+          "specifiers": [
+            "Command"
+          ]
+        },
+        {
+          "source": "domain::entities::package",
+          "specifiers": [
+            "PackageCategory",
+            "PackageScope",
+            "PackageSource"
+          ]
+        },
+        {
+          "source": "domain::entities",
+          "specifiers": [
+            "PackageEntry"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "PackagePort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "PackageName"
+          ]
+        }
+      ],
+      "exports": [
+        "PacmanAdapter",
+        "new",
+        "AurAdapter",
+        "new",
+        "FlatpakAdapter",
+        "new"
+      ],
+      "totalLines": 371,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-system/src/process.rs": {
+      "filePath": "crates/adapter-system/src/process.rs",
+      "contentHash": "160cacd495aafe265fb1e1763a7591bf32df940b484c1846fd5392bcfcf3bc84",
+      "functions": [
+        {
+          "name": "is_running",
+          "owner": "ProcessManager",
+          "params": [
+            "process_name"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 26
+        },
+        {
+          "name": "terminate_gracefully",
+          "owner": "ProcessManager",
+          "params": [
+            "process_name",
+            "timeout_secs"
+          ],
+          "returnType": "Result<(), DomainError>",
+          "exported": true,
+          "lineCount": 32
+        }
+      ],
+      "classes": [
+        {
+          "name": "ProcessManager",
+          "methods": [
+            "is_running",
+            "terminate_gracefully"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        }
+      ],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "std",
+          "specifiers": [
+            "thread"
+          ]
+        },
+        {
+          "source": "std::time",
+          "specifiers": [
+            "Duration",
+            "Instant"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        }
+      ],
+      "exports": [
+        "ProcessManager",
+        "is_running",
+        "terminate_gracefully"
+      ],
+      "totalLines": 73,
+      "hasStructuralAnalysis": true
+    },
+    "crates/adapter-system/tests/system_tests.rs": {
+      "filePath": "crates/adapter-system/tests/system_tests.rs",
+      "contentHash": "e0a7915a29139ecb28d841ae77b0f05b97f308e31ee9cccb918b43a4f963d52a",
+      "functions": [
+        {
+          "name": "test_os_release_parser_matrix",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 16
+        },
+        {
+          "name": "test_real_system_adapter",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 10
+        },
+        {
+          "name": "test_real_system_package_query",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 22
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "adapter_system",
+          "specifiers": [
+            "AurAdapter",
+            "FlatpakAdapter",
+            "LinuxSystemAdapter",
+            "OsReleaseParser",
+            "PacmanAdapter"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "PackagePort",
+            "SystemPort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "DistroFamily"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 58,
+      "hasStructuralAnalysis": true
+    },
+    "crates/application/Cargo.toml": {
+      "filePath": "crates/application/Cargo.toml",
+      "contentHash": "f9c28a364ec1699cab251efb3266dbfd731b0041ef5f96c4dadb73fafc9f9ac7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 21,
+      "hasStructuralAnalysis": false
+    },
+    "crates/application/src/backup.rs": {
+      "filePath": "crates/application/src/backup.rs",
+      "contentHash": "2de97d2af77fdf21244490d061cc1dce2c61793735efaf9e6e6b9a2d15100551",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "BackupRequest",
+          "params": [
+            "config_root",
+            "user_home",
+            "output_archive"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "with_filter",
+          "owner": "BackupRequest",
+          "params": [
+            "filter"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "with_custom_directories",
+          "owner": "BackupRequest",
+          "params": [
+            "dirs"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "with_snapshot_id",
+          "owner": "BackupRequest",
+          "params": [
+            "id"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "new",
+          "owner": "BackupPipelineUseCase",
+          "params": [
+            "browser_port",
+            "storage_port",
+            "agent_port",
+            "system_port",
+            "package_ports"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "execute",
+          "owner": "BackupPipelineUseCase",
+          "params": [
+            "req"
+          ],
+          "returnType": "Result<BackupReport, DomainError>",
+          "exported": true,
+          "lineCount": 111
+        },
+        {
+          "name": "chrono_timestamp_slug",
+          "owner": "",
+          "params": [],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "current_utc_iso",
+          "owner": "",
+          "params": [],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 3
+        }
+      ],
+      "classes": [
+        {
+          "name": "BackupRequest",
+          "methods": [
+            "new",
+            "with_filter",
+            "with_custom_directories",
+            "with_snapshot_id"
+          ],
+          "properties": [
+            "config_root",
+            "user_home",
+            "output_archive",
+            "selection_filter",
+            "custom_directories",
+            "snapshot_id"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "BackupReport",
+          "methods": [],
+          "properties": [
+            "snapshot_id",
+            "output_path",
+            "checksum",
+            "total_files",
+            "total_size_bytes",
+            "manifest"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "BackupPipelineUseCase",
+          "methods": [
+            "new",
+            "execute"
+          ],
+          "properties": [
+            "browser_port",
+            "storage_port",
+            "agent_port",
+            "system_port",
+            "package_ports"
+          ],
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc"
+          ]
+        },
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "domain::entities::custom_directory",
+          "specifiers": [
+            "CustomDirectoryEntry"
+          ]
+        },
+        {
+          "source": "domain::entities::manifest",
+          "specifiers": [
+            "Manifest"
+          ]
+        },
+        {
+          "source": "domain::entities::selection_filter",
+          "specifiers": [
+            "SelectionFilter"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "AgentPort",
+            "BrowserPort",
+            "PackagePort",
+            "StoragePort",
+            "SystemPort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "Checksum"
+          ]
+        }
+      ],
+      "exports": [
+        "BackupRequest",
+        "new",
+        "with_filter",
+        "with_custom_directories",
+        "with_snapshot_id",
+        "BackupReport",
+        "BackupPipelineUseCase",
+        "new",
+        "execute"
+      ],
+      "totalLines": 213,
+      "hasStructuralAnalysis": true
+    },
+    "crates/application/src/inspect.rs": {
+      "filePath": "crates/application/src/inspect.rs",
+      "contentHash": "ddd513fd5bdc7baff43b00d01f10f03e4d17371a5d65e3d341db2485adfaccb6",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "InspectSnapshotUseCase",
+          "params": [
+            "storage_port"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "execute",
+          "owner": "InspectSnapshotUseCase",
+          "params": [
+            "archive_path"
+          ],
+          "returnType": "Result<SnapshotSummary, DomainError>",
+          "exported": true,
+          "lineCount": 20
+        }
+      ],
+      "classes": [
+        {
+          "name": "SnapshotSummary",
+          "methods": [],
+          "properties": [
+            "snapshot_id",
+            "created_at_utc",
+            "source_host",
+            "source_distro",
+            "zen_profiles_count",
+            "total_tabs",
+            "spaces_count",
+            "packages_count",
+            "skills_count",
+            "custom_dirs_count",
+            "checksum"
+          ],
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "InspectSnapshotUseCase",
+          "methods": [
+            "new",
+            "execute"
+          ],
+          "properties": [
+            "storage_port"
+          ],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc"
+          ]
+        },
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "StoragePort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "Checksum",
+            "DistroFamily"
+          ]
+        }
+      ],
+      "exports": [
+        "SnapshotSummary",
+        "InspectSnapshotUseCase",
+        "new",
+        "execute"
+      ],
+      "totalLines": 55,
+      "hasStructuralAnalysis": true
+    },
+    "crates/application/src/lib.rs": {
+      "filePath": "crates/application/src/lib.rs",
+      "contentHash": "761ac216292cbcff3acbdecb9e95856c2bb570efd1a4aaf80318e2dc2b31b351",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "backup",
+          "specifiers": [
+            "BackupPipelineUseCase",
+            "BackupReport",
+            "BackupRequest"
+          ]
+        },
+        {
+          "source": "inspect",
+          "specifiers": [
+            "InspectSnapshotUseCase",
+            "SnapshotSummary"
+          ]
+        },
+        {
+          "source": "restore",
+          "specifiers": [
+            "RestorePipelineUseCase",
+            "RestoreReport",
+            "RestoreRequest"
+          ]
+        },
+        {
+          "source": "verify",
+          "specifiers": [
+            "IntegrityReport",
+            "VerifyIntegrityUseCase"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 10,
+      "hasStructuralAnalysis": true
+    },
+    "crates/application/src/restore.rs": {
+      "filePath": "crates/application/src/restore.rs",
+      "contentHash": "4f33ed23f85f4140742c33fc696453d907ec622dfd17b73e14b00b0ff48963e0",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "RestoreRequest",
+          "params": [
+            "archive_path",
+            "target_config_root",
+            "target_home"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 14
+        },
+        {
+          "name": "with_packages",
+          "owner": "RestoreRequest",
+          "params": [
+            "install",
+            "dry_run"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "with_custom_base",
+          "owner": "RestoreRequest",
+          "params": [
+            "base"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "new",
+          "owner": "RestorePipelineUseCase",
+          "params": [
+            "browser_port",
+            "storage_port",
+            "agent_port",
+            "system_port",
+            "package_ports"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "execute",
+          "owner": "RestorePipelineUseCase",
+          "params": [
+            "req"
+          ],
+          "returnType": "Result<RestoreReport, DomainError>",
+          "exported": true,
+          "lineCount": 107
+        },
+        {
+          "name": "copy_dir_recursively",
+          "owner": "",
+          "params": [
+            "src",
+            "dst"
+          ],
+          "returnType": "std::io::Result<()>",
+          "exported": false,
+          "lineCount": 16
+        }
+      ],
+      "classes": [
+        {
+          "name": "RestoreRequest",
+          "methods": [
+            "new",
+            "with_packages",
+            "with_custom_base"
+          ],
+          "properties": [
+            "archive_path",
+            "target_config_root",
+            "target_home",
+            "target_custom_base",
+            "install_packages",
+            "dry_run"
+          ],
+          "exported": true,
+          "lineCount": 8
+        },
+        {
+          "name": "RestoreReport",
+          "methods": [],
+          "properties": [
+            "snapshot_id",
+            "source_distro",
+            "target_distro",
+            "profiles_restored",
+            "skills_restored",
+            "packages_installed",
+            "pending_packages",
+            "fuse2_missing_warning"
+          ],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "RestorePipelineUseCase",
+          "methods": [
+            "new",
+            "execute"
+          ],
+          "properties": [
+            "browser_port",
+            "storage_port",
+            "agent_port",
+            "system_port",
+            "package_ports"
+          ],
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc"
+          ]
+        },
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempdir"
+          ]
+        },
+        {
+          "source": "domain::entities::package",
+          "specifiers": [
+            "PackageSource"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "AgentPort",
+            "BrowserPort",
+            "PackagePort",
+            "StoragePort",
+            "SystemPort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "DistroFamily",
+            "PackageName"
+          ]
+        }
+      ],
+      "exports": [
+        "RestoreRequest",
+        "new",
+        "with_packages",
+        "with_custom_base",
+        "RestoreReport",
+        "RestorePipelineUseCase",
+        "new",
+        "execute"
+      ],
+      "totalLines": 214,
+      "hasStructuralAnalysis": true
+    },
+    "crates/application/src/verify.rs": {
+      "filePath": "crates/application/src/verify.rs",
+      "contentHash": "a3f150348f1fffa47d0788afc158eb2c2a579e3fb5659c7756341e8f74458423",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "VerifyIntegrityUseCase",
+          "params": [
+            "storage_port"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "execute",
+          "owner": "VerifyIntegrityUseCase",
+          "params": [
+            "archive_path"
+          ],
+          "returnType": "Result<IntegrityReport, DomainError>",
+          "exported": true,
+          "lineCount": 25
+        }
+      ],
+      "classes": [
+        {
+          "name": "IntegrityReport",
+          "methods": [],
+          "properties": [
+            "snapshot_id",
+            "computed_checksum",
+            "declared_checksum",
+            "is_valid",
+            "total_files"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "VerifyIntegrityUseCase",
+          "methods": [
+            "new",
+            "execute"
+          ],
+          "properties": [
+            "storage_port"
+          ],
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc"
+          ]
+        },
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "StoragePort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "Checksum"
+          ]
+        }
+      ],
+      "exports": [
+        "IntegrityReport",
+        "VerifyIntegrityUseCase",
+        "new",
+        "execute"
+      ],
+      "totalLines": 54,
+      "hasStructuralAnalysis": true
+    },
+    "crates/application/tests/use_case_tests.rs": {
+      "filePath": "crates/application/tests/use_case_tests.rs",
+      "contentHash": "ce0607fe44fb02b5de2f25c3d9e6cae3200c2d7aab573dd20397b9c4663e0652",
+      "functions": [
+        {
+          "name": "test_full_backup_and_restore_pipeline",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 117
+        },
+        {
+          "name": "test_backup_aborts_when_browser_locked",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 31
+        },
+        {
+          "name": "test_selection_filter_excludes_items_deterministically",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 28
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "std",
+          "specifiers": [
+            "fs"
+          ]
+        },
+        {
+          "source": "std::sync",
+          "specifiers": [
+            "Arc"
+          ]
+        },
+        {
+          "source": "tempfile",
+          "specifiers": [
+            "tempdir"
+          ]
+        },
+        {
+          "source": "adapter_agents",
+          "specifiers": [
+            "LocalAgentAdapter"
+          ]
+        },
+        {
+          "source": "adapter_browser",
+          "specifiers": [
+            "MozLz4Codec",
+            "ZenBrowserAdapter"
+          ]
+        },
+        {
+          "source": "adapter_storage",
+          "specifiers": [
+            "CustomDirsHandler",
+            "ZstdStorageAdapter"
+          ]
+        },
+        {
+          "source": "adapter_system",
+          "specifiers": [
+            "LinuxSystemAdapter",
+            "PacmanAdapter"
+          ]
+        },
+        {
+          "source": "application",
+          "specifiers": [
+            "BackupPipelineUseCase",
+            "BackupRequest",
+            "InspectSnapshotUseCase",
+            "RestorePipelineUseCase",
+            "RestoreRequest",
+            "VerifyIntegrityUseCase"
+          ]
+        },
+        {
+          "source": "domain::entities::selection_filter",
+          "specifiers": [
+            "SelectionFilter"
+          ]
+        },
+        {
+          "source": "domain::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "domain::ports",
+          "specifiers": [
+            "PackagePort"
+          ]
+        },
+        {
+          "source": "domain::value_objects",
+          "specifiers": [
+            "PackageName"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 199,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/Cargo.toml": {
+      "filePath": "crates/domain/Cargo.toml",
+      "contentHash": "0c4c01d58ebb76ba3d3c848ba85d33fbc40d4b223ed04c93401567d962ca5b7b",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 15,
+      "hasStructuralAnalysis": false
+    },
+    "crates/domain/src/entities/agent_governance.rs": {
+      "filePath": "crates/domain/src/entities/agent_governance.rs",
+      "contentHash": "6dfa8b587bec6853805a5a2c97f694df6e7d75bc7ca938cb8bb75e5a246dad48",
+      "functions": [
+        {
+          "name": "default",
+          "owner": null,
+          "params": [],
+          "returnType": "Self",
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "new",
+          "owner": "AgentGovernance",
+          "params": [
+            "default_working_directory"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "skills_by_category",
+          "owner": "AgentGovernance",
+          "params": [
+            "category"
+          ],
+          "returnType": "Vec<&SkillEntry>",
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [
+        {
+          "name": "RuleEntry",
+          "methods": [],
+          "properties": [
+            "name",
+            "relative_path",
+            "description",
+            "is_mandatory"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "SkillEntry",
+          "methods": [],
+          "properties": [
+            "name",
+            "category",
+            "is_symlink",
+            "dereferenced",
+            "original_target",
+            "relative_path",
+            "description"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "QualityGates",
+          "methods": [
+            "default"
+          ],
+          "properties": [
+            "mandatory_pre_approval",
+            "five_phase_engineering_cycle",
+            "zero_warning_clippy",
+            "multi_agent_orchestration",
+            "living_documentation_upkeep"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "AgentGovernance",
+          "methods": [
+            "new",
+            "skills_by_category"
+          ],
+          "properties": [
+            "version",
+            "default_working_directory",
+            "rules",
+            "skills",
+            "quality_gates",
+            "cli_wrappers"
+          ],
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "imports": [
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "SkillCategory"
+          ]
+        }
+      ],
+      "exports": [
+        "RuleEntry",
+        "SkillEntry",
+        "QualityGates",
+        "AgentGovernance",
+        "new",
+        "skills_by_category"
+      ],
+      "totalLines": 76,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/entities/appimage.rs": {
+      "filePath": "crates/domain/src/entities/appimage.rs",
+      "contentHash": "760d78f50fb87868950709ee3de14d02c14fb98fe9036cbaa8badb9c2fe85ce0",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "AppImageEntry",
+          "params": [
+            "name",
+            "relative_path",
+            "size_bytes",
+            "mode"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 12
+        }
+      ],
+      "classes": [
+        {
+          "name": "AppImageEntry",
+          "methods": [
+            "new"
+          ],
+          "properties": [
+            "name",
+            "relative_path",
+            "size_bytes",
+            "mode",
+            "checksum",
+            "desktop_file",
+            "icon_file",
+            "requires_fuse2"
+          ],
+          "exported": true,
+          "lineCount": 10
+        }
+      ],
+      "imports": [
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "Checksum",
+            "UnixMode"
+          ]
+        }
+      ],
+      "exports": [
+        "AppImageEntry",
+        "new"
+      ],
+      "totalLines": 33,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/entities/custom_directory.rs": {
+      "filePath": "crates/domain/src/entities/custom_directory.rs",
+      "contentHash": "84918bbf1b443b6f1acbcf86ca223e2818cce22bc65e5dff655fc4d55b3fded9",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "CustomDirectoryEntry",
+          "params": [
+            "source_path",
+            "archive_prefix",
+            "label"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 11
+        },
+        {
+          "name": "with_stats",
+          "owner": "CustomDirectoryEntry",
+          "params": [
+            "size_bytes",
+            "file_count"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "uuid_or_slug",
+          "owner": "",
+          "params": [
+            "path"
+          ],
+          "returnType": "String",
+          "exported": false,
+          "lineCount": 6
+        }
+      ],
+      "classes": [
+        {
+          "name": "CustomDirectoryEntry",
+          "methods": [
+            "new",
+            "with_stats"
+          ],
+          "properties": [
+            "id",
+            "source_path",
+            "archive_prefix",
+            "label",
+            "exclude_patterns",
+            "size_bytes",
+            "file_count"
+          ],
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "imports": [
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        }
+      ],
+      "exports": [
+        "CustomDirectoryEntry",
+        "new",
+        "with_stats"
+      ],
+      "totalLines": 42,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/entities/manifest.rs": {
+      "filePath": "crates/domain/src/entities/manifest.rs",
+      "contentHash": "cfc1b6242452c374c55f8a24415efd18d5bd96c0316b60bfb41cdea918f99f87",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "Manifest",
+          "params": [
+            "snapshot_id",
+            "created_at_utc",
+            "source_host",
+            "source_distro",
+            "agent_governance"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 23
+        }
+      ],
+      "classes": [
+        {
+          "name": "Manifest",
+          "methods": [
+            "new"
+          ],
+          "properties": [
+            "version",
+            "snapshot_id",
+            "created_at_utc",
+            "source_host",
+            "source_distro",
+            "zen_profiles",
+            "packages",
+            "appimages",
+            "custom_directories",
+            "agent_governance",
+            "checksum",
+            "total_files",
+            "total_size_bytes"
+          ],
+          "exported": true,
+          "lineCount": 15
+        }
+      ],
+      "imports": [
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "crate::entities::agent_governance",
+          "specifiers": [
+            "AgentGovernance"
+          ]
+        },
+        {
+          "source": "crate::entities::appimage",
+          "specifiers": [
+            "AppImageEntry"
+          ]
+        },
+        {
+          "source": "crate::entities::custom_directory",
+          "specifiers": [
+            "CustomDirectoryEntry"
+          ]
+        },
+        {
+          "source": "crate::entities::package",
+          "specifiers": [
+            "PackageEntry"
+          ]
+        },
+        {
+          "source": "crate::entities::zen_profile",
+          "specifiers": [
+            "ZenProfile"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "Checksum",
+            "DistroFamily"
+          ]
+        }
+      ],
+      "exports": [
+        "Manifest",
+        "new"
+      ],
+      "totalLines": 53,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/entities/mod.rs": {
+      "filePath": "crates/domain/src/entities/mod.rs",
+      "contentHash": "4b39fcec84e2a28006c07cb9f79271d674bf5cb5be1a87f4f5e292cd6f48a754",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "agent_governance",
+          "specifiers": [
+            "AgentGovernance",
+            "QualityGates",
+            "RuleEntry",
+            "SkillEntry"
+          ]
+        },
+        {
+          "source": "appimage",
+          "specifiers": [
+            "AppImageEntry"
+          ]
+        },
+        {
+          "source": "custom_directory",
+          "specifiers": [
+            "CustomDirectoryEntry"
+          ]
+        },
+        {
+          "source": "manifest",
+          "specifiers": [
+            "Manifest"
+          ]
+        },
+        {
+          "source": "package",
+          "specifiers": [
+            "PackageEntry",
+            "PackageScope",
+            "PackageSource"
+          ]
+        },
+        {
+          "source": "selection_filter",
+          "specifiers": [
+            "SelectionFilter"
+          ]
+        },
+        {
+          "source": "zen_profile",
+          "specifiers": [
+            "Container",
+            "SessionInfo",
+            "Space",
+            "ZenProfile"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 16,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/entities/package.rs": {
+      "filePath": "crates/domain/src/entities/package.rs",
+      "contentHash": "dbffc3faec18ea79e004fb4316264d1a77e7114463515d19b1304d8005f95199",
+      "functions": [
+        {
+          "name": "label",
+          "owner": "PackageCategory",
+          "params": [],
+          "returnType": "&'static str",
+          "exported": true,
+          "lineCount": 23
+        },
+        {
+          "name": "classify_dependency",
+          "owner": "PackageCategory",
+          "params": [
+            "name"
+          ],
+          "returnType": "PackageCategory",
+          "exported": true,
+          "lineCount": 67
+        },
+        {
+          "name": "classify",
+          "owner": "PackageCategory",
+          "params": [
+            "name",
+            "source"
+          ],
+          "returnType": "(PackageScope, PackageCategory)",
+          "exported": true,
+          "lineCount": 228
+        },
+        {
+          "name": "new",
+          "owner": "PackageEntry",
+          "params": [
+            "name",
+            "source",
+            "scope"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 15
+        },
+        {
+          "name": "with_category",
+          "owner": "PackageEntry",
+          "params": [
+            "category"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "as_dependency",
+          "owner": "PackageEntry",
+          "params": [
+            "is_dep"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "with_version",
+          "owner": "PackageEntry",
+          "params": [
+            "version"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "with_description",
+          "owner": "PackageEntry",
+          "params": [
+            "description"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 4
+        }
+      ],
+      "classes": [
+        {
+          "name": "PackageSource",
+          "methods": [],
+          "properties": [
+            "PacmanNative",
+            "Aur",
+            "Flatpak",
+            "DnfNative",
+            "AptNative",
+            "Nix",
+            "Brew",
+            "SystemdService"
+          ],
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "PackageScope",
+          "methods": [],
+          "properties": [
+            "System",
+            "User"
+          ],
+          "exported": true,
+          "lineCount": 4
+        },
+        {
+          "name": "PackageCategory",
+          "methods": [
+            "label",
+            "classify_dependency",
+            "classify"
+          ],
+          "properties": [
+            "DesktopApp",
+            "CliTool",
+            "Development",
+            "FontsThemes",
+            "UserOther",
+            "KernelFirmware",
+            "BaseBoot",
+            "DriversHardware",
+            "AudioVideoStack",
+            "NetworkDaemons",
+            "FileSystems",
+            "CompositorPlumbing",
+            "SystemOther",
+            "CoreLibrary",
+            "GraphicsMediaLib",
+            "LanguageRuntimeLib",
+            "ToolchainBuildLib",
+            "GeneralDependency",
+            "Other"
+          ],
+          "exported": true,
+          "lineCount": 28
+        },
+        {
+          "name": "PackageEntry",
+          "methods": [
+            "new",
+            "with_category",
+            "as_dependency",
+            "with_version",
+            "with_description"
+          ],
+          "properties": [
+            "name",
+            "source",
+            "scope",
+            "category",
+            "is_dependency",
+            "version",
+            "description"
+          ],
+          "exported": true,
+          "lineCount": 9
+        }
+      ],
+      "imports": [
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "PackageName"
+          ]
+        }
+      ],
+      "exports": [
+        "PackageSource",
+        "PackageScope",
+        "PackageCategory",
+        "label",
+        "classify_dependency",
+        "classify",
+        "PackageEntry",
+        "new",
+        "with_category",
+        "as_dependency",
+        "with_version",
+        "with_description"
+      ],
+      "totalLines": 433,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/entities/selection_filter.rs": {
+      "filePath": "crates/domain/src/entities/selection_filter.rs",
+      "contentHash": "3aa9e76a30f4d770c6cc0dd9d7d82eedc5f791e768248532226e09d156270bb8",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "SelectionFilter",
+          "params": [],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "is_package_included",
+          "owner": "SelectionFilter",
+          "params": [
+            "package"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "is_skill_included",
+          "owner": "SelectionFilter",
+          "params": [
+            "skill_name"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "is_appimage_included",
+          "owner": "SelectionFilter",
+          "params": [
+            "appimage_name"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "is_space_included",
+          "owner": "SelectionFilter",
+          "params": [
+            "space_id"
+          ],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "toggle_package",
+          "owner": "SelectionFilter",
+          "params": [
+            "package"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "toggle_skill",
+          "owner": "SelectionFilter",
+          "params": [
+            "skill_name"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "toggle_appimage",
+          "owner": "SelectionFilter",
+          "params": [
+            "appimage_name"
+          ],
+          "exported": true,
+          "lineCount": 5
+        },
+        {
+          "name": "toggle_space",
+          "owner": "SelectionFilter",
+          "params": [
+            "space_id"
+          ],
+          "exported": true,
+          "lineCount": 5
+        }
+      ],
+      "classes": [
+        {
+          "name": "SelectionFilter",
+          "methods": [
+            "new",
+            "is_package_included",
+            "is_skill_included",
+            "is_appimage_included",
+            "is_space_included",
+            "toggle_package",
+            "toggle_skill",
+            "toggle_appimage",
+            "toggle_space"
+          ],
+          "properties": [
+            "excluded_packages",
+            "excluded_skills",
+            "excluded_appimages",
+            "excluded_spaces",
+            "custom_directories"
+          ],
+          "exported": true,
+          "lineCount": 7
+        }
+      ],
+      "imports": [
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "std::collections",
+          "specifiers": [
+            "HashSet"
+          ]
+        },
+        {
+          "source": "crate::entities::custom_directory",
+          "specifiers": [
+            "CustomDirectoryEntry"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "PackageName"
+          ]
+        }
+      ],
+      "exports": [
+        "SelectionFilter",
+        "new",
+        "is_package_included",
+        "is_skill_included",
+        "is_appimage_included",
+        "is_space_included",
+        "toggle_package",
+        "toggle_skill",
+        "toggle_appimage",
+        "toggle_space"
+      ],
+      "totalLines": 63,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/entities/zen_profile.rs": {
+      "filePath": "crates/domain/src/entities/zen_profile.rs",
+      "contentHash": "3640937221cdaa1301639b6c7b14bf4a367d50c112a596b103ce50fa7729306d",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "ZenProfile",
+          "params": [
+            "id",
+            "is_default",
+            "root_path"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 13
+        },
+        {
+          "name": "total_tabs",
+          "owner": "ZenProfile",
+          "params": [],
+          "returnType": "usize",
+          "exported": true,
+          "lineCount": 3
+        }
+      ],
+      "classes": [
+        {
+          "name": "Space",
+          "methods": [],
+          "properties": [
+            "id",
+            "name",
+            "icon",
+            "color",
+            "container_id",
+            "open_tabs_count",
+            "pinned_tabs_count"
+          ],
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "Container",
+          "methods": [],
+          "properties": [
+            "id",
+            "name",
+            "icon",
+            "color"
+          ],
+          "exported": true,
+          "lineCount": 6
+        },
+        {
+          "name": "SessionInfo",
+          "methods": [],
+          "properties": [
+            "uncompressed_size",
+            "compressed_size",
+            "windows_count",
+            "spaces_count",
+            "total_tabs"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "ZenProfile",
+          "methods": [
+            "new",
+            "total_tabs"
+          ],
+          "properties": [
+            "id",
+            "is_default",
+            "root_path",
+            "session_info",
+            "spaces",
+            "containers",
+            "extensions_count",
+            "has_passwords",
+            "has_bookmarks"
+          ],
+          "exported": true,
+          "lineCount": 11
+        }
+      ],
+      "imports": [
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "ProfileId"
+          ]
+        }
+      ],
+      "exports": [
+        "Space",
+        "Container",
+        "SessionInfo",
+        "ZenProfile",
+        "new",
+        "total_tabs"
+      ],
+      "totalLines": 70,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/errors.rs": {
+      "filePath": "crates/domain/src/errors.rs",
+      "contentHash": "1024827bb81c432c6d017340fbe00971c547354143b5edaf219cb6b9a3b68f2b",
+      "functions": [],
+      "classes": [
+        {
+          "name": "DomainError",
+          "methods": [],
+          "properties": [
+            "ManifestError",
+            "ChecksumMismatch",
+            "BrowserError",
+            "BrowserLocked",
+            "DecompressionBombDetected",
+            "PackageError",
+            "AppImageError",
+            "SecurityViolation",
+            "AgentGovernanceError",
+            "UnsupportedDistro",
+            "ValidationError"
+          ],
+          "exported": true,
+          "lineCount": 41
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "thiserror",
+          "specifiers": [
+            "Error"
+          ]
+        }
+      ],
+      "exports": [
+        "DomainError"
+      ],
+      "totalLines": 46,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/lib.rs": {
+      "filePath": "crates/domain/src/lib.rs",
+      "contentHash": "ccb2f8a7676f05dc525e1dad532056aae35145e0c2e748a03cc66f70eac888c3",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "",
+          "specifiers": [
+            "*"
+          ]
+        },
+        {
+          "source": "errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "",
+          "specifiers": [
+            "*"
+          ]
+        },
+        {
+          "source": "",
+          "specifiers": [
+            "*"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 10,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/ports/agent_port.rs": {
+      "filePath": "crates/domain/src/ports/agent_port.rs",
+      "contentHash": "b258d5f17294ee829774c5244cb509a2628a389a7e90001aa446fb0c87eaf7e3",
+      "functions": [],
+      "classes": [
+        {
+          "name": "AgentPort",
+          "methods": [
+            "scan_governance",
+            "export_governance",
+            "restore_governance"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 15
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "crate::entities",
+          "specifiers": [
+            "AgentGovernance"
+          ]
+        },
+        {
+          "source": "crate::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        }
+      ],
+      "exports": [
+        "AgentPort"
+      ],
+      "totalLines": 22,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/ports/browser_port.rs": {
+      "filePath": "crates/domain/src/ports/browser_port.rs",
+      "contentHash": "e8b36274c5730bb09d19799ca0dbbf3090cb66c0f0a8656fc9c03f985db5e198",
+      "functions": [],
+      "classes": [
+        {
+          "name": "BrowserPort",
+          "methods": [
+            "is_locked",
+            "scan_profiles",
+            "decompress_session",
+            "compress_session",
+            "normalize_installation_hash",
+            "export_profile_state",
+            "restore_profile_state"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 26
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path"
+          ]
+        },
+        {
+          "source": "crate::entities",
+          "specifiers": [
+            "ZenProfile"
+          ]
+        },
+        {
+          "source": "crate::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "ProfileId"
+          ]
+        }
+      ],
+      "exports": [
+        "BrowserPort"
+      ],
+      "totalLines": 34,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/ports/mod.rs": {
+      "filePath": "crates/domain/src/ports/mod.rs",
+      "contentHash": "fe2f00c6b86e17cf256d4d00b8a8733fbdc7d7af92d38b27ca3b62a7c335b4d3",
+      "functions": [],
+      "classes": [],
+      "imports": [
+        {
+          "source": "agent_port",
+          "specifiers": [
+            "AgentPort"
+          ]
+        },
+        {
+          "source": "browser_port",
+          "specifiers": [
+            "BrowserPort"
+          ]
+        },
+        {
+          "source": "package_port",
+          "specifiers": [
+            "PackagePort"
+          ]
+        },
+        {
+          "source": "storage_port",
+          "specifiers": [
+            "StoragePort"
+          ]
+        },
+        {
+          "source": "system_port",
+          "specifiers": [
+            "SystemPort"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 12,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/ports/package_port.rs": {
+      "filePath": "crates/domain/src/ports/package_port.rs",
+      "contentHash": "b1e0c9fdc02145de2f1e579471bec8a7a0fddd2b2f72caa2a1efad993e7fad58",
+      "functions": [],
+      "classes": [
+        {
+          "name": "PackagePort",
+          "methods": [
+            "source",
+            "query_installed",
+            "install_batch",
+            "is_available",
+            "query_dependencies"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 22
+        }
+      ],
+      "imports": [
+        {
+          "source": "crate::entities::package",
+          "specifiers": [
+            "PackageSource"
+          ]
+        },
+        {
+          "source": "crate::entities",
+          "specifiers": [
+            "PackageEntry"
+          ]
+        },
+        {
+          "source": "crate::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "PackageName"
+          ]
+        }
+      ],
+      "exports": [
+        "PackagePort"
+      ],
+      "totalLines": 29,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/ports/storage_port.rs": {
+      "filePath": "crates/domain/src/ports/storage_port.rs",
+      "contentHash": "0c0e3bae366c3b7bd6ac6dc6e23c50c8922284eea854b797e18fccfd1c81a23d",
+      "functions": [],
+      "classes": [
+        {
+          "name": "StoragePort",
+          "methods": [
+            "create_snapshot",
+            "read_manifest",
+            "extract_snapshot",
+            "compute_checksum"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 18
+        }
+      ],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "Path",
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "crate::entities",
+          "specifiers": [
+            "Manifest"
+          ]
+        },
+        {
+          "source": "crate::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "Checksum"
+          ]
+        }
+      ],
+      "exports": [
+        "StoragePort"
+      ],
+      "totalLines": 26,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/ports/system_port.rs": {
+      "filePath": "crates/domain/src/ports/system_port.rs",
+      "contentHash": "9fefbd9d4a0b30b7a38614caf25d721e5c54b0251c5b7f35e8e252e53a8d2802",
+      "functions": [],
+      "classes": [
+        {
+          "name": "SystemPort",
+          "methods": [
+            "detect_distro",
+            "hostname",
+            "is_process_running",
+            "terminate_process_gracefully",
+            "is_fuse2_available"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 16
+        }
+      ],
+      "imports": [
+        {
+          "source": "crate::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        },
+        {
+          "source": "crate::value_objects",
+          "specifiers": [
+            "DistroFamily"
+          ]
+        }
+      ],
+      "exports": [
+        "SystemPort"
+      ],
+      "totalLines": 21,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/src/value_objects/mod.rs": {
+      "filePath": "crates/domain/src/value_objects/mod.rs",
+      "contentHash": "10c86da381db56a4c03e195bfc4dbbbb1c5d516bea633a657a4586312efa864e",
+      "functions": [
+        {
+          "name": "new",
+          "owner": "ProfileId",
+          "params": [
+            "id"
+          ],
+          "returnType": "Result<Self, DomainError>",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "as_str",
+          "owner": "ProfileId",
+          "params": [],
+          "returnType": "&str",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "fmt",
+          "owner": null,
+          "params": [
+            "f"
+          ],
+          "returnType": "fmt::Result",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "new",
+          "owner": "PackageName",
+          "params": [
+            "name"
+          ],
+          "returnType": "Result<Self, DomainError>",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "as_str",
+          "owner": "PackageName",
+          "params": [],
+          "returnType": "&str",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "fmt",
+          "owner": null,
+          "params": [
+            "f"
+          ],
+          "returnType": "fmt::Result",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "from_id",
+          "owner": "DistroFamily",
+          "params": [
+            "id",
+            "id_like"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 27
+        },
+        {
+          "name": "as_str",
+          "owner": "DistroFamily",
+          "params": [],
+          "returnType": "&'static str",
+          "exported": true,
+          "lineCount": 9
+        },
+        {
+          "name": "fmt",
+          "owner": null,
+          "params": [
+            "f"
+          ],
+          "returnType": "fmt::Result",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "new",
+          "owner": "Checksum",
+          "params": [
+            "hash"
+          ],
+          "returnType": "Result<Self, DomainError>",
+          "exported": true,
+          "lineCount": 10
+        },
+        {
+          "name": "as_str",
+          "owner": "Checksum",
+          "params": [],
+          "returnType": "&str",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "fmt",
+          "owner": null,
+          "params": [
+            "f"
+          ],
+          "returnType": "fmt::Result",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "new",
+          "owner": "UnixMode",
+          "params": [
+            "mode"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "raw",
+          "owner": "UnixMode",
+          "params": [],
+          "returnType": "u32",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "is_executable",
+          "owner": "UnixMode",
+          "params": [],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "is_strictly_private",
+          "owner": "UnixMode",
+          "params": [],
+          "returnType": "bool",
+          "exported": true,
+          "lineCount": 3
+        },
+        {
+          "name": "fmt",
+          "owner": null,
+          "params": [
+            "f"
+          ],
+          "returnType": "fmt::Result",
+          "exported": false,
+          "lineCount": 3
+        },
+        {
+          "name": "from_name",
+          "owner": "SkillCategory",
+          "params": [
+            "name"
+          ],
+          "returnType": "Self",
+          "exported": true,
+          "lineCount": 16
+        }
+      ],
+      "classes": [
+        {
+          "name": "ProfileId",
+          "methods": [
+            "new",
+            "as_str",
+            "fmt"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "PackageName",
+          "methods": [
+            "new",
+            "as_str",
+            "fmt"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "DistroFamily",
+          "methods": [
+            "from_id",
+            "as_str",
+            "fmt"
+          ],
+          "properties": [
+            "Arch",
+            "Fedora",
+            "Debian",
+            "OpenSuse",
+            "Unknown"
+          ],
+          "exported": true,
+          "lineCount": 7
+        },
+        {
+          "name": "Checksum",
+          "methods": [
+            "new",
+            "as_str",
+            "fmt"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "UnixMode",
+          "methods": [
+            "new",
+            "raw",
+            "is_executable",
+            "is_strictly_private",
+            "fmt"
+          ],
+          "properties": [],
+          "exported": true,
+          "lineCount": 1
+        },
+        {
+          "name": "SkillCategory",
+          "methods": [
+            "from_name"
+          ],
+          "properties": [
+            "DesignPattern",
+            "Architecture",
+            "Security",
+            "Testing",
+            "Process",
+            "General"
+          ],
+          "exported": true,
+          "lineCount": 8
+        }
+      ],
+      "imports": [
+        {
+          "source": "serde",
+          "specifiers": [
+            "Deserialize",
+            "Serialize"
+          ]
+        },
+        {
+          "source": "std",
+          "specifiers": [
+            "fmt"
+          ]
+        },
+        {
+          "source": "crate::errors",
+          "specifiers": [
+            "DomainError"
+          ]
+        }
+      ],
+      "exports": [
+        "ProfileId",
+        "new",
+        "as_str",
+        "PackageName",
+        "new",
+        "as_str",
+        "DistroFamily",
+        "from_id",
+        "as_str",
+        "Checksum",
+        "new",
+        "as_str",
+        "UnixMode",
+        "new",
+        "raw",
+        "is_executable",
+        "is_strictly_private",
+        "SkillCategory",
+        "from_name"
+      ],
+      "totalLines": 207,
+      "hasStructuralAnalysis": true
+    },
+    "crates/domain/tests/domain_tests.rs": {
+      "filePath": "crates/domain/tests/domain_tests.rs",
+      "contentHash": "1af8be3b5e373b6db6fe49719a7b8617af87081da023cd112e55840b25327076",
+      "functions": [
+        {
+          "name": "test_profile_id_validations",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 7
+        },
+        {
+          "name": "test_package_name_validations",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 5
+        },
+        {
+          "name": "test_checksum_validations",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 6
+        },
+        {
+          "name": "test_distro_family_inference",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 9
+        },
+        {
+          "name": "test_unix_mode_permissions",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 15
+        },
+        {
+          "name": "test_zen_profile_and_spaces",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 34
+        },
+        {
+          "name": "test_agent_governance_and_skills",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 36
+        },
+        {
+          "name": "test_selection_filter_exclusions",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 21
+        },
+        {
+          "name": "test_custom_directory_entry",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 12
+        },
+        {
+          "name": "test_manifest_roundtrip_serialization",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 39
+        },
+        {
+          "name": "test_package_category_classification",
+          "owner": "",
+          "params": [],
+          "exported": false,
+          "lineCount": 41
+        }
+      ],
+      "classes": [],
+      "imports": [
+        {
+          "source": "std::path",
+          "specifiers": [
+            "PathBuf"
+          ]
+        },
+        {
+          "source": "domain",
+          "specifiers": [
+            "AgentGovernance",
+            "AppImageEntry",
+            "Checksum",
+            "Container",
+            "CustomDirectoryEntry",
+            "DistroFamily",
+            "Manifest",
+            "PackageEntry",
+            "PackageName",
+            "PackageScope",
+            "PackageSource",
+            "ProfileId",
+            "RuleEntry",
+            "SelectionFilter",
+            "SkillCategory",
+            "SkillEntry",
+            "Space",
+            "UnixMode",
+            "ZenProfile"
+          ]
+        }
+      ],
+      "exports": [],
+      "totalLines": 255,
+      "hasStructuralAnalysis": true
+    },
+    "docs/modulos_aplicacao.md": {
+      "filePath": "docs/modulos_aplicacao.md",
+      "contentHash": "27b80b847ed236189ec4fade18742b0a483c9e50751ddcee165707c7765b05b7",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 148,
+      "hasStructuralAnalysis": false
+    },
+    "estado_arquitetural_atual.md": {
+      "filePath": "estado_arquitetural_atual.md",
+      "contentHash": "be60d19342647dc8a67b9e0a0d5e03038fd8165d17b956beb5813a586be312ce",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 62,
+      "hasStructuralAnalysis": false
+    },
+    "estado_atual.md": {
+      "filePath": "estado_atual.md",
+      "contentHash": "94bea24ac382d0bcf638b065fefa273ccf11fb49992c9d1f3c812fdce221b934",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 83,
+      "hasStructuralAnalysis": false
+    },
+    "tasks/todo.md": {
+      "filePath": "tasks/todo.md",
+      "contentHash": "dd6f1ea0a925f8a5a677aa8830d4e84cc9f6f66f427afbd867ab6d812b597814",
+      "functions": [],
+      "classes": [],
+      "imports": [],
+      "exports": [],
+      "totalLines": 106,
+      "hasStructuralAnalysis": false
+    }
+  }
+}

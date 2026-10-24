@@ -1,0 +1,583 @@
+{
+  "name": "distro-vault",
+  "rawDescription": "Sistema declarativo de backup e migração cross-distro com preservação de sessões do Zen Browser, AppImages, pacotes de sistema e governança de agentes de IA.",
+  "readmeHead": "# Distro-Vault 🦀📦\n\n> Ferramenta de alta performance em Rust para backup declarativo, restauração e transição sem atrito entre distribuições Linux (Distro Hopping).\n\n![Arquitetura da Aplicação](docs/architecture.svg)\n\n---\n\n## Recursos Principais\n\n- 🌐 **Zen Browser Preservation:** Extração e empacotamento atômico de Workspaces (Spaces), abas abertas e fixadas via codec nativo `mozLz40\\0`, além de correção automática do hash de instalação (`installs.ini`/`profiles.ini`).\n- 📦 **Multi-Distro Package Engine:** Gerenciamento declarativo para `pacman`, `aur` (`paru`/`yay`), `flatpak`, `dnf`, `apt` e `nix`.\n- 🚀 **AppImage & Gear Lever Vault:** Preservação de binários portáteis em `~/AppImages` e garantia da biblioteca `FUSE 2` no host destino.\n- 🤖 **Agent Ecosystem Sync:** Exportação declarativa de regras e das 19 skills essenciais de agentes de IA com desreferenciamento de symlinks para execução em qualquer SO.\n- 🔒 **Secrets & POSIX Integrity:** Preservação estrita de modos `0700` e `06",
+  "languages": [
+    "Rust",
+    "Markdown",
+    "TOML"
+  ],
+  "frameworks": [
+    "Ratatui",
+    "Crossterm",
+    "Clap",
+    "Zstandard"
+  ],
+  "files": [
+    {
+      "path": ".ignore",
+      "language": "unknown",
+      "sizeLines": 5,
+      "fileCategory": "code"
+    },
+    {
+      "path": "AGENTS.md",
+      "language": "markdown",
+      "sizeLines": 107,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "Cargo.toml",
+      "language": "toml",
+      "sizeLines": 57,
+      "fileCategory": "config"
+    },
+    {
+      "path": "GEMINI.md",
+      "language": "markdown",
+      "sizeLines": 73,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "README.md",
+      "language": "markdown",
+      "sizeLines": 49,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "crates/adapter-agents/Cargo.toml",
+      "language": "toml",
+      "sizeLines": 16,
+      "fileCategory": "config"
+    },
+    {
+      "path": "crates/adapter-agents/src/lib.rs",
+      "language": "rust",
+      "sizeLines": 69,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-agents/src/scanner.rs",
+      "language": "rust",
+      "sizeLines": 214,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-agents/tests/agent_tests.rs",
+      "language": "rust",
+      "sizeLines": 98,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-browser/Cargo.toml",
+      "language": "toml",
+      "sizeLines": 18,
+      "fileCategory": "config"
+    },
+    {
+      "path": "crates/adapter-browser/src/lib.rs",
+      "language": "rust",
+      "sizeLines": 250,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-browser/src/mozlz4.rs",
+      "language": "rust",
+      "sizeLines": 100,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-browser/src/profile_normalizer.rs",
+      "language": "rust",
+      "sizeLines": 407,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-browser/tests/browser_tests.rs",
+      "language": "rust",
+      "sizeLines": 165,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/Cargo.toml",
+      "language": "toml",
+      "sizeLines": 34,
+      "fileCategory": "config"
+    },
+    {
+      "path": "crates/adapter-cli/src/args.rs",
+      "language": "rust",
+      "sizeLines": 106,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/src/di.rs",
+      "language": "rust",
+      "sizeLines": 69,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/src/lib.rs",
+      "language": "rust",
+      "sizeLines": 3,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/src/main.rs",
+      "language": "rust",
+      "sizeLines": 382,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/src/tui/app.rs",
+      "language": "rust",
+      "sizeLines": 284,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/src/tui/events.rs",
+      "language": "rust",
+      "sizeLines": 71,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/src/tui/mod.rs",
+      "language": "rust",
+      "sizeLines": 7,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/src/tui/runner.rs",
+      "language": "rust",
+      "sizeLines": 54,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/src/tui/ui.rs",
+      "language": "rust",
+      "sizeLines": 232,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-cli/tests/cli_tests.rs",
+      "language": "rust",
+      "sizeLines": 186,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-storage/Cargo.toml",
+      "language": "toml",
+      "sizeLines": 17,
+      "fileCategory": "config"
+    },
+    {
+      "path": "crates/adapter-storage/src/archive.rs",
+      "language": "rust",
+      "sizeLines": 342,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-storage/src/custom_dirs.rs",
+      "language": "rust",
+      "sizeLines": 59,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-storage/src/lib.rs",
+      "language": "rust",
+      "sizeLines": 75,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-storage/tests/storage_tests.rs",
+      "language": "rust",
+      "sizeLines": 123,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-system/Cargo.toml",
+      "language": "toml",
+      "sizeLines": 14,
+      "fileCategory": "config"
+    },
+    {
+      "path": "crates/adapter-system/src/lib.rs",
+      "language": "rust",
+      "sizeLines": 44,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-system/src/os_release.rs",
+      "language": "rust",
+      "sizeLines": 101,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-system/src/packages.rs",
+      "language": "rust",
+      "sizeLines": 370,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-system/src/process.rs",
+      "language": "rust",
+      "sizeLines": 72,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/adapter-system/tests/system_tests.rs",
+      "language": "rust",
+      "sizeLines": 57,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/application/Cargo.toml",
+      "language": "toml",
+      "sizeLines": 20,
+      "fileCategory": "config"
+    },
+    {
+      "path": "crates/application/src/backup.rs",
+      "language": "rust",
+      "sizeLines": 212,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/application/src/inspect.rs",
+      "language": "rust",
+      "sizeLines": 54,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/application/src/lib.rs",
+      "language": "rust",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/application/src/restore.rs",
+      "language": "rust",
+      "sizeLines": 213,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/application/src/verify.rs",
+      "language": "rust",
+      "sizeLines": 53,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/application/tests/use_case_tests.rs",
+      "language": "rust",
+      "sizeLines": 198,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/Cargo.toml",
+      "language": "toml",
+      "sizeLines": 14,
+      "fileCategory": "config"
+    },
+    {
+      "path": "crates/domain/src/entities/agent_governance.rs",
+      "language": "rust",
+      "sizeLines": 75,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/entities/appimage.rs",
+      "language": "rust",
+      "sizeLines": 32,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/entities/custom_directory.rs",
+      "language": "rust",
+      "sizeLines": 41,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/entities/manifest.rs",
+      "language": "rust",
+      "sizeLines": 52,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/entities/mod.rs",
+      "language": "rust",
+      "sizeLines": 15,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/entities/package.rs",
+      "language": "rust",
+      "sizeLines": 432,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/entities/selection_filter.rs",
+      "language": "rust",
+      "sizeLines": 62,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/entities/zen_profile.rs",
+      "language": "rust",
+      "sizeLines": 69,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/errors.rs",
+      "language": "rust",
+      "sizeLines": 45,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/lib.rs",
+      "language": "rust",
+      "sizeLines": 9,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/ports/agent_port.rs",
+      "language": "rust",
+      "sizeLines": 21,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/ports/browser_port.rs",
+      "language": "rust",
+      "sizeLines": 33,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/ports/mod.rs",
+      "language": "rust",
+      "sizeLines": 11,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/ports/package_port.rs",
+      "language": "rust",
+      "sizeLines": 28,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/ports/storage_port.rs",
+      "language": "rust",
+      "sizeLines": 25,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/ports/system_port.rs",
+      "language": "rust",
+      "sizeLines": 20,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/src/value_objects/mod.rs",
+      "language": "rust",
+      "sizeLines": 206,
+      "fileCategory": "code"
+    },
+    {
+      "path": "crates/domain/tests/domain_tests.rs",
+      "language": "rust",
+      "sizeLines": 254,
+      "fileCategory": "code"
+    },
+    {
+      "path": "docs/modulos_aplicacao.md",
+      "language": "markdown",
+      "sizeLines": 147,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "estado_arquitetural_atual.md",
+      "language": "markdown",
+      "sizeLines": 61,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "estado_atual.md",
+      "language": "markdown",
+      "sizeLines": 82,
+      "fileCategory": "docs"
+    },
+    {
+      "path": "tasks/todo.md",
+      "language": "markdown",
+      "sizeLines": 105,
+      "fileCategory": "docs"
+    }
+  ],
+  "totalFiles": 66,
+  "filteredByIgnore": 36,
+  "estimatedComplexity": "moderate",
+  "stats": {
+    "filesScanned": 66,
+    "byCategory": {
+      "code": 51,
+      "docs": 7,
+      "config": 8
+    },
+    "byLanguage": {
+      "unknown": 1,
+      "markdown": 7,
+      "toml": 8,
+      "rust": 50
+    }
+  },
+  "importMap": {
+    ".ignore": [],
+    "AGENTS.md": [],
+    "Cargo.toml": [],
+    "GEMINI.md": [],
+    "README.md": [],
+    "crates/adapter-agents/Cargo.toml": [],
+    "crates/adapter-agents/src/lib.rs": [
+      "crates/adapter-agents/src/scanner.rs"
+    ],
+    "crates/adapter-agents/src/scanner.rs": [],
+    "crates/adapter-agents/tests/agent_tests.rs": [],
+    "crates/adapter-browser/Cargo.toml": [],
+    "crates/adapter-browser/src/lib.rs": [
+      "crates/adapter-browser/src/mozlz4.rs",
+      "crates/adapter-browser/src/profile_normalizer.rs"
+    ],
+    "crates/adapter-browser/src/mozlz4.rs": [],
+    "crates/adapter-browser/src/profile_normalizer.rs": [],
+    "crates/adapter-browser/tests/browser_tests.rs": [],
+    "crates/adapter-cli/Cargo.toml": [],
+    "crates/adapter-cli/src/args.rs": [],
+    "crates/adapter-cli/src/di.rs": [],
+    "crates/adapter-cli/src/lib.rs": [
+      "crates/adapter-cli/src/args.rs",
+      "crates/adapter-cli/src/di.rs",
+      "crates/adapter-cli/src/tui/mod.rs"
+    ],
+    "crates/adapter-cli/src/main.rs": [],
+    "crates/adapter-cli/src/tui/app.rs": [],
+    "crates/adapter-cli/src/tui/events.rs": [],
+    "crates/adapter-cli/src/tui/mod.rs": [
+      "crates/adapter-cli/src/tui/app.rs",
+      "crates/adapter-cli/src/tui/events.rs",
+      "crates/adapter-cli/src/tui/runner.rs",
+      "crates/adapter-cli/src/tui/ui.rs"
+    ],
+    "crates/adapter-cli/src/tui/runner.rs": [],
+    "crates/adapter-cli/src/tui/ui.rs": [],
+    "crates/adapter-cli/tests/cli_tests.rs": [],
+    "crates/adapter-storage/Cargo.toml": [],
+    "crates/adapter-storage/src/archive.rs": [],
+    "crates/adapter-storage/src/custom_dirs.rs": [],
+    "crates/adapter-storage/src/lib.rs": [
+      "crates/adapter-storage/src/archive.rs",
+      "crates/adapter-storage/src/custom_dirs.rs"
+    ],
+    "crates/adapter-storage/tests/storage_tests.rs": [],
+    "crates/adapter-system/Cargo.toml": [],
+    "crates/adapter-system/src/lib.rs": [
+      "crates/adapter-system/src/os_release.rs",
+      "crates/adapter-system/src/packages.rs",
+      "crates/adapter-system/src/process.rs"
+    ],
+    "crates/adapter-system/src/os_release.rs": [],
+    "crates/adapter-system/src/packages.rs": [],
+    "crates/adapter-system/src/process.rs": [],
+    "crates/adapter-system/tests/system_tests.rs": [],
+    "crates/application/Cargo.toml": [],
+    "crates/application/src/backup.rs": [],
+    "crates/application/src/inspect.rs": [],
+    "crates/application/src/lib.rs": [
+      "crates/application/src/backup.rs",
+      "crates/application/src/inspect.rs",
+      "crates/application/src/restore.rs",
+      "crates/application/src/verify.rs"
+    ],
+    "crates/application/src/restore.rs": [],
+    "crates/application/src/verify.rs": [],
+    "crates/application/tests/use_case_tests.rs": [],
+    "crates/domain/Cargo.toml": [],
+    "crates/domain/src/entities/agent_governance.rs": [
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/entities/appimage.rs": [
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/entities/custom_directory.rs": [],
+    "crates/domain/src/entities/manifest.rs": [
+      "crates/domain/src/entities/agent_governance.rs",
+      "crates/domain/src/entities/appimage.rs",
+      "crates/domain/src/entities/custom_directory.rs",
+      "crates/domain/src/entities/package.rs",
+      "crates/domain/src/entities/zen_profile.rs",
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/entities/mod.rs": [
+      "crates/domain/src/entities/agent_governance.rs",
+      "crates/domain/src/entities/appimage.rs",
+      "crates/domain/src/entities/custom_directory.rs",
+      "crates/domain/src/entities/manifest.rs",
+      "crates/domain/src/entities/package.rs",
+      "crates/domain/src/entities/selection_filter.rs",
+      "crates/domain/src/entities/zen_profile.rs"
+    ],
+    "crates/domain/src/entities/package.rs": [
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/entities/selection_filter.rs": [
+      "crates/domain/src/entities/custom_directory.rs",
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/entities/zen_profile.rs": [
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/errors.rs": [],
+    "crates/domain/src/lib.rs": [
+      "crates/domain/src/entities/mod.rs",
+      "crates/domain/src/errors.rs",
+      "crates/domain/src/ports/mod.rs",
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/ports/agent_port.rs": [
+      "crates/domain/src/entities/mod.rs",
+      "crates/domain/src/errors.rs"
+    ],
+    "crates/domain/src/ports/browser_port.rs": [
+      "crates/domain/src/entities/mod.rs",
+      "crates/domain/src/errors.rs",
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/ports/mod.rs": [
+      "crates/domain/src/ports/agent_port.rs",
+      "crates/domain/src/ports/browser_port.rs",
+      "crates/domain/src/ports/package_port.rs",
+      "crates/domain/src/ports/storage_port.rs",
+      "crates/domain/src/ports/system_port.rs"
+    ],
+    "crates/domain/src/ports/package_port.rs": [
+      "crates/domain/src/entities/mod.rs",
+      "crates/domain/src/entities/package.rs",
+      "crates/domain/src/errors.rs",
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/ports/storage_port.rs": [
+      "crates/domain/src/entities/mod.rs",
+      "crates/domain/src/errors.rs",
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/ports/system_port.rs": [
+      "crates/domain/src/errors.rs",
+      "crates/domain/src/value_objects/mod.rs"
+    ],
+    "crates/domain/src/value_objects/mod.rs": [
+      "crates/domain/src/errors.rs"
+    ],
+    "crates/domain/tests/domain_tests.rs": [],
+    "docs/modulos_aplicacao.md": [],
+    "estado_arquitetural_atual.md": [],
+    "estado_atual.md": [],
+    "tasks/todo.md": []
+  }
+}

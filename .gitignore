@@ -9,3 +9,7 @@
 
 # graphify local outputs
 /graphify-out/
+
+# understand-anything trash cache
+.ua/.trash-*
+*.tar.zst
