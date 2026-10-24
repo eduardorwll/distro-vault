@@ -30,7 +30,7 @@ pub enum Commands {
 
 #[derive(Debug, Args, Clone)]
 pub struct BackupArgs {
-    /// Output archive path (default: ~/Antigravity/backups/distro-vault-<timestamp>.tar.zst)
+    /// Output archive path (default: ./backups/distro-vault-<timestamp>.tar.zst)
     #[arg(short, long)]
     pub output: Option<PathBuf>,
 

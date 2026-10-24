@@ -224,7 +224,7 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                 .add_modifier(Modifier::BOLD),
         ),
         Span::styled(
-            "~/Antigravity/backups/  •  ",
+            format!("{}  •  ", app.default_backups_dir.display()),
             Style::default().fg(Color::White),
         ),
         Span::styled(
@@ -272,7 +272,10 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
     let list_items: Vec<ListItem> = if app.snapshots.is_empty() {
         vec![
             ListItem::new(Line::from(vec![Span::styled(
-                "  Nenhum snapshot encontrado em ~/Antigravity/backups/",
+                format!(
+                    "  Nenhum snapshot encontrado em {}",
+                    app.default_backups_dir.display()
+                ),
                 Style::default().fg(Color::Yellow),
             )])),
             ListItem::new(Line::from(vec![Span::styled(

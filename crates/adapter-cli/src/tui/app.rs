@@ -96,12 +96,17 @@ pub struct TuiApp {
     pub input_target: InputTarget,
     pub input_buffer: String,
     pub status_message: Option<String>,
+    pub default_backups_dir: PathBuf,
     pub should_quit: bool,
     pub should_start_backup: bool,
 }
 
 impl TuiApp {
     pub fn new() -> Self {
+        let default_backups_dir = std::env::current_dir()
+            .unwrap_or_else(|_| PathBuf::from("."))
+            .join("backups");
+
         Self {
             mode: TuiMode::Backup,
             current_tab: 0,
@@ -134,6 +139,7 @@ impl TuiApp {
             input_target: InputTarget::CustomDir,
             input_buffer: String::new(),
             status_message: None,
+            default_backups_dir,
             should_quit: false,
             should_start_backup: false,
         }

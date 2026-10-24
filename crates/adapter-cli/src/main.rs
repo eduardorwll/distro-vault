@@ -56,7 +56,7 @@ fn handle_backup(
         )
     } else {
         let output_archive = args.output.unwrap_or_else(|| {
-            let backups_dir = home.join("Antigravity/backups");
+            let backups_dir = default_backups_dir();
             let _ = std::fs::create_dir_all(&backups_dir);
             let timestamp = chrono_timestamp_slug();
             backups_dir.join(format!("distro-vault-{}.tar.zst", timestamp))
@@ -404,19 +404,32 @@ fn handle_interactive(
         let _ = tui_app.add_custom_directory(&dir.to_string_lossy());
     }
 
-    // 6. Discover existing backups in ~/Antigravity/backups/
-    let backups_dir = home.join("Antigravity/backups");
-    if backups_dir.exists() {
-        if let Ok(entries) = std::fs::read_dir(&backups_dir) {
-            let mut paths: Vec<_> = entries
-                .flatten()
-                .map(|e| e.path())
-                .filter(|p| p.is_file() && p.to_string_lossy().ends_with(".tar.zst"))
-                .collect();
-            paths.sort_by(|a, b| b.cmp(a));
-            for p in paths {
-                let manifest = container.storage_adapter.read_manifest(&p).ok();
-                tui_app.add_snapshot_file(p, manifest);
+    // 6. Discover existing backups in ./backups/ and fallback ~/Antigravity/backups/
+    let backups_dir = default_backups_dir();
+    tui_app.default_backups_dir = backups_dir.clone();
+
+    let mut scan_dirs = vec![backups_dir.clone()];
+    let legacy_backups_dir = home.join("Antigravity/backups");
+    if legacy_backups_dir != backups_dir && legacy_backups_dir.exists() {
+        scan_dirs.push(legacy_backups_dir);
+    }
+
+    let mut seen_paths = std::collections::HashSet::new();
+    for dir in scan_dirs {
+        if dir.exists() {
+            if let Ok(entries) = std::fs::read_dir(&dir) {
+                let mut paths: Vec<_> = entries
+                    .flatten()
+                    .map(|e| e.path())
+                    .filter(|p| p.is_file() && p.to_string_lossy().ends_with(".tar.zst"))
+                    .collect();
+                paths.sort_by(|a, b| b.cmp(a));
+                for p in paths {
+                    if seen_paths.insert(p.clone()) {
+                        let manifest = container.storage_adapter.read_manifest(&p).ok();
+                        tui_app.add_snapshot_file(p, manifest);
+                    }
+                }
             }
         }
     }
@@ -730,6 +743,12 @@ fn default_home() -> PathBuf {
     std::env::var("HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from("/home/eduardorwll"))
+}
+
+fn default_backups_dir() -> PathBuf {
+    std::env::current_dir()
+        .unwrap_or_else(|_| default_home())
+        .join("backups")
 }
 
 fn chrono_timestamp_slug() -> String {
