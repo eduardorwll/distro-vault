@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
 
 use domain::errors::DomainError;
 use domain::ports::StoragePort;
@@ -37,7 +37,12 @@ impl VerifyIntegrityUseCase {
         if !is_valid {
             return Err(DomainError::ChecksumMismatch {
                 path: archive_path.to_string_lossy().to_string(),
-                expected: manifest.checksum.as_ref().map(|c| c.as_str()).unwrap_or("none").to_string(),
+                expected: manifest
+                    .checksum
+                    .as_ref()
+                    .map(|c| c.as_str())
+                    .unwrap_or("none")
+                    .to_string(),
                 actual: computed_checksum.as_str().to_string(),
             });
         }

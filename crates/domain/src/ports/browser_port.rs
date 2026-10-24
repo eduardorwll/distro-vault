@@ -26,8 +26,16 @@ pub trait BrowserPort: Send + Sync {
     ) -> Result<(), DomainError>;
 
     /// Exports essential browser state to destination directory
-    fn export_profile_state(&self, profile: &ZenProfile, dest_dir: &Path) -> Result<(), DomainError>;
+    fn export_profile_state(
+        &self,
+        profile: &ZenProfile,
+        dest_dir: &Path,
+    ) -> Result<(), DomainError>;
 
     /// Restores browser state from source directory into target config root
-    fn restore_profile_state(&self, source_dir: &Path, config_root: &Path) -> Result<(), DomainError>;
+    fn restore_profile_state(
+        &self,
+        source_dir: &Path,
+        config_root: &Path,
+    ) -> Result<(), DomainError>;
 }

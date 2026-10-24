@@ -28,7 +28,13 @@ fn test_storage_roundtrip_snapshot_and_manifest() {
     assert_eq!(custom_entry.file_count, 1);
     assert!(custom_entry.size_bytes > 0);
 
-    let mut manifest = Manifest::new("snap-001", "2026-10-23T12:00:00Z", "arch-station", DistroFamily::Arch, AgentGovernance::new("~/Antigravity"));
+    let mut manifest = Manifest::new(
+        "snap-001",
+        "2026-10-23T12:00:00Z",
+        "arch-station",
+        DistroFamily::Arch,
+        AgentGovernance::new("~/Antigravity"),
+    );
     manifest.custom_directories.push(custom_entry.clone());
 
     let archive_path = tmp.path().join("backup.tar.zst");
@@ -39,12 +45,16 @@ fn test_storage_roundtrip_snapshot_and_manifest() {
         CustomDirsHandler::to_archive_item(&custom_entry),
     ];
 
-    let checksum = adapter.create_snapshot(&items, &manifest, &archive_path).expect("Create snapshot failed");
+    let checksum = adapter
+        .create_snapshot(&items, &manifest, &archive_path)
+        .expect("Create snapshot failed");
     assert_eq!(checksum.as_str().len(), 64);
     assert!(archive_path.exists());
 
     // Read manifest without full unpacking
-    let read_m = adapter.read_manifest(&archive_path).expect("Read manifest failed");
+    let read_m = adapter
+        .read_manifest(&archive_path)
+        .expect("Read manifest failed");
     assert_eq!(read_m.snapshot_id, "snap-001");
     assert_eq!(read_m.source_host, "arch-station");
     assert_eq!(read_m.source_distro, DistroFamily::Arch);
@@ -52,7 +62,9 @@ fn test_storage_roundtrip_snapshot_and_manifest() {
 
     // Unpack to target
     let restore_dir = tmp.path().join("restore");
-    adapter.extract_snapshot(&archive_path, &restore_dir).expect("Extraction failed");
+    adapter
+        .extract_snapshot(&archive_path, &restore_dir)
+        .expect("Extraction failed");
 
     assert!(restore_dir.join("manifest.json").exists());
     assert!(restore_dir.join("root_files/hello.txt").exists());
@@ -71,9 +83,18 @@ fn test_zip_slip_rejection() {
     let canonical_target = target_dir.canonicalize().unwrap();
 
     // 1. Unit test ZipSlipGuard directly
-    assert!(ZipSlipGuard::sanitize_entry_path(Path::new("../escaped.txt"), &canonical_target).is_err());
-    assert!(ZipSlipGuard::sanitize_entry_path(Path::new("/absolute/file.txt"), &canonical_target).is_err());
-    assert!(ZipSlipGuard::sanitize_entry_path(Path::new("safe/nested/file.txt"), &canonical_target).is_ok());
+    assert!(
+        ZipSlipGuard::sanitize_entry_path(Path::new("../escaped.txt"), &canonical_target).is_err()
+    );
+    assert!(
+        ZipSlipGuard::sanitize_entry_path(Path::new("/absolute/file.txt"), &canonical_target)
+            .is_err()
+    );
+    assert!(ZipSlipGuard::sanitize_entry_path(
+        Path::new("safe/nested/file.txt"),
+        &canonical_target
+    )
+    .is_ok());
 
     // 2. Integration test with raw tar header
     let malicious_archive_path = tmp.path().join("malicious.tar.zst");
@@ -95,7 +116,9 @@ fn test_zip_slip_rejection() {
     enc.finish().unwrap();
 
     let adapter = ZstdStorageAdapter::new();
-    let err = adapter.extract_snapshot(&malicious_archive_path, &target_dir).unwrap_err();
+    let err = adapter
+        .extract_snapshot(&malicious_archive_path, &target_dir)
+        .unwrap_err();
 
     match err {
         DomainError::SecurityViolation { path } => {

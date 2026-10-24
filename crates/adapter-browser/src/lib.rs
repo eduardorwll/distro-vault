@@ -43,12 +43,33 @@ impl ZenBrowserAdapter {
             // Check Zen-specific spaces/workspaces
             if let Some(space_arr) = v.pointer("/spaces").and_then(|s| s.as_array()) {
                 for s in space_arr {
-                    let id = s.get("id").and_then(|i| i.as_str()).unwrap_or_default().to_string();
-                    let name = s.get("name").and_then(|n| n.as_str()).unwrap_or("Workspace").to_string();
-                    let icon = s.get("icon").and_then(|ic| ic.as_str()).map(|s| s.to_string());
-                    let color = s.get("color").and_then(|co| co.as_str()).map(|s| s.to_string());
-                    let container_id = s.get("container_id").and_then(|ci| ci.as_str()).map(|s| s.to_string());
-                    let tab_count = s.get("tabs").and_then(|t| t.as_array()).map(|a| a.len()).unwrap_or(0);
+                    let id = s
+                        .get("id")
+                        .and_then(|i| i.as_str())
+                        .unwrap_or_default()
+                        .to_string();
+                    let name = s
+                        .get("name")
+                        .and_then(|n| n.as_str())
+                        .unwrap_or("Workspace")
+                        .to_string();
+                    let icon = s
+                        .get("icon")
+                        .and_then(|ic| ic.as_str())
+                        .map(|s| s.to_string());
+                    let color = s
+                        .get("color")
+                        .and_then(|co| co.as_str())
+                        .map(|s| s.to_string());
+                    let container_id = s
+                        .get("container_id")
+                        .and_then(|ci| ci.as_str())
+                        .map(|s| s.to_string());
+                    let tab_count = s
+                        .get("tabs")
+                        .and_then(|t| t.as_array())
+                        .map(|a| a.len())
+                        .unwrap_or(0);
                     if !id.is_empty() {
                         spaces.push(Space {
                             id,
@@ -66,14 +87,34 @@ impl ZenBrowserAdapter {
             // Check contextual identities (Containers)
             if let Some(container_arr) = v.pointer("/containers").and_then(|c| c.as_array()) {
                 for c in container_arr {
-                    let id = c.get("userContextId").and_then(|i| i.as_u64()).map(|u| u.to_string())
+                    let id = c
+                        .get("userContextId")
+                        .and_then(|i| i.as_u64())
+                        .map(|u| u.to_string())
                         .or_else(|| c.get("id").and_then(|i| i.as_str()).map(|s| s.to_string()))
                         .unwrap_or_default();
-                    let name = c.get("name").and_then(|n| n.as_str()).unwrap_or("Container").to_string();
-                    let color = c.get("color").and_then(|co| co.as_str()).unwrap_or("blue").to_string();
-                    let icon = c.get("icon").and_then(|ic| ic.as_str()).unwrap_or("fingerprint").to_string();
+                    let name = c
+                        .get("name")
+                        .and_then(|n| n.as_str())
+                        .unwrap_or("Container")
+                        .to_string();
+                    let color = c
+                        .get("color")
+                        .and_then(|co| co.as_str())
+                        .unwrap_or("blue")
+                        .to_string();
+                    let icon = c
+                        .get("icon")
+                        .and_then(|ic| ic.as_str())
+                        .unwrap_or("fingerprint")
+                        .to_string();
                     if !id.is_empty() {
-                        containers.push(Container { id, name, color, icon });
+                        containers.push(Container {
+                            id,
+                            name,
+                            color,
+                            icon,
+                        });
                     }
                 }
             }
@@ -187,7 +228,8 @@ impl BrowserPort for ZenBrowserAdapter {
                 }
 
                 zen_prof.has_bookmarks = places_file.exists();
-                zen_prof.has_passwords = path.join("logins.json").exists() || path.join("key4.db").exists();
+                zen_prof.has_passwords =
+                    path.join("logins.json").exists() || path.join("key4.db").exists();
                 if path.join("extensions.json").exists() {
                     zen_prof.extensions_count = 1;
                 }
@@ -215,7 +257,11 @@ impl BrowserPort for ZenBrowserAdapter {
         ProfilesIniNormalizer::normalize(config_root, target_profile_id.as_str())
     }
 
-    fn export_profile_state(&self, profile: &ZenProfile, dest_dir: &Path) -> Result<(), DomainError> {
+    fn export_profile_state(
+        &self,
+        profile: &ZenProfile,
+        dest_dir: &Path,
+    ) -> Result<(), DomainError> {
         if self.is_locked(&profile.root_path)? {
             return Err(DomainError::BrowserLocked {
                 lock_file: profile.root_path.join(".parentlock"),
@@ -226,7 +272,11 @@ impl BrowserPort for ZenBrowserAdapter {
         Self::copy_profile_recursively(&profile.root_path, &target_profile_dest)
     }
 
-    fn restore_profile_state(&self, source_dir: &Path, config_root: &Path) -> Result<(), DomainError> {
+    fn restore_profile_state(
+        &self,
+        source_dir: &Path,
+        config_root: &Path,
+    ) -> Result<(), DomainError> {
         let entries = fs::read_dir(source_dir).map_err(|e| DomainError::BrowserError {
             message: format!("Failed to read source_dir {:?}: {}", source_dir, e),
         })?;

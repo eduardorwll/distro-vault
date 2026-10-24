@@ -30,13 +30,12 @@ impl MozLz4Codec {
         }
 
         // Read uncompressed size in Little-Endian
-        let uncompressed_size = u32::from_le_bytes(
-            compressed_bytes[8..12]
-                .try_into()
-                .map_err(|_| DomainError::BrowserError {
+        let uncompressed_size =
+            u32::from_le_bytes(compressed_bytes[8..12].try_into().map_err(|_| {
+                DomainError::BrowserError {
                     message: "Failed to parse uncompressed size bytes".into(),
-                })?,
-        ) as usize;
+                }
+            })?) as usize;
 
         // Protection against Decompression Bomb
         if uncompressed_size > MAX_UNCOMPRESSED_SIZE {
@@ -56,9 +55,11 @@ impl MozLz4Codec {
 
         // Raw block decompression via lz4_flex
         let payload = &compressed_bytes[12..];
-        let decompressed = lz4_flex::block::decompress(payload, uncompressed_size)
-            .map_err(|e| DomainError::BrowserError {
-                message: format!("LZ4 raw block decompression failed: {}", e),
+        let decompressed =
+            lz4_flex::block::decompress(payload, uncompressed_size).map_err(|e| {
+                DomainError::BrowserError {
+                    message: format!("LZ4 raw block decompression failed: {}", e),
+                }
             })?;
 
         if decompressed.len() != uncompressed_size {

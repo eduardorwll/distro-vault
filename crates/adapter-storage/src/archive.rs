@@ -88,16 +88,20 @@ impl ZipSlipGuard {
         target_dir: &Path,
     ) -> Result<(), DomainError> {
         let canonical_target = if target_dir.exists() {
-            target_dir.canonicalize().map_err(|e| DomainError::SecurityViolation {
-                path: format!("Failed to canonicalize target_dir {:?}: {}", target_dir, e),
-            })?
+            target_dir
+                .canonicalize()
+                .map_err(|e| DomainError::SecurityViolation {
+                    path: format!("Failed to canonicalize target_dir {:?}: {}", target_dir, e),
+                })?
         } else {
             fs::create_dir_all(target_dir).map_err(|e| DomainError::SecurityViolation {
                 path: format!("Failed to create target_dir {:?}: {}", target_dir, e),
             })?;
-            target_dir.canonicalize().map_err(|e| DomainError::SecurityViolation {
-                path: format!("Failed to canonicalize newly created target_dir: {}", e),
-            })?
+            target_dir
+                .canonicalize()
+                .map_err(|e| DomainError::SecurityViolation {
+                    path: format!("Failed to canonicalize newly created target_dir: {}", e),
+                })?
         };
 
         for entry_res in archive.entries().map_err(|e| DomainError::ManifestError {
@@ -117,19 +121,31 @@ impl ZipSlipGuard {
                 _ => {}
             }
 
-            let entry_path = entry.path().map_err(|e| DomainError::SecurityViolation {
-                path: format!("Failed to read archive entry path: {}", e),
-            })?.to_path_buf();
+            let entry_path = entry
+                .path()
+                .map_err(|e| DomainError::SecurityViolation {
+                    path: format!("Failed to read archive entry path: {}", e),
+                })?
+                .to_path_buf();
 
             let safe_destination = Self::sanitize_entry_path(&entry_path, &canonical_target)?;
 
             if entry_type.is_symlink() {
-                if let Some(target_link) = entry.link_name().map_err(|e| DomainError::SecurityViolation {
-                    path: format!("Failed to read symlink target: {}", e),
-                })? {
-                    if target_link.is_absolute() || target_link.components().any(|c| c == Component::ParentDir) {
+                if let Some(target_link) =
+                    entry
+                        .link_name()
+                        .map_err(|e| DomainError::SecurityViolation {
+                            path: format!("Failed to read symlink target: {}", e),
+                        })?
+                {
+                    if target_link.is_absolute()
+                        || target_link.components().any(|c| c == Component::ParentDir)
+                    {
                         return Err(DomainError::SecurityViolation {
-                            path: format!("Forbidden escaping symlink rejected: {:?} -> {:?}", entry_path, target_link),
+                            path: format!(
+                                "Forbidden escaping symlink rejected: {:?} -> {:?}",
+                                entry_path, target_link
+                            ),
                         });
                     }
                 }
@@ -143,9 +159,14 @@ impl ZipSlipGuard {
                 }
             }
 
-            entry.unpack(&safe_destination).map_err(|e| DomainError::SecurityViolation {
-                path: format!("Failed to unpack {:?} into {:?}: {}", entry_path, safe_destination, e),
-            })?;
+            entry
+                .unpack(&safe_destination)
+                .map_err(|e| DomainError::SecurityViolation {
+                    path: format!(
+                        "Failed to unpack {:?} into {:?}: {}",
+                        entry_path, safe_destination, e
+                    ),
+                })?;
         }
 
         Ok(())
@@ -164,19 +185,27 @@ impl TarZstdPacker {
         if let Some(parent) = output_archive.parent() {
             if !parent.exists() {
                 fs::create_dir_all(parent).map_err(|e| DomainError::ManifestError {
-                    message: format!("Failed to create output archive parent dir {:?}: {}", parent, e),
+                    message: format!(
+                        "Failed to create output archive parent dir {:?}: {}",
+                        parent, e
+                    ),
                 })?;
             }
         }
 
         let out_file = File::create(output_archive).map_err(|e| DomainError::ManifestError {
-            message: format!("Failed to create output archive file {:?}: {}", output_archive, e),
+            message: format!(
+                "Failed to create output archive file {:?}: {}",
+                output_archive, e
+            ),
         })?;
 
         let writer = BufWriter::new(out_file);
         // zstd compression level 3 (balanced speed and ratio)
-        let zstd_encoder = zstd::stream::write::Encoder::new(writer, 3).map_err(|e| DomainError::ManifestError {
-            message: format!("Failed to initialize zstd encoder: {}", e),
+        let zstd_encoder = zstd::stream::write::Encoder::new(writer, 3).map_err(|e| {
+            DomainError::ManifestError {
+                message: format!("Failed to initialize zstd encoder: {}", e),
+            }
         })?;
 
         let mut tar_builder = Builder::new(zstd_encoder);
@@ -203,9 +232,11 @@ impl TarZstdPacker {
                 let mut f = File::open(disk_path).map_err(|e| DomainError::ManifestError {
                     message: format!("Failed to open file {:?}: {}", disk_path, e),
                 })?;
-                let meta = disk_path.metadata().map_err(|e| DomainError::ManifestError {
-                    message: format!("Failed to read metadata {:?}: {}", disk_path, e),
-                })?;
+                let meta = disk_path
+                    .metadata()
+                    .map_err(|e| DomainError::ManifestError {
+                        message: format!("Failed to read metadata {:?}: {}", disk_path, e),
+                    })?;
                 let mut header = Header::new_gnu();
                 header.set_size(meta.len());
                 #[cfg(unix)]
@@ -237,9 +268,10 @@ impl TarZstdPacker {
                     let dest_path_in_tar = archive_rel_path.join(rel_under_source);
 
                     if entry_p.is_file() {
-                        let mut f = File::open(entry_p).map_err(|e| DomainError::ManifestError {
-                            message: format!("Failed to open file {:?}: {}", entry_p, e),
-                        })?;
+                        let mut f =
+                            File::open(entry_p).map_err(|e| DomainError::ManifestError {
+                                message: format!("Failed to open file {:?}: {}", entry_p, e),
+                            })?;
                         let meta = entry_p.metadata().map_err(|e| DomainError::ManifestError {
                             message: format!("Failed to read metadata {:?}: {}", entry_p, e),
                         })?;
@@ -258,7 +290,10 @@ impl TarZstdPacker {
                         tar_builder
                             .append_data(&mut header, &dest_path_in_tar, &mut f)
                             .map_err(|e| DomainError::ManifestError {
-                                message: format!("Failed to append file {:?} to archive: {}", entry_p, e),
+                                message: format!(
+                                    "Failed to append file {:?} to archive: {}",
+                                    entry_p, e
+                                ),
                             })?;
                     } else if entry_p.is_dir() {
                         let mut header = Header::new_gnu();
@@ -269,20 +304,27 @@ impl TarZstdPacker {
                         tar_builder
                             .append_data(&mut header, &dest_path_in_tar, &mut std::io::empty())
                             .map_err(|e| DomainError::ManifestError {
-                                message: format!("Failed to append directory {:?} to archive: {}", entry_p, e),
+                                message: format!(
+                                    "Failed to append directory {:?} to archive: {}",
+                                    entry_p, e
+                                ),
                             })?;
                     }
                 }
             }
         }
 
-        let zstd_encoder = tar_builder.into_inner().map_err(|e| DomainError::ManifestError {
-            message: format!("Failed to finalize tar archive: {}", e),
-        })?;
+        let zstd_encoder = tar_builder
+            .into_inner()
+            .map_err(|e| DomainError::ManifestError {
+                message: format!("Failed to finalize tar archive: {}", e),
+            })?;
 
-        zstd_encoder.finish().map_err(|e| DomainError::ManifestError {
-            message: format!("Failed to finish zstd compression: {}", e),
-        })?;
+        zstd_encoder
+            .finish()
+            .map_err(|e| DomainError::ManifestError {
+                message: format!("Failed to finish zstd compression: {}", e),
+            })?;
 
         Ok(())
     }
@@ -311,9 +353,11 @@ impl TarZstdPacker {
             if let Ok(path) = entry.path() {
                 if path == Path::new("manifest.json") {
                     let mut s = String::new();
-                    entry.read_to_string(&mut s).map_err(|e| DomainError::ManifestError {
-                        message: format!("Failed to read manifest.json content: {}", e),
-                    })?;
+                    entry
+                        .read_to_string(&mut s)
+                        .map_err(|e| DomainError::ManifestError {
+                            message: format!("Failed to read manifest.json content: {}", e),
+                        })?;
                     return Ok(s);
                 }
             }

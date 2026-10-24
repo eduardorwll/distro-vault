@@ -36,9 +36,18 @@ fn test_distro_family_inference() {
     assert_eq!(DistroFamily::from_id("arch", None), DistroFamily::Arch);
     assert_eq!(DistroFamily::from_id("cachyos", None), DistroFamily::Arch);
     assert_eq!(DistroFamily::from_id("fedora", None), DistroFamily::Fedora);
-    assert_eq!(DistroFamily::from_id("ubuntu", Some("debian")), DistroFamily::Debian);
-    assert_eq!(DistroFamily::from_id("opensuse-tumbleweed", None), DistroFamily::OpenSuse);
-    assert_eq!(DistroFamily::from_id("unknown_os", None), DistroFamily::Unknown);
+    assert_eq!(
+        DistroFamily::from_id("ubuntu", Some("debian")),
+        DistroFamily::Debian
+    );
+    assert_eq!(
+        DistroFamily::from_id("opensuse-tumbleweed", None),
+        DistroFamily::OpenSuse
+    );
+    assert_eq!(
+        DistroFamily::from_id("unknown_os", None),
+        DistroFamily::Unknown
+    );
 }
 
 #[test]
@@ -61,7 +70,11 @@ fn test_unix_mode_permissions() {
 #[test]
 fn test_zen_profile_and_spaces() {
     let pid = ProfileId::new("test.default").unwrap();
-    let mut profile = ZenProfile::new(pid, true, PathBuf::from("/home/user/.config/zen/test.default"));
+    let mut profile = ZenProfile::new(
+        pid,
+        true,
+        PathBuf::from("/home/user/.config/zen/test.default"),
+    );
 
     profile.spaces.push(Space {
         id: "space-1".to_string(),
@@ -279,7 +292,13 @@ fn test_ssh_key_entity_and_filter() {
     use domain::entities::ssh_key::{SshFileType, SshKeyEntry};
     use std::path::PathBuf;
 
-    let key = SshKeyEntry::new("id_ed25519", PathBuf::from("id_ed25519"), SshFileType::PrivateKey, 411, 0o600);
+    let key = SshKeyEntry::new(
+        "id_ed25519",
+        PathBuf::from("id_ed25519"),
+        SshFileType::PrivateKey,
+        411,
+        0o600,
+    );
     assert_eq!(key.file_type.as_str(), "Chave Privada");
     assert_eq!(key.file_type.default_posix_mode(), 0o600);
     assert_eq!(SshFileType::PublicKey.default_posix_mode(), 0o644);

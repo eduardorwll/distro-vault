@@ -17,7 +17,12 @@ pub struct AppImageEntry {
 }
 
 impl AppImageEntry {
-    pub fn new(name: impl Into<String>, relative_path: PathBuf, size_bytes: u64, mode: UnixMode) -> Self {
+    pub fn new(
+        name: impl Into<String>,
+        relative_path: PathBuf,
+        size_bytes: u64,
+        mode: UnixMode,
+    ) -> Self {
         Self {
             name: name.into(),
             relative_path,

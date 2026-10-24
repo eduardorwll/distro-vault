@@ -8,7 +8,8 @@ use domain::ports::BrowserPort;
 
 #[test]
 fn test_mozlz4_roundtrip_valid_payload() {
-    let sample_json = r#"{"windows":[{"tabs":[{"entries":[{"url":"https://rust-lang.org","title":"Rust"}]}]}]}"#;
+    let sample_json =
+        r#"{"windows":[{"tabs":[{"entries":[{"url":"https://rust-lang.org","title":"Rust"}]}]}]}"#;
     let compressed = MozLz4Codec::compress(sample_json).expect("Compression failed");
 
     assert!(compressed.starts_with(b"mozLz40\0"));
@@ -91,14 +92,18 @@ Default=1
 
     assert!(rewritten.contains("StartWithLastProfile=1"));
     assert!(rewritten.contains(&format!("Default={}", target)));
-    assert!(rewritten.contains(&format!("Path={}\nDefault=1", target)) || rewritten.contains("Default=1"));
+    assert!(
+        rewritten.contains(&format!("Path={}\nDefault=1", target))
+            || rewritten.contains("Default=1")
+    );
 
     let sample_installs_ini = r#"[15B76BAA26BA15E7]
 Default=vo0xpeic.Default Profile
 Locked=1
 "#;
 
-    let rewritten_installs = ProfilesIniNormalizer::rewrite_installs_ini(sample_installs_ini, target);
+    let rewritten_installs =
+        ProfilesIniNormalizer::rewrite_installs_ini(sample_installs_ini, target);
     assert!(rewritten_installs.contains(&format!("Default={}", target)));
     assert!(rewritten_installs.contains("Locked=1"));
 }
@@ -142,7 +147,9 @@ fn test_browser_adapter_scan_and_lock_check() {
 
     // Add fake session
     let session_file = prof_dir.join("zen-sessions.jsonlz4");
-    let compressed_session = MozLz4Codec::compress(r#"{"spaces":[{"id":"s1","name":"Dev","tabs":["t1","t2"]}]}"#).unwrap();
+    let compressed_session =
+        MozLz4Codec::compress(r#"{"spaces":[{"id":"s1","name":"Dev","tabs":["t1","t2"]}]}"#)
+            .unwrap();
     fs::write(&session_file, compressed_session).unwrap();
 
     let scanned = adapter.scan_profiles(tmp.path()).expect("Scan failed");
@@ -155,11 +162,17 @@ fn test_browser_adapter_scan_and_lock_check() {
 
 #[test]
 fn test_real_system_zen_sessions_lz4_if_present() {
-    let real_session_path = Path::new("/home/eduardorwll/.config/zen/7awtlvx8.Default (release)/zen-sessions.jsonlz4");
+    let real_session_path =
+        Path::new("/home/eduardorwll/.config/zen/7awtlvx8.Default (release)/zen-sessions.jsonlz4");
     if real_session_path.exists() {
         let bytes = fs::read(real_session_path).expect("Failed to read real session");
-        let decompressed = MozLz4Codec::decompress(&bytes).expect("Failed to decompress real zen-sessions.jsonlz4");
+        let decompressed = MozLz4Codec::decompress(&bytes)
+            .expect("Failed to decompress real zen-sessions.jsonlz4");
         assert!(decompressed.len() > 100);
-        assert!(decompressed.contains("windows") || decompressed.contains("spaces") || decompressed.contains("tabs"));
+        assert!(
+            decompressed.contains("windows")
+                || decompressed.contains("spaces")
+                || decompressed.contains("tabs")
+        );
     }
 }

@@ -12,4 +12,28 @@
 
 # understand-anything trash cache
 .ua/.trash-*
+
+# Security & Sensitive Files Guardrails
 *.tar.zst
+*.tar.gz
+*.tar
+*.zip
+*.zst
+*.key
+*.pem
+*.secret
+*.token
+.env
+.env.*
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+*.jsonlz4
+id_rsa*
+id_ed25519*
+id_ecdsa*
+id_dsa*
+known_hosts*
+authorized_keys*
+*.log
+

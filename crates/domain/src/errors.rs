@@ -41,8 +41,5 @@ pub enum DomainError {
     UnsupportedDistro { distro: String },
 
     #[error("Entity validation error: field '{field}' is invalid: {reason}")]
-    ValidationError {
-        field: &'static str,
-        reason: String,
-    },
+    ValidationError { field: &'static str, reason: String },
 }

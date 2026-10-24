@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::path::Path;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
 
 use domain::errors::DomainError;
 use domain::ports::StoragePort;

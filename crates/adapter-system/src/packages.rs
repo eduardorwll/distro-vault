@@ -90,7 +90,8 @@ impl PackagePort for PacmanAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
-                    let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::PacmanNative);
+                    let (mut scope, mut category) =
+                        PackageCategory::classify(name_str, PackageSource::PacmanNative);
                     if is_distro_preinstalled_on_system(name_str) && scope == PackageScope::User {
                         scope = PackageScope::System;
                         category = PackageCategory::DistroBase;
@@ -138,9 +139,7 @@ impl PackagePort for PacmanAdapter {
     }
 
     fn is_available(&self, name: &PackageName) -> Result<bool, DomainError> {
-        let status = Command::new("pacman")
-            .args(["-Si", name.as_str()])
-            .output();
+        let status = Command::new("pacman").args(["-Si", name.as_str()]).output();
 
         match status {
             Ok(out) => Ok(out.status.success()),
@@ -171,9 +170,13 @@ impl PackagePort for PacmanAdapter {
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
                     let category = PackageCategory::classify_dependency(name_str);
-                    let mut entry = PackageEntry::new(pkg_name, PackageSource::PacmanNative, PackageScope::System)
-                        .with_category(category)
-                        .as_dependency(true);
+                    let mut entry = PackageEntry::new(
+                        pkg_name,
+                        PackageSource::PacmanNative,
+                        PackageScope::System,
+                    )
+                    .with_category(category)
+                    .as_dependency(true);
                     if let Some(&ver) = parts.get(1) {
                         entry = entry.with_version(ver);
                     }
@@ -216,12 +219,11 @@ impl PackagePort for AurAdapter {
             Some(h) => h,
             None => return Ok(Vec::new()),
         };
-        let output = Command::new(helper)
-            .args(["-Qme"])
-            .output()
-            .map_err(|e| DomainError::PackageError {
+        let output = Command::new(helper).args(["-Qme"]).output().map_err(|e| {
+            DomainError::PackageError {
                 message: format!("Failed to run {} -Qme: {}", helper, e),
-            })?;
+            }
+        })?;
 
         if !output.status.success() {
             return Err(DomainError::PackageError {
@@ -239,7 +241,8 @@ impl PackagePort for AurAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
-                    let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::Aur);
+                    let (mut scope, mut category) =
+                        PackageCategory::classify(name_str, PackageSource::Aur);
                     if is_distro_preinstalled_on_system(name_str) && scope == PackageScope::User {
                         scope = PackageScope::System;
                         category = PackageCategory::DistroBase;
@@ -280,9 +283,10 @@ impl PackagePort for AurAdapter {
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
                     let category = PackageCategory::classify_dependency(name_str);
-                    let mut entry = PackageEntry::new(pkg_name, PackageSource::Aur, PackageScope::User)
-                        .with_category(category)
-                        .as_dependency(true);
+                    let mut entry =
+                        PackageEntry::new(pkg_name, PackageSource::Aur, PackageScope::User)
+                            .with_category(category)
+                            .as_dependency(true);
                     if let Some(&ver) = parts.get(1) {
                         entry = entry.with_version(ver);
                     }
@@ -335,9 +339,7 @@ impl PackagePort for AurAdapter {
             Some(h) => h,
             None => return Ok(false),
         };
-        let status = Command::new(helper)
-            .args(["-Si", name.as_str()])
-            .output();
+        let status = Command::new(helper).args(["-Si", name.as_str()]).output();
 
         match status {
             Ok(out) => Ok(out.status.success()),
@@ -362,17 +364,30 @@ impl PackagePort for DnfAdapter {
     }
 
     fn query_installed(&self) -> Result<Vec<PackageEntry>, DomainError> {
-        if which::which("dnf").is_err() && which::which("dnf5").is_err() && which::which("rpm").is_err() {
+        if which::which("dnf").is_err()
+            && which::which("dnf5").is_err()
+            && which::which("rpm").is_err()
+        {
             return Ok(Vec::new());
         }
 
         let output = if which::which("dnf5").is_ok() {
             Command::new("dnf5")
-                .args(["repoquery", "--userinstalled", "--qf", "%{name}\t%{version}-%{release}"])
+                .args([
+                    "repoquery",
+                    "--userinstalled",
+                    "--qf",
+                    "%{name}\t%{version}-%{release}",
+                ])
                 .output()
         } else if which::which("dnf").is_ok() {
             Command::new("dnf")
-                .args(["repoquery", "--userinstalled", "--qf", "%{name}\t%{version}-%{release}"])
+                .args([
+                    "repoquery",
+                    "--userinstalled",
+                    "--qf",
+                    "%{name}\t%{version}-%{release}",
+                ])
                 .output()
         } else {
             Command::new("rpm")
@@ -391,7 +406,8 @@ impl PackagePort for DnfAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
-                    let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::DnfNative);
+                    let (mut scope, mut category) =
+                        PackageCategory::classify(name_str, PackageSource::DnfNative);
                     if is_distro_preinstalled_on_system(name_str) && scope == PackageScope::User {
                         scope = PackageScope::System;
                         category = PackageCategory::DistroBase;
@@ -414,9 +430,19 @@ impl PackagePort for DnfAdapter {
             return Ok(Vec::new());
         }
 
-        let cmd = if which::which("dnf5").is_ok() { "dnf5" } else { "dnf" };
+        let cmd = if which::which("dnf5").is_ok() {
+            "dnf5"
+        } else {
+            "dnf"
+        };
         let output = Command::new(cmd)
-            .args(["repoquery", "--installed", "--unneeded", "--qf", "%{name}\t%{version}-%{release}"])
+            .args([
+                "repoquery",
+                "--installed",
+                "--unneeded",
+                "--qf",
+                "%{name}\t%{version}-%{release}",
+            ])
             .output();
 
         let output = match output {
@@ -431,9 +457,10 @@ impl PackagePort for DnfAdapter {
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
                     let category = PackageCategory::classify_dependency(name_str);
-                    let mut entry = PackageEntry::new(pkg_name, PackageSource::DnfNative, PackageScope::System)
-                        .with_category(category)
-                        .as_dependency(true);
+                    let mut entry =
+                        PackageEntry::new(pkg_name, PackageSource::DnfNative, PackageScope::System)
+                            .with_category(category)
+                            .as_dependency(true);
                     if let Some(&ver) = parts.get(1) {
                         entry = entry.with_version(ver);
                     }
@@ -455,7 +482,11 @@ impl PackagePort for DnfAdapter {
             return Ok(names);
         }
 
-        let cmd = if which::which("dnf5").is_ok() { "dnf5" } else { "dnf" };
+        let cmd = if which::which("dnf5").is_ok() {
+            "dnf5"
+        } else {
+            "dnf"
+        };
         let name_strs: Vec<&str> = names.iter().map(|n| n.as_str()).collect();
         let status = Command::new("sudo")
             .arg(cmd)
@@ -476,10 +507,12 @@ impl PackagePort for DnfAdapter {
     }
 
     fn is_available(&self, name: &PackageName) -> Result<bool, DomainError> {
-        let cmd = if which::which("dnf5").is_ok() { "dnf5" } else { "dnf" };
-        let status = Command::new(cmd)
-            .args(["info", name.as_str()])
-            .output();
+        let cmd = if which::which("dnf5").is_ok() {
+            "dnf5"
+        } else {
+            "dnf"
+        };
+        let status = Command::new(cmd).args(["info", name.as_str()]).output();
 
         match status {
             Ok(out) => Ok(out.status.success()),
@@ -554,7 +587,8 @@ impl PackagePort for AptAdapter {
                 }
 
                 if let Ok(pkg_name) = PackageName::new(name_str) {
-                    let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::AptNative);
+                    let (mut scope, mut category) =
+                        PackageCategory::classify(name_str, PackageSource::AptNative);
                     if is_distro_preinstalled_on_system(name_str) && scope == PackageScope::User {
                         scope = PackageScope::System;
                         category = PackageCategory::DistroBase;
@@ -577,9 +611,7 @@ impl PackagePort for AptAdapter {
             return Ok(Vec::new());
         }
 
-        let output = Command::new("apt-mark")
-            .arg("showauto")
-            .output();
+        let output = Command::new("apt-mark").arg("showauto").output();
 
         let output = match output {
             Ok(o) if o.status.success() => o,
@@ -595,9 +627,10 @@ impl PackagePort for AptAdapter {
             }
             if let Ok(pkg_name) = PackageName::new(name_str) {
                 let category = PackageCategory::classify_dependency(name_str);
-                let entry = PackageEntry::new(pkg_name, PackageSource::AptNative, PackageScope::System)
-                    .with_category(category)
-                    .as_dependency(true);
+                let entry =
+                    PackageEntry::new(pkg_name, PackageSource::AptNative, PackageScope::System)
+                        .with_category(category)
+                        .as_dependency(true);
                 list.push(entry);
             }
         }
@@ -678,7 +711,8 @@ impl PackagePort for FlatpakAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&app_id) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(app_id) {
-                    let (scope, category) = PackageCategory::classify(app_id, PackageSource::Flatpak);
+                    let (scope, category) =
+                        PackageCategory::classify(app_id, PackageSource::Flatpak);
                     let mut entry = PackageEntry::new(pkg_name, PackageSource::Flatpak, scope)
                         .with_category(category);
                     if let Some(&ver) = parts.get(1) {

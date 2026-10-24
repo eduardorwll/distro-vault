@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use ratatui::widgets::ListState;
+use std::path::PathBuf;
 
 use adapter_storage::CustomDirsHandler;
 use domain::entities::custom_directory::CustomDirectoryEntry;
@@ -194,13 +194,16 @@ impl TuiApp {
             .map(|m| m.created_at_utc.clone())
             .unwrap_or_else(|| "Data desconhecida".to_string());
 
-        self.snapshots.insert(0, SnapshotItem {
-            path,
-            filename,
-            size_bytes,
-            modified_at,
-            manifest,
-        });
+        self.snapshots.insert(
+            0,
+            SnapshotItem {
+                path,
+                filename,
+                size_bytes,
+                modified_at,
+                manifest,
+            },
+        );
         self.snapshot_cursor = 0;
         self.snapshot_list_state.select(Some(0));
     }
@@ -294,12 +297,19 @@ impl TuiApp {
                     TuiRow::Header { category_id, .. } => {
                         let cat = category_id.clone();
                         let any_included = rows.iter().any(|r| match r {
-                            TuiRow::Item { category_id: c, item } if c == &cat => item.included,
+                            TuiRow::Item {
+                                category_id: c,
+                                item,
+                            } if c == &cat => item.included,
                             _ => false,
                         });
                         let new_state = !any_included;
                         for r in rows.iter_mut() {
-                            if let TuiRow::Item { category_id: c, item } = r {
+                            if let TuiRow::Item {
+                                category_id: c,
+                                item,
+                            } = r
+                            {
                                 if c == &cat {
                                     item.included = new_state;
                                 }
@@ -333,8 +343,8 @@ impl TuiApp {
 
     pub fn add_custom_directory(&mut self, path_str: &str) -> Result<(), String> {
         let path = PathBuf::from(path_str.trim());
-        let inspected = CustomDirsHandler::inspect_directory(&path, None)
-            .map_err(|e| format!("{}", e))?;
+        let inspected =
+            CustomDirsHandler::inspect_directory(&path, None).map_err(|e| format!("{}", e))?;
 
         self.custom_dirs.push(inspected);
         self.status_message = Some(format!("Diretório adicionado com sucesso: {}", path_str));

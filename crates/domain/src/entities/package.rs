@@ -162,7 +162,9 @@ impl PackageCategory {
         {
             return true;
         }
-        DISTRO_PREINSTALLED_PACKAGES.binary_search(&n.as_str()).is_ok()
+        DISTRO_PREINSTALLED_PACKAGES
+            .binary_search(&n.as_str())
+            .is_ok()
     }
 
     /// Alias for is_distro_preinstalled

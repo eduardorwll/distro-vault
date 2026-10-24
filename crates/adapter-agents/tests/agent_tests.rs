@@ -12,8 +12,16 @@ fn test_agent_scanner_reads_rules_and_frontmatter() {
     let home = tmp.path();
 
     // 1. Create GEMINI.md and AGENTS.md
-    fs::write(home.join("GEMINI.md"), "# Guidelines\nLocal default: ~/Antigravity/").unwrap();
-    fs::write(home.join("AGENTS.md"), "# Protocols\nMandatory pre-approval").unwrap();
+    fs::write(
+        home.join("GEMINI.md"),
+        "# Guidelines\nLocal default: ~/Antigravity/",
+    )
+    .unwrap();
+    fs::write(
+        home.join("AGENTS.md"),
+        "# Protocols\nMandatory pre-approval",
+    )
+    .unwrap();
 
     // 2. Create skills with SKILL.md containing YAML frontmatter
     let skills_dir = home.join(".agents/skills");
@@ -57,7 +65,11 @@ fn test_agent_symlink_dereferencing() {
     // External target directory simulating /usr/share/omarchy/
     let external_omarchy = tmp.path().join("external_share/omarchy");
     fs::create_dir_all(&external_omarchy).unwrap();
-    fs::write(external_omarchy.join("SKILL.md"), "---\nname: omarchy\ndescription: Omarchy desktop skill.\n---\nBody").unwrap();
+    fs::write(
+        external_omarchy.join("SKILL.md"),
+        "---\nname: omarchy\ndescription: Omarchy desktop skill.\n---\nBody",
+    )
+    .unwrap();
     fs::write(external_omarchy.join("config.sh"), "#!/bin/bash\necho ok").unwrap();
 
     // Create symlink ~/.agents/skills/omarchy -> external_omarchy
@@ -75,11 +87,16 @@ fn test_agent_symlink_dereferencing() {
 
     // Export with dereference_symlinks = true
     let export_dir = tmp.path().join("export");
-    adapter.export_governance(&governance, &export_dir, true).expect("Export failed");
+    adapter
+        .export_governance(&governance, &export_dir, true)
+        .expect("Export failed");
 
     let exported_omarchy = export_dir.join(".agents/skills/omarchy");
     assert!(exported_omarchy.exists());
-    assert!(!exported_omarchy.is_symlink(), "Exported skill must be a real directory, not a symlink");
+    assert!(
+        !exported_omarchy.is_symlink(),
+        "Exported skill must be a real directory, not a symlink"
+    );
     assert!(exported_omarchy.join("SKILL.md").exists());
     assert!(exported_omarchy.join("config.sh").exists());
 }
@@ -89,9 +106,14 @@ fn test_real_system_agent_scanning() {
     let home = Path::new("/home/eduardorwll");
     if home.join(".agents/skills").exists() {
         let adapter = LocalAgentAdapter::new();
-        let governance = adapter.scan_governance(home).expect("Scan of real system failed");
+        let governance = adapter
+            .scan_governance(home)
+            .expect("Scan of real system failed");
 
-        assert!(!governance.skills.is_empty(), "Expected real skills to be discovered");
+        assert!(
+            !governance.skills.is_empty(),
+            "Expected real skills to be discovered"
+        );
         assert!(governance.skills.len() >= 10);
         assert!(governance.rules.iter().any(|r| r.name == "GEMINI.md"));
     }

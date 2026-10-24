@@ -42,7 +42,10 @@ fn test_cli_parsing_subcommands() {
 
     match parsed_restore.command {
         Some(Commands::Restore(r)) => {
-            assert_eq!(r.archive.as_ref().unwrap().to_str().unwrap(), "/tmp/snapshot.tar.zst");
+            assert_eq!(
+                r.archive.as_ref().unwrap().to_str().unwrap(),
+                "/tmp/snapshot.tar.zst"
+            );
             assert!(r.install_packages);
             assert!(r.dry_run);
         }
@@ -61,13 +64,9 @@ fn test_cli_parsing_subcommands() {
     }
 
     // 3. Inspect command
-    let parsed_inspect = Cli::try_parse_from([
-        "distro-vault",
-        "inspect",
-        "/tmp/snapshot.tar.zst",
-        "--json",
-    ])
-    .expect("Failed to parse inspect args");
+    let parsed_inspect =
+        Cli::try_parse_from(["distro-vault", "inspect", "/tmp/snapshot.tar.zst", "--json"])
+            .expect("Failed to parse inspect args");
 
     match parsed_inspect.command {
         Some(Commands::Inspect(i)) => {
@@ -78,12 +77,8 @@ fn test_cli_parsing_subcommands() {
     }
 
     // 4. Verify command
-    let parsed_verify = Cli::try_parse_from([
-        "distro-vault",
-        "verify",
-        "/tmp/snapshot.tar.zst",
-    ])
-    .expect("Failed to parse verify args");
+    let parsed_verify = Cli::try_parse_from(["distro-vault", "verify", "/tmp/snapshot.tar.zst"])
+        .expect("Failed to parse verify args");
 
     match parsed_verify.command {
         Some(Commands::Verify(v)) => {
@@ -98,68 +93,60 @@ fn test_tui_app_state_and_filter_generation() {
     let mut app = TuiApp::new();
 
     // Setup dummy user packages with headers
-    app.user_packages = TuiApp::group_into_rows(vec![
-        (
-            "cli".to_string(),
-            "FERRAMENTAS CLI".to_string(),
-            vec![
-                TuiItem {
-                    id: "ripgrep".to_string(),
-                    name: "ripgrep".to_string(),
-                    details: "fast grep".to_string(),
-                    included: true,
-                },
-                TuiItem {
-                    id: "git".to_string(),
-                    name: "git".to_string(),
-                    details: "vcs".to_string(),
-                    included: true,
-                },
-            ],
-        ),
-    ]);
+    app.user_packages = TuiApp::group_into_rows(vec![(
+        "cli".to_string(),
+        "FERRAMENTAS CLI".to_string(),
+        vec![
+            TuiItem {
+                id: "ripgrep".to_string(),
+                name: "ripgrep".to_string(),
+                details: "fast grep".to_string(),
+                included: true,
+            },
+            TuiItem {
+                id: "git".to_string(),
+                name: "git".to_string(),
+                details: "vcs".to_string(),
+                included: true,
+            },
+        ],
+    )]);
 
     // Setup dummy system packages with headers (unselected by default)
-    app.system_packages = TuiApp::group_into_rows(vec![
-        (
-            "kernel".to_string(),
-            "KERNEL & FIRMWARE".to_string(),
-            vec![TuiItem {
-                id: "linux".to_string(),
-                name: "linux".to_string(),
-                details: "core kernel".to_string(),
-                included: false,
-            }],
-        ),
-    ]);
+    app.system_packages = TuiApp::group_into_rows(vec![(
+        "kernel".to_string(),
+        "KERNEL & FIRMWARE".to_string(),
+        vec![TuiItem {
+            id: "linux".to_string(),
+            name: "linux".to_string(),
+            details: "core kernel".to_string(),
+            included: false,
+        }],
+    )]);
 
     // Setup dummy dependency packages with headers (unselected by default)
-    app.dependency_packages = TuiApp::group_into_rows(vec![
-        (
-            "core_libs".to_string(),
-            "BIBLIOTECAS CORE".to_string(),
-            vec![TuiItem {
-                id: "glibc".to_string(),
-                name: "glibc".to_string(),
-                details: "C runtime".to_string(),
-                included: false,
-            }],
-        ),
-    ]);
+    app.dependency_packages = TuiApp::group_into_rows(vec![(
+        "core_libs".to_string(),
+        "BIBLIOTECAS CORE".to_string(),
+        vec![TuiItem {
+            id: "glibc".to_string(),
+            name: "glibc".to_string(),
+            details: "C runtime".to_string(),
+            included: false,
+        }],
+    )]);
 
     // Setup dummy skills with headers
-    app.skills = TuiApp::group_into_rows(vec![
-        (
-            "clean_code".to_string(),
-            "CLEAN CODE".to_string(),
-            vec![TuiItem {
-                id: "clean-code".to_string(),
-                name: "clean-code".to_string(),
-                details: "Uncle Bob".to_string(),
-                included: true,
-            }],
-        ),
-    ]);
+    app.skills = TuiApp::group_into_rows(vec![(
+        "clean_code".to_string(),
+        "CLEAN CODE".to_string(),
+        vec![TuiItem {
+            id: "clean-code".to_string(),
+            name: "clean-code".to_string(),
+            details: "Uncle Bob".to_string(),
+            included: true,
+        }],
+    )]);
 
     // Verify initial selection counts
     assert_eq!(app.count_items(0), 2);
@@ -246,7 +233,10 @@ fn test_tui_app_state_and_filter_generation() {
     app.add_snapshot_file(snap_path.clone(), None);
 
     assert_eq!(app.snapshots.len(), 1);
-    assert_eq!(app.selected_snapshot().unwrap().filename, "distro-vault-test.tar.zst");
+    assert_eq!(
+        app.selected_snapshot().unwrap().filename,
+        "distro-vault-test.tar.zst"
+    );
     assert_eq!(app.snapshot_cursor, 0);
 
     // Test restore options toggle

@@ -64,6 +64,9 @@ impl ZenProfile {
     }
 
     pub fn total_tabs(&self) -> usize {
-        self.spaces.iter().map(|s| s.open_tabs_count + s.pinned_tabs_count).sum()
+        self.spaces
+            .iter()
+            .map(|s| s.open_tabs_count + s.pinned_tabs_count)
+            .sum()
     }
 }

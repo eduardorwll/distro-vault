@@ -36,7 +36,11 @@ impl SystemPort for LinuxSystemAdapter {
         ProcessManager::is_running(process_name)
     }
 
-    fn terminate_process_gracefully(&self, process_name: &str, timeout_secs: u64) -> Result<(), DomainError> {
+    fn terminate_process_gracefully(
+        &self,
+        process_name: &str,
+        timeout_secs: u64,
+    ) -> Result<(), DomainError> {
         ProcessManager::terminate_gracefully(process_name, timeout_secs)
     }
 

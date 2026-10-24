@@ -23,7 +23,10 @@ impl LinuxSshAdapter {
         if file_name.ends_with(".pub") {
             return SshFileType::PublicKey;
         }
-        if file_name == "config" || file_name.starts_with("config.d") || file_name.starts_with("config_") {
+        if file_name == "config"
+            || file_name.starts_with("config.d")
+            || file_name.starts_with("config_")
+        {
             return SshFileType::Config;
         }
         if file_name == "authorized_keys" || file_name.starts_with("authorized_keys") {
@@ -67,7 +70,11 @@ impl SshPort for LinuxSshAdapter {
 
         let mut entries = Vec::new();
         let read_dir = fs::read_dir(&ssh_dir).map_err(|e| DomainError::SshError {
-            message: format!("Failed to read SSH directory '{}': {}", ssh_dir.display(), e),
+            message: format!(
+                "Failed to read SSH directory '{}': {}",
+                ssh_dir.display(),
+                e
+            ),
         })?;
 
         for entry_res in read_dir {
@@ -86,7 +93,8 @@ impl SshPort for LinuxSshAdapter {
             };
 
             // Ignore temporary editor files or socket pipes
-            if file_name.ends_with('~') || file_name.ends_with(".tmp") || file_name.starts_with('.') {
+            if file_name.ends_with('~') || file_name.ends_with(".tmp") || file_name.starts_with('.')
+            {
                 continue;
             }
 
@@ -135,7 +143,11 @@ impl SshPort for LinuxSshAdapter {
         // 1. Create ~/.ssh directory with strict 0700 permissions
         if !target_ssh.exists() {
             fs::create_dir_all(&target_ssh).map_err(|e| DomainError::SshError {
-                message: format!("Failed to create SSH directory '{}': {}", target_ssh.display(), e),
+                message: format!(
+                    "Failed to create SSH directory '{}': {}",
+                    target_ssh.display(),
+                    e
+                ),
             })?;
         }
         let _ = fs::set_permissions(&target_ssh, fs::Permissions::from_mode(0o700));
@@ -160,13 +172,21 @@ impl SshPort for LinuxSshAdapter {
 
             // Copy file content
             fs::copy(&source_file, &target_file).map_err(|e| DomainError::SshError {
-                message: format!("Failed copying SSH key to '{}': {}", target_file.display(), e),
+                message: format!(
+                    "Failed copying SSH key to '{}': {}",
+                    target_file.display(),
+                    e
+                ),
             })?;
 
             // Enforce strict POSIX permissions
             let target_mode = match key.file_type {
-                SshFileType::PrivateKey | SshFileType::Config | SshFileType::AuthorizedKeys => 0o600,
-                SshFileType::PublicKey | SshFileType::KnownHosts | SshFileType::Certificate => 0o644,
+                SshFileType::PrivateKey | SshFileType::Config | SshFileType::AuthorizedKeys => {
+                    0o600
+                }
+                SshFileType::PublicKey | SshFileType::KnownHosts | SshFileType::Certificate => {
+                    0o644
+                }
                 SshFileType::Other => 0o600,
             };
 

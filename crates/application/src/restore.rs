@@ -1,7 +1,7 @@
+use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
 use tempfile::tempdir;
 
 use domain::entities::package::PackageSource;
@@ -99,7 +99,8 @@ impl RestorePipelineUseCase {
             message: format!("Failed to create staging directory for restoration: {}", e),
         })?;
 
-        self.storage_port.extract_snapshot(&req.archive_path, staging_dir.path())?;
+        self.storage_port
+            .extract_snapshot(&req.archive_path, staging_dir.path())?;
 
         // 3. Restore Browser Profiles & Normalize Hashes
         let mut profiles_restored = Vec::new();
@@ -109,14 +110,10 @@ impl RestorePipelineUseCase {
                 let prof_staging_path = staging_browser.join(prof.id.as_str());
                 if prof_staging_path.exists() {
                     if !req.dry_run {
-                        self.browser_port.restore_profile_state(
-                            &staging_browser,
-                            &req.target_config_root,
-                        )?;
-                        self.browser_port.normalize_installation_hash(
-                            &req.target_config_root,
-                            &prof.id,
-                        )?;
+                        self.browser_port
+                            .restore_profile_state(&staging_browser, &req.target_config_root)?;
+                        self.browser_port
+                            .normalize_installation_hash(&req.target_config_root, &prof.id)?;
                     }
                     profiles_restored.push(prof.id.as_str().to_string());
                 }
@@ -127,11 +124,15 @@ impl RestorePipelineUseCase {
         let staging_agents = staging_dir.path().join("agents");
         let skills_count = manifest.agent_governance.skills.len();
         if staging_agents.exists() && !req.dry_run {
-            self.agent_port.restore_governance(&staging_agents, &req.target_home)?;
+            self.agent_port
+                .restore_governance(&staging_agents, &req.target_home)?;
         }
 
         // 5. Detect Target Distro & Package Dispatch
-        let target_distro = self.system_port.detect_distro().unwrap_or(DistroFamily::Unknown);
+        let target_distro = self
+            .system_port
+            .detect_distro()
+            .unwrap_or(DistroFamily::Unknown);
         let is_same_distro = target_distro == manifest.source_distro;
 
         let mut packages_installed = Vec::new();
@@ -165,7 +166,8 @@ impl RestorePipelineUseCase {
         }
 
         // 6. Check FUSE2 requirement for AppImages
-        let fuse2_missing_warning = !manifest.appimages.is_empty() && !self.system_port.is_fuse2_available();
+        let fuse2_missing_warning =
+            !manifest.appimages.is_empty() && !self.system_port.is_fuse2_available();
 
         // 7. Restore Registered SSH Keys with strict POSIX permissions (0700/0600)
         let staging_ssh = staging_dir.path().join("ssh");

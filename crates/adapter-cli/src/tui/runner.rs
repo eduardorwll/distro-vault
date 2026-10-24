@@ -1,12 +1,12 @@
-use std::io::{self, stdout};
-use std::path::PathBuf;
-use std::time::Duration;
 use crossterm::{
     event::{self, Event},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
 use ratatui::{backend::CrosstermBackend, Terminal};
+use std::io::{self, stdout};
+use std::path::PathBuf;
+use std::time::Duration;
 
 use domain::entities::custom_directory::CustomDirectoryEntry;
 use domain::entities::selection_filter::SelectionFilter;

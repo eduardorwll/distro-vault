@@ -13,7 +13,11 @@ pub trait SystemPort: Send + Sync {
     fn is_process_running(&self, process_name: &str) -> bool;
 
     /// Attempts to terminate a process gracefully (SIGTERM), waiting up to timeout seconds
-    fn terminate_process_gracefully(&self, process_name: &str, timeout_secs: u64) -> Result<(), DomainError>;
+    fn terminate_process_gracefully(
+        &self,
+        process_name: &str,
+        timeout_secs: u64,
+    ) -> Result<(), DomainError>;
 
     /// Checks if libfuse2 is available for AppImage execution
     fn is_fuse2_available(&self) -> bool;

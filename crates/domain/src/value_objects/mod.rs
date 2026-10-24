@@ -195,7 +195,11 @@ impl SkillCategory {
             SkillCategory::Architecture
         } else if n.contains("sec") || n.contains("doubt") || n.contains("hardening") {
             SkillCategory::Security
-        } else if n.contains("test") || n.contains("debug") || n.contains("tdd") || n.contains("quality") {
+        } else if n.contains("test")
+            || n.contains("debug")
+            || n.contains("tdd")
+            || n.contains("quality")
+        {
             SkillCategory::Testing
         } else if n.contains("plan") || n.contains("incremental") || n.contains("shipping") {
             SkillCategory::Process

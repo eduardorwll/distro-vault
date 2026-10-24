@@ -70,6 +70,9 @@ impl AgentGovernance {
     }
 
     pub fn skills_by_category(&self, category: SkillCategory) -> Vec<&SkillEntry> {
-        self.skills.iter().filter(|s| s.category == category).collect()
+        self.skills
+            .iter()
+            .filter(|s| s.category == category)
+            .collect()
     }
 }

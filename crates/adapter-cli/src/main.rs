@@ -1,8 +1,8 @@
-use std::path::{Path, PathBuf};
-use std::time::Duration;
 use clap::Parser;
 use console::style;
 use indicatif::{ProgressBar, ProgressStyle};
+use std::path::{Path, PathBuf};
+use std::time::Duration;
 
 use adapter_cli::args::{BackupArgs, Cli, Commands, InspectArgs, RestoreArgs, VerifyArgs};
 use adapter_cli::di::AppContainer;
@@ -38,12 +38,22 @@ fn main() {
     }
 }
 
-fn handle_backup(container: &AppContainer, args: BackupArgs) -> Result<(), Box<dyn std::error::Error>> {
+fn handle_backup(
+    container: &AppContainer,
+    args: BackupArgs,
+) -> Result<(), Box<dyn std::error::Error>> {
     let home = args.user_home.unwrap_or_else(default_home);
     let config = args.config_root.unwrap_or_else(|| home.join(".config/zen"));
 
     if args.interactive {
-        handle_interactive(container, TuiMode::Backup, home, config, args.add_dirs, None)
+        handle_interactive(
+            container,
+            TuiMode::Backup,
+            home,
+            config,
+            args.add_dirs,
+            None,
+        )
     } else {
         let output_archive = args.output.unwrap_or_else(|| {
             let backups_dir = home.join("Antigravity/backups");
@@ -81,13 +91,26 @@ fn handle_backup(container: &AppContainer, args: BackupArgs) -> Result<(), Box<d
             }
         }
 
-        execute_backup(container, &home, &config, output_archive, filter, custom_dirs, args.dry_run)
+        execute_backup(
+            container,
+            &home,
+            &config,
+            output_archive,
+            filter,
+            custom_dirs,
+            args.dry_run,
+        )
     }
 }
 
-fn handle_restore(container: &AppContainer, args: RestoreArgs) -> Result<(), Box<dyn std::error::Error>> {
+fn handle_restore(
+    container: &AppContainer,
+    args: RestoreArgs,
+) -> Result<(), Box<dyn std::error::Error>> {
     let home = args.target_home.unwrap_or_else(default_home);
-    let config = args.target_config.unwrap_or_else(|| home.join(".config/zen"));
+    let config = args
+        .target_config
+        .unwrap_or_else(|| home.join(".config/zen"));
 
     if let Some(archive) = args.archive {
         execute_restore(
@@ -154,7 +177,11 @@ fn handle_interactive(
                 let item = TuiItem {
                     id: p.name.as_str().to_string(),
                     name: p.name.as_str().to_string(),
-                    details: format!("{:?} • {}", p.source, p.version.as_deref().unwrap_or("latest")),
+                    details: format!(
+                        "{:?} • {}",
+                        p.source,
+                        p.version.as_deref().unwrap_or("latest")
+                    ),
                     included: is_user,
                 };
                 if is_user {
@@ -187,7 +214,11 @@ fn handle_interactive(
                 let item = TuiItem {
                     id: p.name.as_str().to_string(),
                     name: p.name.as_str().to_string(),
-                    details: format!("{:?} • {}", p.source, p.version.as_deref().unwrap_or("latest")),
+                    details: format!(
+                        "{:?} • {}",
+                        p.source,
+                        p.version.as_deref().unwrap_or("latest")
+                    ),
                     included: false,
                 };
                 match p.category {
@@ -210,23 +241,55 @@ fn handle_interactive(
     ]);
 
     tui_app.system_packages = TuiApp::group_into_rows(vec![
-        ("distro".into(), "PACOTES BASE DA DISTRIBUIÇÃO (PRÉ-INSTALADOS)".into(), sys_distro),
+        (
+            "distro".into(),
+            "PACOTES BASE DA DISTRIBUIÇÃO (PRÉ-INSTALADOS)".into(),
+            sys_distro,
+        ),
         ("kernel".into(), "KERNEL & FIRMWARE".into(), sys_kernel),
         ("base".into(), "BASE & BOOTLOADER".into(), sys_base),
         ("drivers".into(), "DRIVERS & HARDWARE".into(), sys_drivers),
         ("audio".into(), "ÁUDIO & MULTIMÍDIA CORE".into(), sys_audio),
         ("fs".into(), "SISTEMAS DE ARQUIVOS".into(), sys_fs),
         ("net".into(), "REDE, SEGURANÇA & DAEMONS".into(), sys_net),
-        ("compositor".into(), "COMPOSITOR & DISPLAY SERVER".into(), sys_compositor),
-        ("sys_other".into(), "OUTROS DO SISTEMA LOW-LEVEL".into(), sys_other),
+        (
+            "compositor".into(),
+            "COMPOSITOR & DISPLAY SERVER".into(),
+            sys_compositor,
+        ),
+        (
+            "sys_other".into(),
+            "OUTROS DO SISTEMA LOW-LEVEL".into(),
+            sys_other,
+        ),
     ]);
 
     tui_app.dependency_packages = TuiApp::group_into_rows(vec![
-        ("core_libs".into(), "BIBLIOTECAS CORE C/C++".into(), dep_core),
-        ("media_libs".into(), "GRÁFICOS, CODECS & MULTIMÍDIA".into(), dep_media),
-        ("lang_libs".into(), "LINGUAGENS, RUNTIMES & BINDINGS".into(), dep_runtimes),
-        ("build_libs".into(), "COMPILADORES & BUILD TOOLS".into(), dep_build),
-        ("other_deps".into(), "DEMAIS DEPENDÊNCIAS DO SISTEMA".into(), dep_other),
+        (
+            "core_libs".into(),
+            "BIBLIOTECAS CORE C/C++".into(),
+            dep_core,
+        ),
+        (
+            "media_libs".into(),
+            "GRÁFICOS, CODECS & MULTIMÍDIA".into(),
+            dep_media,
+        ),
+        (
+            "lang_libs".into(),
+            "LINGUAGENS, RUNTIMES & BINDINGS".into(),
+            dep_runtimes,
+        ),
+        (
+            "build_libs".into(),
+            "COMPILADORES & BUILD TOOLS".into(),
+            dep_build,
+        ),
+        (
+            "other_deps".into(),
+            "DEMAIS DEPENDÊNCIAS DO SISTEMA".into(),
+            dep_other,
+        ),
     ]);
 
     // 2. Scan skills by category
@@ -242,7 +305,9 @@ fn handle_interactive(
             let item = TuiItem {
                 id: s.name.clone(),
                 name: s.name.clone(),
-                details: s.description.unwrap_or_else(|| "Habilidade de IA".to_string()),
+                details: s
+                    .description
+                    .unwrap_or_else(|| "Habilidade de IA".to_string()),
                 included: true,
             };
             match s.category {
@@ -261,7 +326,11 @@ fn handle_interactive(
             ("sec".into(), "SEGURANÇA & QUALITY GATES".into(), skill_sec),
             ("testing".into(), "TESTES & DIAGNÓSTICO".into(), skill_test),
             ("proc".into(), "PROCESSOS & FLUXOS".into(), skill_proc),
-            ("general".into(), "DEMAIS HABILIDADES DE IA".into(), skill_gen),
+            (
+                "general".into(),
+                "DEMAIS HABILIDADES DE IA".into(),
+                skill_gen,
+            ),
         ]);
     }
 
@@ -278,9 +347,11 @@ fn handle_interactive(
                 });
             }
         }
-        tui_app.zen_spaces = TuiApp::group_into_rows(vec![
-            ("spaces".into(), "WORKSPACES & ESPAÇOS DO NAVEGADOR".into(), spaces),
-        ]);
+        tui_app.zen_spaces = TuiApp::group_into_rows(vec![(
+            "spaces".into(),
+            "WORKSPACES & ESPAÇOS DO NAVEGADOR".into(),
+            spaces,
+        )]);
     }
 
     // 4. Scan registered SSH keys (~/.ssh)
@@ -293,7 +364,12 @@ fn handle_interactive(
             let item = TuiItem {
                 id: k.file_name.clone(),
                 name: k.file_name.clone(),
-                details: format!("{} • {:o} • {} bytes", k.file_type.as_str(), k.posix_mode, k.size_bytes),
+                details: format!(
+                    "{} • {:o} • {} bytes",
+                    k.file_type.as_str(),
+                    k.posix_mode,
+                    k.size_bytes
+                ),
                 included: true,
             };
             match k.file_type {
@@ -305,9 +381,21 @@ fn handle_interactive(
         }
 
         tui_app.ssh_keys = TuiApp::group_into_rows(vec![
-            ("priv".into(), "CHAVES PRIVADAS (0600 - PROTEÇÃO MÁXIMA)".into(), priv_keys),
-            ("pub".into(), "CHAVES PÚBLICAS & CERTIFICADOS (0644)".into(), pub_keys),
-            ("conf".into(), "CONFIGURAÇÃO, KNOWN HOSTS & DEMAIS".into(), configs),
+            (
+                "priv".into(),
+                "CHAVES PRIVADAS (0600 - PROTEÇÃO MÁXIMA)".into(),
+                priv_keys,
+            ),
+            (
+                "pub".into(),
+                "CHAVES PÚBLICAS & CERTIFICADOS (0644)".into(),
+                pub_keys,
+            ),
+            (
+                "conf".into(),
+                "CONFIGURAÇÃO, KNOWN HOSTS & DEMAIS".into(),
+                configs,
+            ),
         ]);
     }
 
@@ -335,19 +423,43 @@ fn handle_interactive(
 
     // Run TUI loop
     match run_tui(tui_app)? {
-        Some(TuiAction::Backup { filter, custom_dirs }) => {
+        Some(TuiAction::Backup {
+            filter,
+            custom_dirs,
+        }) => {
             let output_archive = {
                 let _ = std::fs::create_dir_all(&backups_dir);
                 let timestamp = chrono_timestamp_slug();
                 backups_dir.join(format!("distro-vault-{}.tar.zst", timestamp))
             };
-            execute_backup(container, &home, &config, output_archive, *filter, custom_dirs, false)
+            execute_backup(
+                container,
+                &home,
+                &config,
+                output_archive,
+                *filter,
+                custom_dirs,
+                false,
+            )
         }
-        Some(TuiAction::Restore { archive_path, install_packages, dry_run }) => {
-            execute_restore(container, &archive_path, &config, &home, target_custom, install_packages, dry_run)
-        }
+        Some(TuiAction::Restore {
+            archive_path,
+            install_packages,
+            dry_run,
+        }) => execute_restore(
+            container,
+            &archive_path,
+            &config,
+            &home,
+            target_custom,
+            install_packages,
+            dry_run,
+        ),
         None => {
-            println!("{}", style("Operação cancelada pelo usuário na TUI.").yellow());
+            println!(
+                "{}",
+                style("Operação cancelada pelo usuário na TUI.").yellow()
+            );
             Ok(())
         }
     }
@@ -362,7 +474,10 @@ fn execute_backup(
     custom_dirs: Vec<CustomDirectoryEntry>,
     _dry_run: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", style("▶ Iniciando snapshot declarativo...").cyan().bold());
+    println!(
+        "{}",
+        style("▶ Iniciando snapshot declarativo...").cyan().bold()
+    );
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()
@@ -379,16 +494,55 @@ fn execute_backup(
     let report = container.backup_use_case.execute(req)?;
     pb.finish_and_clear();
 
-    println!("\n{}", style("✔ Snapshot gerado com sucesso!").green().bold());
-    println!("  {} {}", style("ID do Snapshot:").bold(), report.snapshot_id);
-    println!("  {} {}", style("Arquivo:").bold(), report.output_path.display());
-    println!("  {} {}", style("Checksum SHA-256:").bold(), report.checksum.as_str());
-    println!("  {} {} arquivos", style("Total de Itens:").bold(), report.total_files);
-    println!("  {} {:.2} MB", style("Volume Estimado:").bold(), report.total_size_bytes as f64 / 1_048_576.0);
-    println!("  {} perfis Zen: {}", style("Zen Browser:").bold(), report.manifest.zen_profiles.len());
-    println!("  {} skills: {}", style("Agentes IA:").bold(), report.manifest.agent_governance.skills.len());
-    println!("  {} pacotes: {}", style("Pacotes Registrados:").bold(), report.manifest.packages.len());
-    println!("  {} chaves/configs: {}", style("Chaves SSH:").bold(), report.manifest.ssh_keys.len());
+    println!(
+        "\n{}",
+        style("✔ Snapshot gerado com sucesso!").green().bold()
+    );
+    println!(
+        "  {} {}",
+        style("ID do Snapshot:").bold(),
+        report.snapshot_id
+    );
+    println!(
+        "  {} {}",
+        style("Arquivo:").bold(),
+        report.output_path.display()
+    );
+    println!(
+        "  {} {}",
+        style("Checksum SHA-256:").bold(),
+        report.checksum.as_str()
+    );
+    println!(
+        "  {} {} arquivos",
+        style("Total de Itens:").bold(),
+        report.total_files
+    );
+    println!(
+        "  {} {:.2} MB",
+        style("Volume Estimado:").bold(),
+        report.total_size_bytes as f64 / 1_048_576.0
+    );
+    println!(
+        "  {} perfis Zen: {}",
+        style("Zen Browser:").bold(),
+        report.manifest.zen_profiles.len()
+    );
+    println!(
+        "  {} skills: {}",
+        style("Agentes IA:").bold(),
+        report.manifest.agent_governance.skills.len()
+    );
+    println!(
+        "  {} pacotes: {}",
+        style("Pacotes Registrados:").bold(),
+        report.manifest.packages.len()
+    );
+    println!(
+        "  {} chaves/configs: {}",
+        style("Chaves SSH:").bold(),
+        report.manifest.ssh_keys.len()
+    );
 
     Ok(())
 }
@@ -402,7 +556,10 @@ fn execute_restore(
     install_packages: bool,
     dry_run: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    println!("{}", style("▶ Iniciando restauração do sistema...").cyan().bold());
+    println!(
+        "{}",
+        style("▶ Iniciando restauração do sistema...").cyan().bold()
+    );
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()
@@ -412,8 +569,8 @@ fn execute_restore(
     pb.enable_steady_tick(Duration::from_millis(80));
     pb.set_message("Extraindo snapshot e normalizando navegador...");
 
-    let mut req = RestoreRequest::new(archive, config, home)
-        .with_packages(install_packages, dry_run);
+    let mut req =
+        RestoreRequest::new(archive, config, home).with_packages(install_packages, dry_run);
 
     if let Some(custom) = target_custom {
         req = req.with_custom_base(custom);
@@ -424,9 +581,22 @@ fn execute_restore(
 
     println!("\n{}", style("✔ Restauração concluída!").green().bold());
     println!("  {} {}", style("Snapshot:").bold(), report.snapshot_id);
-    println!("  {} {} ➔ {}", style("Migração:").bold(), report.source_distro, report.target_distro);
-    println!("  {} {:?}", style("Perfis Zen Normalizados:").bold(), report.profiles_restored);
-    println!("  {} {}", style("Skills Restauradas:").bold(), report.skills_restored);
+    println!(
+        "  {} {} ➔ {}",
+        style("Migração:").bold(),
+        report.source_distro,
+        report.target_distro
+    );
+    println!(
+        "  {} {:?}",
+        style("Perfis Zen Normalizados:").bold(),
+        report.profiles_restored
+    );
+    println!(
+        "  {} {}",
+        style("Skills Restauradas:").bold(),
+        report.skills_restored
+    );
 
     if report.ssh_keys_restored > 0 {
         println!(
@@ -437,7 +607,11 @@ fn execute_restore(
     }
 
     if !report.packages_installed.is_empty() {
-        println!("  {} {} instalados", style("Pacotes:").bold(), report.packages_installed.len());
+        println!(
+            "  {} {} instalados",
+            style("Pacotes:").bold(),
+            report.packages_installed.len()
+        );
     }
 
     if !report.pending_packages.is_empty() {
@@ -458,7 +632,10 @@ fn execute_restore(
     Ok(())
 }
 
-fn handle_inspect(container: &AppContainer, args: InspectArgs) -> Result<(), Box<dyn std::error::Error>> {
+fn handle_inspect(
+    container: &AppContainer,
+    args: InspectArgs,
+) -> Result<(), Box<dyn std::error::Error>> {
     let summary = container.inspect_use_case.execute(&args.archive)?;
 
     if args.json {
@@ -467,14 +644,48 @@ fn handle_inspect(container: &AppContainer, args: InspectArgs) -> Result<(), Box
     } else {
         println!("\n{}", style("=== Sumário do Snapshot ===").cyan().bold());
         println!("  {} {}", style("ID:").bold(), summary.snapshot_id);
-        println!("  {} {}", style("Criado em (UTC):").bold(), summary.created_at_utc);
-        println!("  {} {}", style("Host de Origem:").bold(), summary.source_host);
-        println!("  {} {}", style("Distro de Origem:").bold(), summary.source_distro);
-        println!("  {} {} ({} abas, {} spaces)", style("Zen Browser:").bold(), summary.zen_profiles_count, summary.total_tabs, summary.spaces_count);
-        println!("  {} {}", style("Pacotes Declarados:").bold(), summary.packages_count);
-        println!("  {} {}", style("Skills de IA:").bold(), summary.skills_count);
-        println!("  {} {}", style("Chaves SSH:").bold(), summary.ssh_keys_count);
-        println!("  {} {}", style("Pastas Customizadas:").bold(), summary.custom_dirs_count);
+        println!(
+            "  {} {}",
+            style("Criado em (UTC):").bold(),
+            summary.created_at_utc
+        );
+        println!(
+            "  {} {}",
+            style("Host de Origem:").bold(),
+            summary.source_host
+        );
+        println!(
+            "  {} {}",
+            style("Distro de Origem:").bold(),
+            summary.source_distro
+        );
+        println!(
+            "  {} {} ({} abas, {} spaces)",
+            style("Zen Browser:").bold(),
+            summary.zen_profiles_count,
+            summary.total_tabs,
+            summary.spaces_count
+        );
+        println!(
+            "  {} {}",
+            style("Pacotes Declarados:").bold(),
+            summary.packages_count
+        );
+        println!(
+            "  {} {}",
+            style("Skills de IA:").bold(),
+            summary.skills_count
+        );
+        println!(
+            "  {} {}",
+            style("Chaves SSH:").bold(),
+            summary.ssh_keys_count
+        );
+        println!(
+            "  {} {}",
+            style("Pastas Customizadas:").bold(),
+            summary.custom_dirs_count
+        );
         if let Some(chk) = summary.checksum {
             println!("  {} {}", style("Checksum:").bold(), chk.as_str());
         }
@@ -483,16 +694,34 @@ fn handle_inspect(container: &AppContainer, args: InspectArgs) -> Result<(), Box
     Ok(())
 }
 
-fn handle_verify(container: &AppContainer, args: VerifyArgs) -> Result<(), Box<dyn std::error::Error>> {
+fn handle_verify(
+    container: &AppContainer,
+    args: VerifyArgs,
+) -> Result<(), Box<dyn std::error::Error>> {
     let report = container.verify_use_case.execute(&args.archive)?;
 
-    println!("\n{}", style("=== Verificação de Integridade ===").cyan().bold());
+    println!(
+        "\n{}",
+        style("=== Verificação de Integridade ===").cyan().bold()
+    );
     println!("  {} {}", style("Snapshot:").bold(), report.snapshot_id);
-    println!("  {} {}", style("Checksum Computado:").bold(), report.computed_checksum.as_str());
+    println!(
+        "  {} {}",
+        style("Checksum Computado:").bold(),
+        report.computed_checksum.as_str()
+    );
     if let Some(ref decl) = report.declared_checksum {
-        println!("  {} {}", style("Checksum Declarado:").bold(), decl.as_str());
+        println!(
+            "  {} {}",
+            style("Checksum Declarado:").bold(),
+            decl.as_str()
+        );
     }
-    println!("  {} {}", style("Status:").bold(), style("Íntegro e Válido ✓").green().bold());
+    println!(
+        "  {} {}",
+        style("Status:").bold(),
+        style("Íntegro e Válido ✓").green().bold()
+    );
 
     Ok(())
 }
@@ -505,6 +734,9 @@ fn default_home() -> PathBuf {
 
 fn chrono_timestamp_slug() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
     format!("{}", now)
 }

@@ -1,5 +1,5 @@
-use std::path::PathBuf;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
+use std::path::PathBuf;
 
 use super::app::{InputTarget, TuiApp, TuiMode};
 
@@ -27,7 +27,8 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
                                 app.input_buffer.clear();
                                 app.input_mode = false;
                             } else {
-                                app.status_message = Some("Arquivo não encontrado no caminho informado.".into());
+                                app.status_message =
+                                    Some("Arquivo não encontrado no caminho informado.".into());
                             }
                         }
                     }

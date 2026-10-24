@@ -45,7 +45,8 @@ impl AgentScanner {
             rules.push(RuleEntry {
                 name: "AGENTS.md".to_string(),
                 relative_path: PathBuf::from("AGENTS.md"),
-                description: "Engineering protocols, mandatory pre-approval, 5-phase gate".to_string(),
+                description: "Engineering protocols, mandatory pre-approval, 5-phase gate"
+                    .to_string(),
                 is_mandatory: true,
             });
         }
@@ -80,17 +81,19 @@ impl AgentScanner {
         }
 
         let mut skills = Vec::new();
-        let entries = fs::read_dir(&skills_root).map_err(|e| DomainError::AgentGovernanceError {
-            message: format!("Failed to read skills directory {:?}: {}", skills_root, e),
-        })?;
+        let entries =
+            fs::read_dir(&skills_root).map_err(|e| DomainError::AgentGovernanceError {
+                message: format!("Failed to read skills directory {:?}: {}", skills_root, e),
+            })?;
 
         for entry in entries.flatten() {
             let path = entry.path();
             let skill_name = entry.file_name().to_string_lossy().to_string();
 
-            let symlink_meta = fs::symlink_metadata(&path).map_err(|e| DomainError::AgentGovernanceError {
-                message: format!("Failed to read metadata for {:?}: {}", path, e),
-            })?;
+            let symlink_meta =
+                fs::symlink_metadata(&path).map_err(|e| DomainError::AgentGovernanceError {
+                    message: format!("Failed to read metadata for {:?}: {}", path, e),
+                })?;
 
             let is_symlink = symlink_meta.is_symlink();
             let original_target = if is_symlink {
@@ -157,9 +160,11 @@ impl AgentScanner {
 
     /// Recursively copies directory, dereferencing any symlinks to physical files
     pub fn copy_dereferenced(src: &Path, dst: &Path) -> Result<(), DomainError> {
-        let canonical_src = src.canonicalize().map_err(|e| DomainError::AgentGovernanceError {
-            message: format!("Failed to canonicalize source {:?}: {}", src, e),
-        })?;
+        let canonical_src = src
+            .canonicalize()
+            .map_err(|e| DomainError::AgentGovernanceError {
+                message: format!("Failed to canonicalize source {:?}: {}", src, e),
+            })?;
 
         if !dst.exists() {
             fs::create_dir_all(dst).map_err(|e| DomainError::AgentGovernanceError {
@@ -167,7 +172,10 @@ impl AgentScanner {
             })?;
         }
 
-        for entry in WalkDir::new(&canonical_src).into_iter().filter_map(|e| e.ok()) {
+        for entry in WalkDir::new(&canonical_src)
+            .into_iter()
+            .filter_map(|e| e.ok())
+        {
             let entry_path = entry.path();
             let rel = match entry_path.strip_prefix(&canonical_src) {
                 Ok(r) => r,
@@ -187,8 +195,10 @@ impl AgentScanner {
             }
 
             if entry_path.is_dir() {
-                fs::create_dir_all(&target_dest).map_err(|e| DomainError::AgentGovernanceError {
-                    message: format!("Failed to create dir {:?}: {}", target_dest, e),
+                fs::create_dir_all(&target_dest).map_err(|e| {
+                    DomainError::AgentGovernanceError {
+                        message: format!("Failed to create dir {:?}: {}", target_dest, e),
+                    }
                 })?;
             } else if entry_path.is_file() {
                 if let Some(parent) = target_dest.parent() {
@@ -198,13 +208,20 @@ impl AgentScanner {
                         }
                     }
                     if !parent.exists() {
-                        fs::create_dir_all(parent).map_err(|e| DomainError::AgentGovernanceError {
-                            message: format!("Failed to create parent dir {:?}: {}", parent, e),
+                        fs::create_dir_all(parent).map_err(|e| {
+                            DomainError::AgentGovernanceError {
+                                message: format!("Failed to create parent dir {:?}: {}", parent, e),
+                            }
                         })?;
                     }
                 }
-                fs::copy(entry_path, &target_dest).map_err(|e| DomainError::AgentGovernanceError {
-                    message: format!("Failed to copy file {:?} to {:?}: {}", entry_path, target_dest, e),
+                fs::copy(entry_path, &target_dest).map_err(|e| {
+                    DomainError::AgentGovernanceError {
+                        message: format!(
+                            "Failed to copy file {:?} to {:?}: {}",
+                            entry_path, target_dest, e
+                        ),
+                    }
                 })?;
             }
         }

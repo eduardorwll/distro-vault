@@ -37,7 +37,8 @@ fn test_full_backup_and_restore_pipeline() {
     fs::write(
         skills_dir.join("SKILL.md"),
         "---\nname: clean-code\ndescription: Clean Code principles.\n---\nBody",
-    ).unwrap();
+    )
+    .unwrap();
     fs::write(user_home.join("GEMINI.md"), "# Guidelines\nDefault dir").unwrap();
 
     let ssh_dir = user_home.join(".ssh");
@@ -45,11 +46,13 @@ fn test_full_backup_and_restore_pipeline() {
     fs::write(
         ssh_dir.join("id_ed25519"),
         "-----BEGIN OPENSSH PRIVATE KEY-----\nMOCK_KEY_DATA\n-----END OPENSSH PRIVATE KEY-----",
-    ).unwrap();
+    )
+    .unwrap();
     fs::write(
         ssh_dir.join("id_ed25519.pub"),
         "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5 mock@test",
-    ).unwrap();
+    )
+    .unwrap();
     fs::write(ssh_dir.join("config"), "Host github.com\n  User git\n").unwrap();
 
     let custom_dir = test_root.join("my_docs");
@@ -85,7 +88,9 @@ fn test_full_backup_and_restore_pipeline() {
         .with_custom_directories(vec![custom_entry])
         .with_snapshot_id("snap-integration-01");
 
-    let report = backup_use_case.execute(backup_req).expect("Backup execution failed");
+    let report = backup_use_case
+        .execute(backup_req)
+        .expect("Backup execution failed");
 
     assert_eq!(report.snapshot_id, "snap-integration-01");
     assert!(output_archive.exists());
@@ -95,7 +100,9 @@ fn test_full_backup_and_restore_pipeline() {
 
     // 4. Test InspectSnapshotUseCase
     let inspect_use_case = InspectSnapshotUseCase::new(storage.clone());
-    let summary = inspect_use_case.execute(&output_archive).expect("Inspect execution failed");
+    let summary = inspect_use_case
+        .execute(&output_archive)
+        .expect("Inspect execution failed");
 
     assert_eq!(summary.snapshot_id, "snap-integration-01");
     assert_eq!(summary.zen_profiles_count, 1);
@@ -105,7 +112,9 @@ fn test_full_backup_and_restore_pipeline() {
 
     // 5. Test VerifyIntegrityUseCase
     let verify_use_case = VerifyIntegrityUseCase::new(storage.clone());
-    let integrity = verify_use_case.execute(&output_archive).expect("Verify execution failed");
+    let integrity = verify_use_case
+        .execute(&output_archive)
+        .expect("Verify execution failed");
 
     assert!(integrity.is_valid);
     assert_eq!(integrity.computed_checksum, report.checksum);
@@ -115,20 +124,20 @@ fn test_full_backup_and_restore_pipeline() {
     let restore_target_home = test_root.join("restored_home");
     let restore_target_custom = test_root.join("restored_custom");
 
-    let restore_use_case = RestorePipelineUseCase::new(
-        browser,
-        storage,
-        agent,
-        system,
-        ssh,
-        package_ports,
-    );
+    let restore_use_case =
+        RestorePipelineUseCase::new(browser, storage, agent, system, ssh, package_ports);
 
-    let restore_req = RestoreRequest::new(&output_archive, &restore_target_config, &restore_target_home)
-        .with_custom_base(&restore_target_custom)
-        .with_packages(false, false);
+    let restore_req = RestoreRequest::new(
+        &output_archive,
+        &restore_target_config,
+        &restore_target_home,
+    )
+    .with_custom_base(&restore_target_custom)
+    .with_packages(false, false);
 
-    let restore_report = restore_use_case.execute(restore_req).expect("Restore execution failed");
+    let restore_report = restore_use_case
+        .execute(restore_req)
+        .expect("Restore execution failed");
 
     assert_eq!(restore_report.snapshot_id, "snap-integration-01");
     assert_eq!(restore_report.profiles_restored.len(), 1);
@@ -149,24 +158,39 @@ fn test_full_backup_and_restore_pipeline() {
     // Verify restored SSH keys with strict POSIX permissions
     let restored_ssh = restore_target_home.join(".ssh");
     assert!(restored_ssh.exists());
-    assert_eq!(fs::metadata(&restored_ssh).unwrap().permissions().mode() & 0o777, 0o700);
+    assert_eq!(
+        fs::metadata(&restored_ssh).unwrap().permissions().mode() & 0o777,
+        0o700
+    );
 
     let restored_priv = restored_ssh.join("id_ed25519");
     assert!(restored_priv.exists());
-    assert_eq!(fs::metadata(&restored_priv).unwrap().permissions().mode() & 0o777, 0o600);
+    assert_eq!(
+        fs::metadata(&restored_priv).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
 
     let restored_pub = restored_ssh.join("id_ed25519.pub");
     assert!(restored_pub.exists());
-    assert_eq!(fs::metadata(&restored_pub).unwrap().permissions().mode() & 0o777, 0o644);
+    assert_eq!(
+        fs::metadata(&restored_pub).unwrap().permissions().mode() & 0o777,
+        0o644
+    );
 
     let restored_conf = restored_ssh.join("config");
     assert!(restored_conf.exists());
-    assert_eq!(fs::metadata(&restored_conf).unwrap().permissions().mode() & 0o777, 0o600);
+    assert_eq!(
+        fs::metadata(&restored_conf).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
 
     // Verify restored custom directories
     let restored_custom_file = restore_target_custom.join("my_docs/project.md");
     assert!(restored_custom_file.exists());
-    assert_eq!(fs::read_to_string(restored_custom_file).unwrap(), "# Secret Distro Project");
+    assert_eq!(
+        fs::read_to_string(restored_custom_file).unwrap(),
+        "# Secret Distro Project"
+    );
 }
 
 #[test]
@@ -230,6 +254,16 @@ fn test_selection_filter_excludes_items_deterministically() {
     let report = backup_use_case.execute(req).expect("Backup failed");
 
     // "unwanted-skill" should NOT be in manifest
-    assert!(!report.manifest.agent_governance.skills.iter().any(|s| s.name == "unwanted-skill"));
-    assert!(report.manifest.agent_governance.skills.iter().any(|s| s.name == "clean-code"));
+    assert!(!report
+        .manifest
+        .agent_governance
+        .skills
+        .iter()
+        .any(|s| s.name == "unwanted-skill"));
+    assert!(report
+        .manifest
+        .agent_governance
+        .skills
+        .iter()
+        .any(|s| s.name == "clean-code"));
 }

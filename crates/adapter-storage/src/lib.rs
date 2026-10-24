@@ -1,10 +1,10 @@
 pub mod archive;
 pub mod custom_dirs;
 
+use sha2::{Digest, Sha256};
 use std::fs::File;
 use std::io::{BufReader, Read};
 use std::path::{Path, PathBuf};
-use sha2::{Digest, Sha256};
 
 use domain::entities::Manifest;
 use domain::errors::DomainError;
@@ -30,9 +30,10 @@ impl StoragePort for ZstdStorageAdapter {
         manifest: &Manifest,
         output_archive: &Path,
     ) -> Result<Checksum, DomainError> {
-        let manifest_json = serde_json::to_string_pretty(manifest).map_err(|e| DomainError::ManifestError {
-            message: format!("Failed to serialize manifest: {}", e),
-        })?;
+        let manifest_json =
+            serde_json::to_string_pretty(manifest).map_err(|e| DomainError::ManifestError {
+                message: format!("Failed to serialize manifest: {}", e),
+            })?;
 
         TarZstdPacker::pack(source_items, &manifest_json, output_archive)?;
         self.compute_checksum(output_archive)
@@ -51,7 +52,10 @@ impl StoragePort for ZstdStorageAdapter {
 
     fn compute_checksum(&self, path: &Path) -> Result<Checksum, DomainError> {
         let file = File::open(path).map_err(|e| DomainError::ManifestError {
-            message: format!("Failed to open file for checksum calculation {:?}: {}", path, e),
+            message: format!(
+                "Failed to open file for checksum calculation {:?}: {}",
+                path, e
+            ),
         })?;
 
         let mut reader = BufReader::new(file);
@@ -59,9 +63,14 @@ impl StoragePort for ZstdStorageAdapter {
         let mut buffer = [0u8; 65536];
 
         loop {
-            let bytes_read = reader.read(&mut buffer).map_err(|e| DomainError::ManifestError {
-                message: format!("Failed to read stream for checksum calculation {:?}: {}", path, e),
-            })?;
+            let bytes_read = reader
+                .read(&mut buffer)
+                .map_err(|e| DomainError::ManifestError {
+                    message: format!(
+                        "Failed to read stream for checksum calculation {:?}: {}",
+                        path, e
+                    ),
+                })?;
             if bytes_read == 0 {
                 break;
             }

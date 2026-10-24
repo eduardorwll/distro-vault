@@ -65,8 +65,7 @@ fn hash_len_0_to_16(bytes: &[u8]) -> u64 {
         let c = bytes[len - 1];
         let y = (a as u32).wrapping_add((b as u32) << 8);
         let z = (len as u32).wrapping_add((c as u32) << 2);
-        return ((y as u64).wrapping_mul(K2) ^ ((z as u64).wrapping_mul(K3)))
-            .wrapping_mul(K2);
+        return ((y as u64).wrapping_mul(K2) ^ ((z as u64).wrapping_mul(K3))).wrapping_mul(K2);
     }
     K2
 }
@@ -79,8 +78,12 @@ fn hash_len_17_to_32(bytes: &[u8]) -> u64 {
     let c = fetch64(&bytes[len - 8..]).wrapping_mul(KMUL);
     let d = fetch64(&bytes[len - 16..]).wrapping_mul(KMUL);
     hash_len_16(
-        a.rotate_right(43).wrapping_add(b.rotate_right(30)).wrapping_add(c),
-        a.wrapping_add(b.rotate_right(20)).wrapping_sub(d).wrapping_add(len as u64),
+        a.rotate_right(43)
+            .wrapping_add(b.rotate_right(30))
+            .wrapping_add(c),
+        a.wrapping_add(b.rotate_right(20))
+            .wrapping_sub(d)
+            .wrapping_add(len as u64),
     )
 }
 
@@ -122,18 +125,33 @@ fn cityhash64(bytes: &[u8]) -> u64 {
         let f = fetch64(&bytes[24..]).wrapping_mul(9);
         let g = fetch64(&bytes[len - 8..]);
         let h = fetch64(&bytes[len - 16..]).wrapping_mul(mul);
-        let u = a.rotate_right(43).wrapping_add(b.rotate_right(30)).wrapping_add(c);
-        let v = a.wrapping_add(b.rotate_right(20)).wrapping_sub(d).wrapping_add(len as u64);
+        let u = a
+            .rotate_right(43)
+            .wrapping_add(b.rotate_right(30))
+            .wrapping_add(c);
+        let v = a
+            .wrapping_add(b.rotate_right(20))
+            .wrapping_sub(d)
+            .wrapping_add(len as u64);
         let w = hash_len_16(u, v);
-        let x = e.rotate_right(43).wrapping_add(f.rotate_right(30)).wrapping_add(g);
-        let y = e.wrapping_add(f.rotate_right(20)).wrapping_sub(h).wrapping_add(len as u64);
+        let x = e
+            .rotate_right(43)
+            .wrapping_add(f.rotate_right(30))
+            .wrapping_add(g);
+        let y = e
+            .wrapping_add(f.rotate_right(20))
+            .wrapping_sub(h)
+            .wrapping_add(len as u64);
         let z = hash_len_16(x, y);
         return hash_len_16(w, z);
     }
 
     let mut x = fetch64(&bytes[len - 40..]) ^ K2;
     let mut y = fetch64(&bytes[len - 16..]) ^ fetch64(&bytes[len - 56..]);
-    let mut z = hash_len_16(fetch64(&bytes[len - 48..]) ^ (len as u64), fetch64(&bytes[len - 24..]));
+    let mut z = hash_len_16(
+        fetch64(&bytes[len - 48..]) ^ (len as u64),
+        fetch64(&bytes[len - 24..]),
+    );
     let mut v = weak_hash_len_32_with_seeds(&bytes[len - 64..], len as u64, z);
     let mut w = weak_hash_len_32_with_seeds(&bytes[len - 32..], y.wrapping_add(K2), v.0);
     z = z.wrapping_add(w.1.rotate_right(37).wrapping_mul(K2));
@@ -141,8 +159,14 @@ fn cityhash64(bytes: &[u8]) -> u64 {
     let mut pos = 0;
     let mut remaining = len;
     while remaining > 64 {
-        x = x.wrapping_add(fetch64(&bytes[pos..])).rotate_right(37).wrapping_mul(K2);
-        y = y.wrapping_add(fetch64(&bytes[pos + 8..])).rotate_right(42).wrapping_mul(K2);
+        x = x
+            .wrapping_add(fetch64(&bytes[pos..]))
+            .rotate_right(37)
+            .wrapping_mul(K2);
+        y = y
+            .wrapping_add(fetch64(&bytes[pos + 8..]))
+            .rotate_right(42)
+            .wrapping_mul(K2);
         x ^= w.1;
         y ^= v.0;
         z = z.rotate_right(33);
@@ -176,13 +200,17 @@ impl ProfilesIniNormalizer {
         // 1. Process profiles.ini
         let profiles_content = if profiles_ini_path.exists() {
             fs::read_to_string(&profiles_ini_path).map_err(|e| DomainError::BrowserError {
-                message: format!("Failed to read profiles.ini at {:?}: {}", profiles_ini_path, e),
+                message: format!(
+                    "Failed to read profiles.ini at {:?}: {}",
+                    profiles_ini_path, e
+                ),
             })?
         } else {
             String::from("[General]\nStartWithLastProfile=1\nVersion=2\n\n")
         };
 
-        let normalized_profiles = Self::rewrite_profiles_ini(&profiles_content, target_profile_dir_name);
+        let normalized_profiles =
+            Self::rewrite_profiles_ini(&profiles_content, target_profile_dir_name);
         Self::atomic_write(&profiles_ini_path, &normalized_profiles)?;
 
         // 2. Process installs.ini
@@ -192,7 +220,8 @@ impl ProfilesIniNormalizer {
             String::new()
         };
 
-        let normalized_installs = Self::rewrite_installs_ini(&installs_content, target_profile_dir_name);
+        let normalized_installs =
+            Self::rewrite_installs_ini(&installs_content, target_profile_dir_name);
         Self::atomic_write(&installs_ini_path, &normalized_installs)?;
 
         Ok(())
@@ -268,7 +297,8 @@ impl ProfilesIniNormalizer {
             } else if name.starts_with("Profile") {
                 let is_target = lines.iter().any(|l| {
                     let t = l.trim();
-                    t == format!("Path={}", target_profile) || t.ends_with(&format!("/{}", target_profile))
+                    t == format!("Path={}", target_profile)
+                        || t.ends_with(&format!("/{}", target_profile))
                 });
 
                 let mut new_lines = Vec::new();
@@ -288,12 +318,24 @@ impl ProfilesIniNormalizer {
         }
 
         if !has_general {
-            sections.insert(0, ("General".to_string(), vec!["StartWithLastProfile=1".to_string(), "Version=2".to_string()]));
+            sections.insert(
+                0,
+                (
+                    "General".to_string(),
+                    vec![
+                        "StartWithLastProfile=1".to_string(),
+                        "Version=2".to_string(),
+                    ],
+                ),
+            );
         }
 
         if !target_profile_section_found {
             // Create Profile0 if no matching profile found
-            let new_prof_idx = sections.iter().filter(|(n, _)| n.starts_with("Profile")).count();
+            let new_prof_idx = sections
+                .iter()
+                .filter(|(n, _)| n.starts_with("Profile"))
+                .count();
             sections.push((
                 format!("Profile{}", new_prof_idx),
                 vec![
@@ -344,7 +386,10 @@ impl ProfilesIniNormalizer {
             // If empty, create standard default entry
             sections.push((
                 "15B76BAA26BA15E7".to_string(),
-                vec![format!("Default={}", target_profile), "Locked=1".to_string()],
+                vec![
+                    format!("Default={}", target_profile),
+                    "Locked=1".to_string(),
+                ],
             ));
         } else {
             for (_, lines) in &mut sections {
@@ -400,7 +445,10 @@ impl ProfilesIniNormalizer {
             message: format!("Failed to write temporary file {:?}: {}", tmp_path, e),
         })?;
         fs::rename(&tmp_path, path).map_err(|e| DomainError::BrowserError {
-            message: format!("Failed to atomically rename {:?} to {:?}: {}", tmp_path, path, e),
+            message: format!(
+                "Failed to atomically rename {:?} to {:?}: {}",
+                tmp_path, path, e
+            ),
         })?;
         Ok(())
     }

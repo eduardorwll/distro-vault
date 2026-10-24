@@ -1,6 +1,6 @@
+use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 use std::sync::Arc;
-use serde::{Deserialize, Serialize};
 
 use domain::entities::custom_directory::CustomDirectoryEntry;
 use domain::entities::manifest::Manifest;
@@ -95,7 +95,9 @@ impl BackupPipelineUseCase {
         // 1. Validate browser locks
         if self.browser_port.is_locked(&req.config_root)? {
             // Attempt graceful shutdown if Zen is running
-            if self.system_port.is_process_running("zen-bin") || self.system_port.is_process_running("zen") {
+            if self.system_port.is_process_running("zen-bin")
+                || self.system_port.is_process_running("zen")
+            {
                 let _ = self.system_port.terminate_process_gracefully("zen-bin", 5);
             }
             if self.browser_port.is_locked(&req.config_root)? {
@@ -108,15 +110,16 @@ impl BackupPipelineUseCase {
         // 2. Query host information
         let source_distro = self.system_port.detect_distro()?;
         let source_host = self.system_port.hostname()?;
-        let snapshot_id = req.snapshot_id.unwrap_or_else(|| {
-            format!("snap-{}", chrono_timestamp_slug())
-        });
+        let snapshot_id = req
+            .snapshot_id
+            .unwrap_or_else(|| format!("snap-{}", chrono_timestamp_slug()));
         let created_at_utc = current_utc_iso();
 
         // 3. Scan & Filter Browser Profiles
         let mut profiles = self.browser_port.scan_profiles(&req.config_root)?;
         for prof in &mut profiles {
-            prof.spaces.retain(|s| req.selection_filter.is_space_included(&s.id));
+            prof.spaces
+                .retain(|s| req.selection_filter.is_space_included(&s.id));
         }
 
         // 4. Scan & Filter Packages across backends
@@ -142,7 +145,9 @@ impl BackupPipelineUseCase {
 
         // 5. Scan & Filter Agent Governance
         let mut governance = self.agent_port.scan_governance(&req.user_home)?;
-        governance.skills.retain(|s| req.selection_filter.is_skill_included(&s.name));
+        governance
+            .skills
+            .retain(|s| req.selection_filter.is_skill_included(&s.name));
 
         // 6. Scan & Filter Registered SSH Keys
         let mut ssh_keys = self.ssh_port.scan_ssh_keys(&req.user_home)?;
@@ -156,7 +161,10 @@ impl BackupPipelineUseCase {
 
         // Add browser profiles
         for prof in &profiles {
-            archive_items.push((prof.root_path.clone(), PathBuf::from("browser").join(prof.id.as_str())));
+            archive_items.push((
+                prof.root_path.clone(),
+                PathBuf::from("browser").join(prof.id.as_str()),
+            ));
         }
 
         // Add agent rules and skills
@@ -169,7 +177,10 @@ impl BackupPipelineUseCase {
         for skill in &governance.skills {
             let disk_path = req.user_home.join(&skill.relative_path);
             if disk_path.exists() {
-                archive_items.push((disk_path, PathBuf::from("agents").join(&skill.relative_path)));
+                archive_items.push((
+                    disk_path,
+                    PathBuf::from("agents").join(&skill.relative_path),
+                ));
             }
         }
 
@@ -184,7 +195,10 @@ impl BackupPipelineUseCase {
         // Add custom directories
         for custom_d in &custom_dirs {
             if custom_d.source_path.exists() {
-                archive_items.push((custom_d.source_path.clone(), custom_d.archive_prefix.clone()));
+                archive_items.push((
+                    custom_d.source_path.clone(),
+                    custom_d.archive_prefix.clone(),
+                ));
             }
         }
 
@@ -201,18 +215,25 @@ impl BackupPipelineUseCase {
         manifest.custom_directories = custom_dirs;
         manifest.ssh_keys = ssh_keys;
 
-        let total_files: usize = archive_items.len() + manifest.custom_directories.iter().map(|c| c.file_count).sum::<usize>();
-        let total_size_bytes: u64 = manifest.custom_directories.iter().map(|c| c.size_bytes).sum::<u64>()
+        let total_files: usize = archive_items.len()
+            + manifest
+                .custom_directories
+                .iter()
+                .map(|c| c.file_count)
+                .sum::<usize>();
+        let total_size_bytes: u64 = manifest
+            .custom_directories
+            .iter()
+            .map(|c| c.size_bytes)
+            .sum::<u64>()
             + manifest.ssh_keys.iter().map(|k| k.size_bytes).sum::<u64>();
         manifest.total_files = total_files;
         manifest.total_size_bytes = total_size_bytes;
 
         // 10. Create atomic snapshot
-        let checksum = self.storage_port.create_snapshot(
-            &archive_items,
-            &manifest,
-            &req.output_archive,
-        )?;
+        let checksum =
+            self.storage_port
+                .create_snapshot(&archive_items, &manifest, &req.output_archive)?;
 
         manifest.checksum = Some(checksum.clone());
 
@@ -229,7 +250,10 @@ impl BackupPipelineUseCase {
 
 fn chrono_timestamp_slug() -> String {
     use std::time::{SystemTime, UNIX_EPOCH};
-    let now = SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs();
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs();
     format!("{}", now)
 }
 

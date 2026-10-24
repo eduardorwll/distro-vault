@@ -1,6 +1,6 @@
-use std::path::Path;
 use crate::entities::ssh_key::SshKeyEntry;
 use crate::errors::DomainError;
+use std::path::Path;
 
 /// Hexagonal port interface for SSH keys scanning, inspection and permission-hardened restoration
 pub trait SshPort: Send + Sync {
