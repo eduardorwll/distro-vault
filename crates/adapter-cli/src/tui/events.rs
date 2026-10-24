@@ -177,6 +177,9 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
                 let start = app.default_backups_dir.clone();
                 app.file_explorer.open(&start, ExplorerTarget::SnapshotOrFolder);
             }
+            KeyCode::Char('s') | KeyCode::Char('S') => {
+                app.should_start_slice = true;
+            }
             KeyCode::Char('r') | KeyCode::Char('R') | KeyCode::F(10) => {
                 app.should_start_restore = true;
             }

@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Todas as Fases (1 a 12) Concluídas com Sucesso (42 testes passando, 0 warnings no Clippy) | Release v0.3.0 Pronta com Menus Drop de Restore Granular e Git Global Config
+Status: 🟢 Todas as Fases (1 a 13) Concluídas com Sucesso (43 testes passando, 0 warnings no Clippy) | Release v0.3.0 Pronta com Menus Drop de Restore Granular, Sub-Dumps (Slice) e Git Global Config
 
 ---
 
@@ -193,3 +193,22 @@ Status: 🟢 Todas as Fases (1 a 12) Concluídas com Sucesso (42 testes passando
 - [x] **Task 12.4: Alternância de Foco e Redesenho da TUI de Restauração**
   - **Status:** Concluído. Adicionado `RestoreFocus` (`SnapshotsList` vs `ItemTree`) alternável via `Tab`. TUI redesenhada em painel duplo com árvore hierárquica à direita exibindo ramificações (`├──`, `└──`), glifos colapsáveis (`▼`, `►`), caixas de seleção (`[x]`, `[ ]`) e cursor com scroll dinâmico.
   - **Arquivos:** `crates/adapter-cli/src/tui/app.rs`, `crates/adapter-cli/src/tui/events.rs`, `crates/adapter-cli/src/tui/ui.rs`, `crates/adapter-cli/src/tui/runner.rs`, `crates/adapter-cli/src/main.rs`
+
+---
+
+## Fase 13: Geração de Sub-Dumps Derivados a partir de Dump Existente (Slice / Filter Sub-Snapshot)
+- [x] **Task 13.1: Caso de Uso `SliceSnapshotUseCase` em `crates/application`**
+  - **Status:** Concluído. Extrai o snapshot de origem em staging isolado com RAII `StagingCleanupGuard`, poda o `Manifest` e os arquivos descartando itens não selecionados no `SelectionFilter`, re-empacota atômico via `StoragePort::create_snapshot` e calcula novo checksum SHA-256.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/src/slice.rs`, `crates/application/src/lib.rs`
+- [x] **Task 13.2: Testes Automatizados de Slicing e Repacotamento**
+  - **Status:** Concluído. Teste de integração `test_slice_snapshot_filters_and_repackages_correctly` cobrindo exclusões de chaves SSH, exclusão de configs Git, integridade do manifesto e rejeição defensiva de sobrescrita de origem.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/tests/use_case_tests.rs`
+- [x] **Task 13.3: Subcomando CLI `slice` em `crates/adapter-cli`**
+  - **Status:** Concluído. `distro-vault slice <SOURCE> -o <OUTPUT>` com opções de linha de comando (`--exclude-package`, `--exclude-skill`, `--no-ssh`, `--no-zen`, `--no-git-config`, `--exclude-custom-dir`, `--staging-dir`) e modo interativo.
+  - **Verificação:** `cargo test -p adapter-cli`
+  - **Arquivos:** `crates/adapter-cli/src/args.rs`, `crates/adapter-cli/src/di.rs`, `crates/adapter-cli/src/main.rs`, `crates/adapter-cli/tests/cli_tests.rs`
+- [x] **Task 13.4: Gatilho TUI `[S]` "Salvar Sub-Dump" no Modo Restore**
+  - **Status:** Concluído. Tecla `[S]` / `[s]` mapeada no modo restore da TUI gerando automaticamente `<origem>-subset-<timestamp>.tar.zst` na pasta de backups a partir das caixas marcadas na árvore hierárquica.
+  - **Arquivos:** `crates/adapter-cli/src/tui/app.rs`, `crates/adapter-cli/src/tui/events.rs`, `crates/adapter-cli/src/tui/ui.rs`, `crates/adapter-cli/src/tui/runner.rs`

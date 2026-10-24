@@ -103,6 +103,7 @@ pub struct TuiApp {
     pub restore_install_packages: bool,
     pub restore_dry_run: bool,
     pub should_start_restore: bool,
+    pub should_start_slice: bool,
     // Input / Modal fields
     pub input_mode: bool,
     pub input_target: InputTarget,
@@ -150,6 +151,7 @@ impl TuiApp {
             restore_install_packages: true,
             restore_dry_run: false,
             should_start_restore: false,
+            should_start_slice: false,
             input_mode: false,
             input_target: InputTarget::CustomDir,
             input_buffer: String::new(),
@@ -217,6 +219,18 @@ impl TuiApp {
 
     pub fn selected_snapshot(&self) -> Option<&SnapshotItem> {
         self.snapshots.get(self.snapshot_cursor)
+    }
+
+    pub fn get_slice_default_output(&self) -> Option<PathBuf> {
+        let snap = self.selected_snapshot()?;
+        let stem = snap.path.file_name()?.to_string_lossy();
+        let stem_clean = stem.strip_suffix(".tar.zst").unwrap_or(&stem);
+        let timestamp = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_secs();
+        let new_filename = format!("{}-subset-{}.tar.zst", stem_clean, timestamp);
+        Some(self.default_backups_dir.join(new_filename))
     }
 
     pub fn toggle_restore_install_packages(&mut self) {

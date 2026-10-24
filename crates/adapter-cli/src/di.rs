@@ -8,7 +8,8 @@ use adapter_system::{
     LinuxSystemAdapter, PacmanAdapter,
 };
 use application::{
-    BackupPipelineUseCase, InspectSnapshotUseCase, RestorePipelineUseCase, VerifyIntegrityUseCase,
+    BackupPipelineUseCase, InspectSnapshotUseCase, RestorePipelineUseCase, SliceSnapshotUseCase,
+    VerifyIntegrityUseCase,
 };
 use domain::ports::PackagePort;
 
@@ -16,6 +17,7 @@ use domain::ports::PackagePort;
 pub struct AppContainer {
     pub backup_use_case: BackupPipelineUseCase,
     pub restore_use_case: RestorePipelineUseCase,
+    pub slice_use_case: SliceSnapshotUseCase,
     pub inspect_use_case: InspectSnapshotUseCase,
     pub verify_use_case: VerifyIntegrityUseCase,
 
@@ -65,11 +67,13 @@ impl AppContainer {
         );
 
         let inspect_use_case = InspectSnapshotUseCase::new(storage.clone());
+        let slice_use_case = SliceSnapshotUseCase::new(storage.clone());
         let verify_use_case = VerifyIntegrityUseCase::new(storage.clone());
 
         Self {
             backup_use_case,
             restore_use_case,
+            slice_use_case,
             inspect_use_case,
             verify_use_case,
             browser_adapter: browser,

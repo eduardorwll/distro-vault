@@ -24,6 +24,9 @@ pub enum Commands {
     /// Inspect a snapshot manifest without extracting the archive
     Inspect(InspectArgs),
 
+    /// Extract a filtered subset from an existing snapshot to generate a new snapshot archive
+    Slice(SliceArgs),
+
     /// Verify the cryptographic checksum and structural integrity of a snapshot
     Verify(VerifyArgs),
 }
@@ -115,4 +118,50 @@ pub struct InspectArgs {
 pub struct VerifyArgs {
     /// Path to the .tar.zst snapshot archive to verify
     pub archive: PathBuf,
+}
+
+#[derive(Debug, Args, Clone)]
+pub struct SliceArgs {
+    /// Path to the source .tar.zst snapshot archive to slice
+    pub source: PathBuf,
+
+    /// Path to the new output .tar.zst archive (default: <source>-subset-<timestamp>.tar.zst)
+    #[arg(short, long)]
+    pub output: Option<PathBuf>,
+
+    /// Launch interactive Ratatui TUI to inspect and select components to include in the new snapshot
+    #[arg(short, long, default_value_t = false)]
+    pub interactive: bool,
+
+    /// Package name to exclude (can be specified multiple times)
+    #[arg(long = "exclude-package")]
+    pub exclude_packages: Vec<String>,
+
+    /// AI Agent skill name to exclude (can be specified multiple times)
+    #[arg(long = "exclude-skill")]
+    pub exclude_skills: Vec<String>,
+
+    /// SSH key filename to exclude (can be specified multiple times)
+    #[arg(long = "exclude-ssh-key")]
+    pub exclude_ssh_keys: Vec<String>,
+
+    /// Do not include any SSH keys in the new subset snapshot
+    #[arg(long = "no-ssh", default_value_t = false)]
+    pub no_ssh: bool,
+
+    /// Do not include Zen Browser profiles and spaces
+    #[arg(long = "no-zen", default_value_t = false)]
+    pub no_zen: bool,
+
+    /// Do not include global Git configuration (.gitconfig)
+    #[arg(long = "no-git-config", default_value_t = false)]
+    pub no_git_config: bool,
+
+    /// Custom directory ID/slug to exclude (can be specified multiple times)
+    #[arg(long = "exclude-custom-dir")]
+    pub exclude_custom_dirs: Vec<String>,
+
+    /// Override staging directory for extraction
+    #[arg(long)]
+    pub staging_dir: Option<PathBuf>,
 }

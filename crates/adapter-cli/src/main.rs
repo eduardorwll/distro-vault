@@ -4,11 +4,13 @@ use indicatif::{ProgressBar, ProgressStyle};
 use std::path::{Path, PathBuf};
 use std::time::Duration;
 
-use adapter_cli::args::{BackupArgs, Cli, Commands, InspectArgs, RestoreArgs, VerifyArgs};
+use adapter_cli::args::{
+    BackupArgs, Cli, Commands, InspectArgs, RestoreArgs, SliceArgs, VerifyArgs,
+};
 use adapter_cli::di::AppContainer;
 use adapter_cli::tui::{run_tui, TuiAction, TuiApp, TuiItem, TuiMode, TuiRow};
 use adapter_storage::CustomDirsHandler;
-use application::{BackupRequest, RestoreRequest};
+use application::{BackupRequest, RestoreRequest, SliceSnapshotRequest};
 use domain::entities::custom_directory::CustomDirectoryEntry;
 use domain::entities::package::{PackageCategory, PackageScope};
 use domain::entities::selection_filter::SelectionFilter;
@@ -23,6 +25,7 @@ fn main() {
         Some(Commands::Backup(args)) => handle_backup(&container, args),
         Some(Commands::Restore(args)) => handle_restore(&container, args),
         Some(Commands::Inspect(args)) => handle_inspect(&container, args),
+        Some(Commands::Slice(args)) => handle_slice(&container, args),
         Some(Commands::Verify(args)) => handle_verify(&container, args),
         None => {
             // Default action: launch interactive TUI
@@ -215,6 +218,19 @@ fn handle_interactive(
                 selection_filter: selection_filter.map(|f| *f),
             };
             execute_restore(container, params)
+        }
+        Some(TuiAction::Slice {
+            source_archive,
+            output_archive,
+            selection_filter,
+        }) => {
+            execute_slice(
+                container,
+                &source_archive,
+                output_archive,
+                *selection_filter,
+                None,
+            )
         }
         None => {
             println!(
@@ -828,6 +844,178 @@ fn handle_verify(
         "  {} {}",
         style("Status:").bold(),
         style("Íntegro e Válido ✓").green().bold()
+    );
+
+    Ok(())
+}
+
+fn handle_slice(
+    container: &AppContainer,
+    args: SliceArgs,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let source_archive = args.source;
+    if !source_archive.exists() {
+        return Err(format!(
+            "Arquivo de snapshot de origem não encontrado: {:?}",
+            source_archive
+        )
+        .into());
+    }
+
+    if args.interactive {
+        let home = default_home();
+        let config = home.join(".config/zen");
+        handle_interactive(
+            container,
+            TuiMode::Restore,
+            home,
+            config,
+            Vec::new(),
+            None,
+        )
+    } else {
+        let output_archive = args.output.unwrap_or_else(|| {
+            let backups_dir = default_backups_dir();
+            let _ = std::fs::create_dir_all(&backups_dir);
+            let stem = source_archive
+                .file_name()
+                .map(|s| s.to_string_lossy().to_string())
+                .unwrap_or_else(|| "snapshot".to_string());
+            let stem_clean = stem.strip_suffix(".tar.zst").unwrap_or(&stem);
+            let timestamp = chrono_timestamp_slug();
+            backups_dir.join(format!("{}-subset-{}.tar.zst", stem_clean, timestamp))
+        });
+
+        let mut filter = SelectionFilter::new();
+        for p in &args.exclude_packages {
+            if let Ok(name) = PackageName::new(p) {
+                filter.toggle_package(name);
+            }
+        }
+        for s in &args.exclude_skills {
+            filter.toggle_skill(s.clone());
+        }
+        for k in &args.exclude_ssh_keys {
+            filter.exclude_ssh_key(k.clone());
+        }
+        if args.no_ssh {
+            if let Ok(manifest) = container.storage_adapter.read_manifest(&source_archive) {
+                for k in manifest.ssh_keys {
+                    filter.exclude_ssh_key(k.file_name);
+                }
+            }
+        }
+        if args.no_zen {
+            filter.set_restore_zen(false);
+        }
+        if args.no_git_config {
+            filter.set_restore_git_config(false);
+        }
+        for c in &args.exclude_custom_dirs {
+            filter.toggle_custom_dir(c.clone());
+        }
+
+        execute_slice(
+            container,
+            &source_archive,
+            output_archive,
+            filter,
+            args.staging_dir,
+        )
+    }
+}
+
+fn execute_slice(
+    container: &AppContainer,
+    source_archive: &Path,
+    output_archive: PathBuf,
+    filter: SelectionFilter,
+    staging_dir: Option<PathBuf>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    println!(
+        "{}",
+        style("▶ Gerando sub-dump derivado (slice)...").cyan().bold()
+    );
+    let pb = ProgressBar::new_spinner();
+    pb.set_style(
+        ProgressStyle::default_spinner()
+            .tick_chars("⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏")
+            .template("{spinner:.green} {msg}")?,
+    );
+    pb.enable_steady_tick(Duration::from_millis(80));
+    pb.set_message("Filtrando e empacotando sub-dump em novo snapshot...");
+
+    let mut req = SliceSnapshotRequest::new(source_archive, &output_archive, filter);
+    if let Some(staging) = staging_dir {
+        req = req.with_staging_dir(staging);
+    }
+
+    let report = container.slice_use_case.execute(req)?;
+    pb.finish_and_clear();
+
+    println!(
+        "\n{}",
+        style("✔ Sub-dump gerado com sucesso!").green().bold()
+    );
+    println!(
+        "  {} {}",
+        style("ID do Snapshot:").bold(),
+        report.snapshot_id
+    );
+    println!(
+        "  {} {}",
+        style("Arquivo de Origem:").bold(),
+        source_archive.display()
+    );
+    println!(
+        "  {} {}",
+        style("Novo Arquivo Gerado:").bold(),
+        report.output_path.display()
+    );
+    println!(
+        "  {} {}",
+        style("Checksum SHA-256:").bold(),
+        report.checksum.as_str()
+    );
+    println!(
+        "  {} {} itens",
+        style("Total de Arquivos:").bold(),
+        report.total_files
+    );
+    println!(
+        "  {} {:.2} MB",
+        style("Volume Estimado:").bold(),
+        report.total_size_bytes as f64 / 1_048_576.0
+    );
+    println!(
+        "  {} perfis Zen: {}",
+        style("Zen Browser:").bold(),
+        report.manifest.zen_profiles.len()
+    );
+    println!(
+        "  {} skills: {}",
+        style("Agentes IA:").bold(),
+        report.manifest.agent_governance.skills.len()
+    );
+    println!(
+        "  {} pacotes: {}",
+        style("Pacotes Registrados:").bold(),
+        report.manifest.packages.len()
+    );
+    println!(
+        "  {} chaves: {}",
+        style("Chaves SSH:").bold(),
+        report.manifest.ssh_keys.len()
+    );
+    println!(
+        "  {} arquivos: {}",
+        style("Configurações Git:").bold(),
+        report.manifest.git_configs.len()
+    );
+    println!(
+        "  {} pastas: {}",
+        style("Pastas Customizadas:").bold(),
+        report.manifest.custom_directories.len()
     );
 
     Ok(())

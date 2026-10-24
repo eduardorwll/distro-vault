@@ -14,6 +14,7 @@
 - 🤖 **Agent Ecosystem Sync:** Exportação declarativa de regras e das 19 skills essenciais de agentes de IA com desreferenciamento de symlinks para execução em qualquer SO.
 - ⚙️ **Git Global Config Auto-Deployment:** Backup e restauração automática de `~/.gitconfig` e `~/.config/git/config` com preservação de identidade de autor.
 - 🌲 **Restore Granular com Menus Drop:** Interface TUI Ratatui interativa permitindo selecionar exatamente quais componentes restaurar (apps, chaves SSH, pacotes, agentes, config Git e pastas customizadas) com navegação em árvore e menus colapsáveis.
+- 💾 **Geração de Sub-Dumps (Slice):** Capacidade de extrair um dump derivado (`distro-vault slice` ou atalho `[S]` na TUI) a partir de um snapshot existente, gerando um novo arquivo `.tar.zst` autocontido apenas com os componentes selecionados.
 - 🔒 **Secrets & POSIX Integrity:** Preservação estrita de modos `0700` e `0600` em chaves SSH/GPG e compactação Zstandard de alta velocidade com Zip-Slip Guard.
 
 ---

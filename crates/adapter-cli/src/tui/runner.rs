@@ -29,6 +29,11 @@ pub enum TuiAction {
         dry_run: bool,
         selection_filter: Option<Box<SelectionFilter>>,
     },
+    Slice {
+        source_archive: PathBuf,
+        output_archive: PathBuf,
+        selection_filter: Box<SelectionFilter>,
+    },
 }
 
 /// RAII Guard that guarantees terminal raw mode is cleanly restored on drop
@@ -81,6 +86,30 @@ pub fn run_tui(mut app: TuiApp) -> io::Result<Option<TuiAction>> {
             } else {
                 app.status_message = Some("Nenhum snapshot selecionado para restaurar.".into());
                 app.should_start_restore = false;
+            }
+        }
+
+        if app.should_start_slice {
+            if let Some(snap) = app.selected_snapshot() {
+                let output_archive = match app.get_slice_default_output() {
+                    Some(out) => out,
+                    None => {
+                        app.status_message =
+                            Some("Erro ao calcular caminho de saída do sub-dump.".into());
+                        app.should_start_slice = false;
+                        continue;
+                    }
+                };
+                let selection_filter = Box::new(app.restore_tree.build_selection_filter());
+                return Ok(Some(TuiAction::Slice {
+                    source_archive: snap.path.clone(),
+                    output_archive,
+                    selection_filter,
+                }));
+            } else {
+                app.status_message =
+                    Some("Nenhum snapshot selecionado para gerar sub-dump.".into());
+                app.should_start_slice = false;
             }
         }
 

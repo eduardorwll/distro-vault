@@ -9,11 +9,11 @@ use adapter_storage::{CustomDirsHandler, ZstdStorageAdapter};
 use adapter_system::{LinuxGitConfigAdapter, LinuxSshAdapter, LinuxSystemAdapter, PacmanAdapter};
 use application::{
     BackupPipelineUseCase, BackupRequest, InspectSnapshotUseCase, RestorePipelineUseCase,
-    RestoreRequest, VerifyIntegrityUseCase,
+    RestoreRequest, SliceSnapshotRequest, SliceSnapshotUseCase, VerifyIntegrityUseCase,
 };
 use domain::entities::selection_filter::SelectionFilter;
 use domain::errors::DomainError;
-use domain::ports::PackagePort;
+use domain::ports::{PackagePort, StoragePort};
 use domain::value_objects::PackageName;
 
 #[test]
@@ -339,4 +339,89 @@ fn test_transcribe_path_to_target_home() {
     let sys = Path::new("/opt/custom_app");
     let transcribed_sys = transcribe_path_to_target_home(sys, target_home);
     assert_eq!(transcribed_sys, PathBuf::from("/opt/custom_app"));
+}
+
+#[test]
+fn test_slice_snapshot_filters_and_repackages_correctly() {
+    let tmp = tempdir().expect("Failed to create tempdir");
+    let test_root = tmp.path();
+
+    // 1. Setup mock source environment for initial backup
+    let zen_config = test_root.join(".config/zen");
+    let prof_dir = zen_config.join("7awtlvx8.Default (release)");
+    fs::create_dir_all(&prof_dir).unwrap();
+
+    let session_data = r#"{"spaces":[{"id":"s1","name":"DevSpace","tabs":["t1","t2"]}]}"#;
+    let compressed_session = MozLz4Codec::compress(session_data).unwrap();
+    fs::write(prof_dir.join("zen-sessions.jsonlz4"), compressed_session).unwrap();
+
+    let user_home = test_root.join("home_user");
+    let skills_dir = user_home.join(".agents/skills/clean-code");
+    fs::create_dir_all(&skills_dir).unwrap();
+    fs::write(
+        skills_dir.join("SKILL.md"),
+        "---\nname: clean-code\ndescription: Clean Code principles.\n---\nBody",
+    )
+    .unwrap();
+    fs::write(user_home.join("GEMINI.md"), "# Guidelines\nDefault dir").unwrap();
+
+    let ssh_dir = user_home.join(".ssh");
+    fs::create_dir_all(&ssh_dir).unwrap();
+    fs::write(ssh_dir.join("id_ed25519"), "MOCK_KEY_DATA").unwrap();
+    fs::write(ssh_dir.join("id_ed25519.pub"), "ssh-ed25519 MOCK_PUB").unwrap();
+
+    fs::write(
+        user_home.join(".gitconfig"),
+        "[user]\n\tname = Dev User\n\temail = dev@example.com\n",
+    )
+    .unwrap();
+
+    let storage = Arc::new(ZstdStorageAdapter::new());
+    let backup_use_case = BackupPipelineUseCase::new(
+        Arc::new(ZenBrowserAdapter::new()),
+        storage.clone(),
+        Arc::new(LocalAgentAdapter::new()),
+        Arc::new(LinuxSystemAdapter::new()),
+        Arc::new(LinuxSshAdapter::new()),
+        Arc::new(LinuxGitConfigAdapter::new()),
+        vec![],
+    );
+
+    let full_archive = test_root.join("full_snapshot.tar.zst");
+    let backup_req = BackupRequest::new(zen_config, user_home.clone(), full_archive.clone());
+    let backup_rep = backup_use_case.execute(backup_req).unwrap();
+    assert_eq!(backup_rep.manifest.ssh_keys.len(), 2);
+    assert_eq!(backup_rep.manifest.git_configs.len(), 1);
+
+    // 2. Setup slice request: exclude git config, exclude private key
+    let mut filter = SelectionFilter::default();
+    filter.set_restore_git_config(false);
+    filter.toggle_ssh_key("id_ed25519".to_string()); // Exclude private key
+
+    let sliced_archive = test_root.join("sliced_snapshot.tar.zst");
+    let slice_use_case = SliceSnapshotUseCase::new(storage.clone());
+    let slice_req = SliceSnapshotRequest::new(&full_archive, &sliced_archive, filter);
+
+    let slice_rep = slice_use_case.execute(slice_req).unwrap();
+    assert!(sliced_archive.exists());
+    assert_eq!(slice_rep.output_path, sliced_archive);
+
+    // Verify manifest of the sliced archive
+    let inspected_manifest = storage.read_manifest(&sliced_archive).unwrap();
+    assert!(inspected_manifest.git_configs.is_empty());
+    assert_eq!(inspected_manifest.ssh_keys.len(), 1);
+    assert_eq!(inspected_manifest.ssh_keys[0].file_name, "id_ed25519.pub");
+    assert_eq!(inspected_manifest.zen_profiles.len(), 1);
+    assert_eq!(inspected_manifest.agent_governance.skills.len(), 1);
+
+    // 3. Test defensive check: overwriting source onto itself is rejected
+    let invalid_req =
+        SliceSnapshotRequest::new(&full_archive, &full_archive, SelectionFilter::default());
+    let err = slice_use_case.execute(invalid_req).unwrap_err();
+    match err {
+        DomainError::ManifestError { message } => {
+            assert!(message.contains("cannot be identical"));
+        }
+        other => panic!("Expected ManifestError, got {:?}", other),
+    }
 }

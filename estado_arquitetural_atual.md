@@ -69,3 +69,8 @@ graph TD
     - Contrato expandido no Core Domain em `SelectionFilter` com flags de sistema (`restore_zen`, `restore_git_config`) e exclusão granular de diretórios customizados (`excluded_custom_dirs`).
     - Na apresentação (TUI Ratatui), a estrutura hierárquica `RestoreTreeState` organiza o manifesto em categorias colapsáveis com menus drop (`Enter/→/←/e`) e nós de itens individuais, permitindo seleção/desseleção em lote ou por item (`Espaço/x`). Foco duplo navegável com `Tab`.
     - No caso de uso `RestorePipelineUseCase`, a extração e implantação de pacotes, AppImages, perfis do Zen Browser, chaves SSH, skills de IA, pastas extras e configurações Git respeitam estritamente as seleções do usuário.
+12. **Geração de Sub-Dumps Derivados (Deep Module `SliceSnapshotUseCase`):**
+    - Permite extrair um subset podado a partir de um snapshot `.tar.zst` existente sem depender de ferramentas locais (navegador, chaves, pacotes).
+    - Desacoplamento estrito exigindo apenas a porta `StoragePort`. Extração em staging temporário protegido por RAII `StagingCleanupGuard`.
+    - Poda do `Manifest` e filtragem atômica de arquivos com recálculo determinístico de `total_files`, `total_size_bytes` e geração de novo checksum criptográfico SHA-256.
+    - Acionado via CLI (`distro-vault slice`) ou diretamente na TUI através do atalho `[S] Salvar Sub-Dump`.

@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
 Data: 24 de Outubro de 2026
-Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 12) Concluídas com Sucesso | 42 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui com Menus Drop Hierárquicos de Restore, SSH, Git Global Config, Transcrição Cross-Distro e Explorador Unificado
+Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 13) Concluídas com Sucesso | 43 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui com Menus Drop Hierárquicos de Restore, Geração de Sub-Dumps (Slice), SSH, Git Global Config, Transcrição Cross-Distro e Explorador Unificado
 
 ---
 
@@ -54,10 +54,16 @@ Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 12) Co
 - [x] Menus drop com expansão/recolhimento dinâmico (`Enter`, `→`, `←`, `e`), alternância em lote e individual de checkboxes (`Espaço`, `x`).
 - [x] Navegação por foco duplo (`Tab`) entre a lista de snapshots disponíveis e a árvore de seleção hierárquica à direita.
 
+### Fase 13: Geração de Sub-Dumps Derivados a partir de Dump Existente (Slice / Filter Sub-Snapshot)
+- [x] Caso de uso `SliceSnapshotUseCase` em `crates/application` extraindo snapshot fonte em staging isolado com proteção RAII `StagingCleanupGuard`.
+- [x] Poda do `Manifest` e filtragem atômica de arquivos para empacotar um novo snapshot `.tar.zst` autocontido com novo checksum SHA-256.
+- [x] Subcomando CLI `distro-vault slice <ORIGEM> -o <DESTINO>` suportando filtros de linha de comando (`--exclude-package`, `--no-ssh`, etc.) e modo interativo.
+- [x] Atalho `[S]` / `[s]` na TUI de restauração para gerar o sub-dump derivado instantaneamente a partir das marcações da árvore.
+
 ---
 
 ## 2. Métricas de Qualidade e Compilação
-- `cargo test --workspace` -> **42 testes passando (100% de sucesso)**
+- `cargo test --workspace` -> **43 testes passando (100% de sucesso)**
 - `cargo clippy --workspace --all-targets -- -D warnings` -> **Zero Warnings Policy rigorosamente mantida**
 - `cargo audit` -> **0 vulnerabilidades / 0 CVEs em 263 dependências**
 - Binário de release atualizado em `bin/distro-vault` e no host do usuário em `/home/eduardorwll/distro-vault`.

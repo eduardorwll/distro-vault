@@ -86,6 +86,33 @@ fn test_cli_parsing_subcommands() {
         }
         _ => panic!("Expected Verify command"),
     }
+
+    // 5. Slice command
+    let parsed_slice = Cli::try_parse_from([
+        "distro-vault",
+        "slice",
+        "/tmp/snapshot.tar.zst",
+        "--output",
+        "/tmp/subset.tar.zst",
+        "--no-ssh",
+        "--no-zen",
+        "--no-git-config",
+        "--exclude-package",
+        "vim",
+    ])
+    .expect("Failed to parse slice args");
+
+    match parsed_slice.command {
+        Some(Commands::Slice(s)) => {
+            assert_eq!(s.source.to_str().unwrap(), "/tmp/snapshot.tar.zst");
+            assert_eq!(s.output.unwrap().to_str().unwrap(), "/tmp/subset.tar.zst");
+            assert!(s.no_ssh);
+            assert!(s.no_zen);
+            assert!(s.no_git_config);
+            assert_eq!(s.exclude_packages, vec!["vim"]);
+        }
+        _ => panic!("Expected Slice command"),
+    }
 }
 
 #[test]

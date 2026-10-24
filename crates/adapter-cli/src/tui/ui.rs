@@ -72,11 +72,11 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
             ),
             TuiMode::Restore => match app.restore_focus {
                 RestoreFocus::SnapshotsList => Span::styled(
-                    " [↑/↓] Snapshots  [Tab] Focar Árvore de Dump  [P] Pacotes  [D] Dry-Run  [A] Arquivo  [Enter] Focar Dump  [R] RESTAURAR  [Q] Sair ",
+                    " [↑/↓] Snapshots  [Tab] Focar Árvore  [P] Pacotes  [D] Dry-Run  [A] Arquivo  [S] NOVO SUB-DUMP  [R] RESTAURAR  [Q] Sair ",
                     Style::default().fg(Color::DarkGray),
                 ),
                 RestoreFocus::ItemTree => Span::styled(
-                    " [↑/↓] Navegar Árvore  [Enter/→] Abrir/Fechar Drop  [Espaço] Marcar/Desmarcar  [Tab] Voltar a Snapshots  [R] RESTAURAR  [Q] Sair ",
+                    " [↑/↓] Navegar Árvore  [Enter/→] Abrir/Fechar Drop  [Espaço] Marcar/Desmarcar  [S] NOVO SUB-DUMP  [Tab] Voltar  [R] RESTAURAR  [Q] Sair ",
                     Style::default().fg(Color::Cyan),
                 ),
             },
@@ -577,7 +577,15 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                     Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
-                    "(Recupera apenas os itens marcados na árvore com transcrição automática para $HOME)",
+                    "(Recupera no sistema)  •  ",
+                    Style::default().fg(Color::Gray),
+                ),
+                Span::styled(
+                    "💾 [S] SALVAR SUB-DUMP ",
+                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    "(Gera novo .tar.zst apenas com itens marcados)",
                     Style::default().fg(Color::Gray),
                 ),
             ]),
