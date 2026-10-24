@@ -14,6 +14,8 @@ pub struct SelectionFilter {
     pub excluded_skills: HashSet<String>,
     pub excluded_appimages: HashSet<String>,
     pub excluded_spaces: HashSet<String>,
+    #[serde(default)]
+    pub excluded_ssh_keys: HashSet<String>,
     pub custom_directories: Vec<CustomDirectoryEntry>,
 }
 
@@ -40,6 +42,10 @@ impl SelectionFilter {
 
     pub fn is_space_included(&self, space_id: &str) -> bool {
         !self.excluded_spaces.contains(space_id)
+    }
+
+    pub fn is_ssh_key_included(&self, key_name: &str) -> bool {
+        !self.excluded_ssh_keys.contains(key_name)
     }
 
     pub fn exclude_package(&mut self, package: PackageName) {
@@ -76,5 +82,19 @@ impl SelectionFilter {
         if !self.excluded_spaces.remove(&space_id) {
             self.excluded_spaces.insert(space_id);
         }
+    }
+
+    pub fn toggle_ssh_key(&mut self, key_name: String) {
+        if !self.excluded_ssh_keys.remove(&key_name) {
+            self.excluded_ssh_keys.insert(key_name);
+        }
+    }
+
+    pub fn exclude_ssh_key(&mut self, key_name: String) {
+        self.excluded_ssh_keys.insert(key_name);
+    }
+
+    pub fn include_ssh_key(&mut self, key_name: &str) {
+        self.excluded_ssh_keys.remove(key_name);
     }
 }

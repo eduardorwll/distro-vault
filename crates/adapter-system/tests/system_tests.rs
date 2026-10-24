@@ -1,6 +1,14 @@
-use adapter_system::{AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, LinuxSystemAdapter, OsReleaseParser, PacmanAdapter};
+use std::fs;
+use std::os::unix::fs::PermissionsExt;
+use tempfile::tempdir;
+
+use adapter_system::{
+    AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, LinuxSshAdapter, LinuxSystemAdapter,
+    OsReleaseParser, PacmanAdapter,
+};
 use domain::entities::package::PackageSource;
-use domain::ports::{PackagePort, SystemPort};
+use domain::entities::ssh_key::SshFileType;
+use domain::ports::{PackagePort, SshPort, SystemPort};
 use domain::value_objects::DistroFamily;
 
 #[test]
@@ -76,4 +84,49 @@ fn test_apt_and_dnf_adapters_resilience() {
     // Verify results are valid collections
     let _ = apt_pkgs.len();
     let _ = apt_deps.len();
+}
+
+#[test]
+fn test_ssh_adapter_scan_and_permissions() {
+    let tmp = tempdir().expect("Failed to create tempdir");
+    let fake_home = tmp.path().join("home_user");
+    let fake_ssh = fake_home.join(".ssh");
+    fs::create_dir_all(&fake_ssh).unwrap();
+
+    fs::write(fake_ssh.join("id_ed25519"), "-----BEGIN OPENSSH PRIVATE KEY-----\nMOCK\n-----END OPENSSH PRIVATE KEY-----").unwrap();
+    fs::write(fake_ssh.join("id_ed25519.pub"), "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5 mock@test").unwrap();
+    fs::write(fake_ssh.join("config"), "Host *\n  ServerAliveInterval 60\n").unwrap();
+    fs::write(fake_ssh.join("authorized_keys"), "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5 user@client\n").unwrap();
+    fs::write(fake_ssh.join("known_hosts"), "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5\n").unwrap();
+    fs::write(fake_ssh.join("id_ed25519-cert.pub"), "ssh-ed25519-cert-v01@openssh.com CERTIFICATE\n").unwrap();
+
+    let adapter = LinuxSshAdapter::new();
+    let keys = adapter.scan_ssh_keys(&fake_home).expect("Scan SSH keys failed");
+
+    assert_eq!(keys.len(), 6);
+
+    let find_type = |name: &str| keys.iter().find(|k| k.file_name == name).unwrap().file_type;
+    assert_eq!(find_type("id_ed25519"), SshFileType::PrivateKey);
+    assert_eq!(find_type("id_ed25519.pub"), SshFileType::PublicKey);
+    assert_eq!(find_type("config"), SshFileType::Config);
+    assert_eq!(find_type("authorized_keys"), SshFileType::AuthorizedKeys);
+    assert_eq!(find_type("known_hosts"), SshFileType::KnownHosts);
+    assert_eq!(find_type("id_ed25519-cert.pub"), SshFileType::Certificate);
+
+    // Test restoration with POSIX permission hardening
+    let target_home = tmp.path().join("restored_home");
+    let restored_count = adapter.restore_ssh_keys(&fake_ssh, &target_home, &keys, false).expect("Restore SSH keys failed");
+    assert_eq!(restored_count, 6);
+
+    let restored_ssh = target_home.join(".ssh");
+    assert!(restored_ssh.exists());
+    assert_eq!(fs::metadata(&restored_ssh).unwrap().permissions().mode() & 0o777, 0o700);
+
+    let mode_of = |file: &str| fs::metadata(restored_ssh.join(file)).unwrap().permissions().mode() & 0o777;
+    assert_eq!(mode_of("id_ed25519"), 0o600);
+    assert_eq!(mode_of("id_ed25519.pub"), 0o644);
+    assert_eq!(mode_of("config"), 0o600);
+    assert_eq!(mode_of("authorized_keys"), 0o600);
+    assert_eq!(mode_of("known_hosts"), 0o644);
+    assert_eq!(mode_of("id_ed25519-cert.pub"), 0o644);
 }

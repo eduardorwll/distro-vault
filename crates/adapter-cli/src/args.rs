@@ -46,6 +46,14 @@ pub struct BackupArgs {
     #[arg(long = "exclude-skill")]
     pub exclude_skills: Vec<String>,
 
+    /// SSH key filename to exclude from backup (can be specified multiple times)
+    #[arg(long = "exclude-ssh-key")]
+    pub exclude_ssh_keys: Vec<String>,
+
+    /// Do not include any SSH keys in the backup snapshot
+    #[arg(long = "no-ssh", default_value_t = false)]
+    pub no_ssh: bool,
+
     /// Extra custom directory path to include and compress (can be specified multiple times)
     #[arg(long = "add-dir")]
     pub add_dirs: Vec<PathBuf>,

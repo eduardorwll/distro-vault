@@ -81,8 +81,9 @@ pub struct TuiApp {
     pub appimages: Vec<TuiRow>,
     pub custom_dirs: Vec<CustomDirectoryEntry>,
     pub zen_spaces: Vec<TuiRow>,
-    pub cursors: [usize; 7],
-    pub list_states: [ListState; 7],
+    pub ssh_keys: Vec<TuiRow>,
+    pub cursors: [usize; 8],
+    pub list_states: [ListState; 8],
     // Restore mode fields
     pub snapshots: Vec<SnapshotItem>,
     pub snapshot_cursor: usize,
@@ -111,8 +112,10 @@ impl TuiApp {
             appimages: Vec::new(),
             custom_dirs: Vec::new(),
             zen_spaces: Vec::new(),
-            cursors: [0; 7],
+            ssh_keys: Vec::new(),
+            cursors: [0; 8],
             list_states: [
+                ListState::default(),
                 ListState::default(),
                 ListState::default(),
                 ListState::default(),
@@ -137,7 +140,7 @@ impl TuiApp {
     }
 
     pub fn next_tab(&mut self) {
-        self.current_tab = (self.current_tab + 1) % 7;
+        self.current_tab = (self.current_tab + 1) % 8;
     }
 
     pub fn set_mode(&mut self, mode: TuiMode) {
@@ -204,7 +207,7 @@ impl TuiApp {
 
     pub fn prev_tab(&mut self) {
         if self.current_tab == 0 {
-            self.current_tab = 6;
+            self.current_tab = 7;
         } else {
             self.current_tab -= 1;
         }
@@ -219,6 +222,7 @@ impl TuiApp {
             4 => self.appimages.len(),
             5 => self.custom_dirs.len(),
             6 => self.zen_spaces.len(),
+            7 => self.ssh_keys.len(),
             _ => 0,
         }
     }
@@ -233,6 +237,7 @@ impl TuiApp {
             4 => count_rows(&self.appimages),
             5 => self.custom_dirs.len(),
             6 => count_rows(&self.zen_spaces),
+            7 => count_rows(&self.ssh_keys),
             _ => 0,
         }
     }
@@ -254,6 +259,7 @@ impl TuiApp {
             4 => count_selected(&self.appimages),
             5 => self.custom_dirs.len(),
             6 => count_selected(&self.zen_spaces),
+            7 => count_selected(&self.ssh_keys),
             _ => 0,
         }
     }
@@ -320,6 +326,7 @@ impl TuiApp {
                 }
             }
             6 => toggle_in_rows(&mut self.zen_spaces),
+            7 => toggle_in_rows(&mut self.ssh_keys),
             _ => {}
         }
     }
@@ -384,6 +391,14 @@ impl TuiApp {
             if let TuiRow::Item { item, .. } = row {
                 if !item.included {
                     filter.toggle_space(item.id.clone());
+                }
+            }
+        }
+
+        for row in &self.ssh_keys {
+            if let TuiRow::Item { item, .. } = row {
+                if !item.included {
+                    filter.toggle_ssh_key(item.id.clone());
                 }
             }
         }

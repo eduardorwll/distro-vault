@@ -273,3 +273,27 @@ fn test_package_category_classification() {
     assert_eq!(s, PackageScope::User);
     assert_eq!(c, PackageCategory::DesktopApp);
 }
+
+#[test]
+fn test_ssh_key_entity_and_filter() {
+    use domain::entities::ssh_key::{SshFileType, SshKeyEntry};
+    use std::path::PathBuf;
+
+    let key = SshKeyEntry::new("id_ed25519", PathBuf::from("id_ed25519"), SshFileType::PrivateKey, 411, 0o600);
+    assert_eq!(key.file_type.as_str(), "Chave Privada");
+    assert_eq!(key.file_type.default_posix_mode(), 0o600);
+    assert_eq!(SshFileType::PublicKey.default_posix_mode(), 0o644);
+    assert_eq!(SshFileType::Config.default_posix_mode(), 0o600);
+
+    let mut filter = domain::entities::SelectionFilter::new();
+    assert!(filter.is_ssh_key_included("id_ed25519"));
+
+    filter.exclude_ssh_key("id_ed25519".to_string());
+    assert!(!filter.is_ssh_key_included("id_ed25519"));
+
+    filter.include_ssh_key("id_ed25519");
+    assert!(filter.is_ssh_key_included("id_ed25519"));
+
+    filter.toggle_ssh_key("id_ed25519".to_string());
+    assert!(!filter.is_ssh_key_included("id_ed25519"));
+}

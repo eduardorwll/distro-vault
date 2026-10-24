@@ -4,6 +4,7 @@ use crate::entities::agent_governance::AgentGovernance;
 use crate::entities::appimage::AppImageEntry;
 use crate::entities::custom_directory::CustomDirectoryEntry;
 use crate::entities::package::PackageEntry;
+use crate::entities::ssh_key::SshKeyEntry;
 use crate::entities::zen_profile::ZenProfile;
 use crate::value_objects::{Checksum, DistroFamily};
 
@@ -20,6 +21,8 @@ pub struct Manifest {
     pub appimages: Vec<AppImageEntry>,
     pub custom_directories: Vec<CustomDirectoryEntry>,
     pub agent_governance: AgentGovernance,
+    #[serde(default)]
+    pub ssh_keys: Vec<SshKeyEntry>,
     pub checksum: Option<Checksum>,
     pub total_files: usize,
     pub total_size_bytes: u64,
@@ -44,6 +47,7 @@ impl Manifest {
             appimages: Vec::new(),
             custom_directories: Vec::new(),
             agent_governance,
+            ssh_keys: Vec::new(),
             checksum: None,
             total_files: 0,
             total_size_bytes: 0,

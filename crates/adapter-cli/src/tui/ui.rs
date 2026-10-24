@@ -86,6 +86,7 @@ fn draw_backup_mode(f: &mut Frame, app: &mut TuiApp, tab_area: Rect, main_area: 
         format!("[5] AppImages ({}/{})", app.count_selected_items(4), app.count_items(4)),
         format!("[6] Pastas Extras ({})", app.custom_dirs.len()),
         format!("[7] Zen Spaces ({}/{})", app.count_selected_items(6), app.count_items(6)),
+        format!("[8] Chaves SSH ({}/{})", app.count_selected_items(7), app.count_items(7)),
     ];
 
     let tabs = Tabs::new(tab_titles)
@@ -139,6 +140,10 @@ fn draw_backup_mode(f: &mut Frame, app: &mut TuiApp, tab_area: Rect, main_area: 
         6 => (
             render_rows(&app.zen_spaces, current_cursor),
             " 🌐 Zen Browser Spaces & Workspaces ",
+        ),
+        7 => (
+            render_rows(&app.ssh_keys, current_cursor),
+            " 🔑 Chaves SSH Cadastradas (~/.ssh - Protegidas com Permissão Estrita 0700/0600) ",
         ),
         _ => (Vec::new(), ""),
     };
@@ -257,7 +262,11 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                 Span::styled(format!("{} pacotes no catálogo declarativo", m.packages.len()), Style::default().fg(Color::White)),
             ]));
             lines.push(Line::from(vec![
-                Span::styled("  📁 Pastas Extras: ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled("  🔑 Chaves SSH: ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled(format!("{} chaves/arquivos registrados (~/.ssh)", m.ssh_keys.len()), Style::default().fg(Color::White)),
+            ]));
+            lines.push(Line::from(vec![
+                Span::styled("  📁 Pastas Extras: ", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
                 Span::styled(format!("{} diretórios customizados arquivados", m.custom_directories.len()), Style::default().fg(Color::White)),
             ]));
             if let Some(ref cs) = m.checksum {

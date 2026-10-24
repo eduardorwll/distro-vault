@@ -1,6 +1,7 @@
 pub mod os_release;
 pub mod packages;
 pub mod process;
+pub mod ssh;
 
 use std::path::Path;
 
@@ -11,6 +12,7 @@ use domain::value_objects::DistroFamily;
 pub use os_release::OsReleaseParser;
 pub use packages::{AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, PacmanAdapter};
 pub use process::ProcessManager;
+pub use ssh::LinuxSshAdapter;
 
 #[derive(Debug, Default, Clone)]
 pub struct LinuxSystemAdapter;

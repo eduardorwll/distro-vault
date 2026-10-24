@@ -6,7 +6,7 @@ use domain::entities::custom_directory::CustomDirectoryEntry;
 use domain::entities::manifest::Manifest;
 use domain::entities::selection_filter::SelectionFilter;
 use domain::errors::DomainError;
-use domain::ports::{AgentPort, BrowserPort, PackagePort, StoragePort, SystemPort};
+use domain::ports::{AgentPort, BrowserPort, PackagePort, SshPort, StoragePort, SystemPort};
 use domain::value_objects::Checksum;
 
 /// DTO for requesting a full declarative system snapshot
@@ -68,6 +68,7 @@ pub struct BackupPipelineUseCase {
     storage_port: Arc<dyn StoragePort>,
     agent_port: Arc<dyn AgentPort>,
     system_port: Arc<dyn SystemPort>,
+    ssh_port: Arc<dyn SshPort>,
     package_ports: Vec<Arc<dyn PackagePort>>,
 }
 
@@ -77,6 +78,7 @@ impl BackupPipelineUseCase {
         storage_port: Arc<dyn StoragePort>,
         agent_port: Arc<dyn AgentPort>,
         system_port: Arc<dyn SystemPort>,
+        ssh_port: Arc<dyn SshPort>,
         package_ports: Vec<Arc<dyn PackagePort>>,
     ) -> Self {
         Self {
@@ -84,6 +86,7 @@ impl BackupPipelineUseCase {
             storage_port,
             agent_port,
             system_port,
+            ssh_port,
             package_ports,
         }
     }
@@ -141,10 +144,14 @@ impl BackupPipelineUseCase {
         let mut governance = self.agent_port.scan_governance(&req.user_home)?;
         governance.skills.retain(|s| req.selection_filter.is_skill_included(&s.name));
 
-        // 6. Custom Directories (already attached or filtered)
+        // 6. Scan & Filter Registered SSH Keys
+        let mut ssh_keys = self.ssh_port.scan_ssh_keys(&req.user_home)?;
+        ssh_keys.retain(|k| req.selection_filter.is_ssh_key_included(&k.file_name));
+
+        // 7. Custom Directories (already attached or filtered)
         let custom_dirs: Vec<CustomDirectoryEntry> = req.custom_directories;
 
-        // 7. Prepare source-to-archive items
+        // 8. Prepare source-to-archive items
         let mut archive_items: Vec<(PathBuf, PathBuf)> = Vec::new();
 
         // Add browser profiles
@@ -166,6 +173,14 @@ impl BackupPipelineUseCase {
             }
         }
 
+        // Add registered SSH keys
+        for key in &ssh_keys {
+            let disk_path = req.user_home.join(".ssh").join(&key.relative_path);
+            if disk_path.exists() {
+                archive_items.push((disk_path, PathBuf::from("ssh").join(&key.relative_path)));
+            }
+        }
+
         // Add custom directories
         for custom_d in &custom_dirs {
             if custom_d.source_path.exists() {
@@ -173,7 +188,7 @@ impl BackupPipelineUseCase {
             }
         }
 
-        // 8. Build Manifest
+        // 9. Build Manifest
         let mut manifest = Manifest::new(
             snapshot_id.clone(),
             created_at_utc,
@@ -184,13 +199,15 @@ impl BackupPipelineUseCase {
         manifest.zen_profiles = profiles;
         manifest.packages = packages;
         manifest.custom_directories = custom_dirs;
+        manifest.ssh_keys = ssh_keys;
 
         let total_files: usize = archive_items.len() + manifest.custom_directories.iter().map(|c| c.file_count).sum::<usize>();
-        let total_size_bytes: u64 = manifest.custom_directories.iter().map(|c| c.size_bytes).sum::<u64>();
+        let total_size_bytes: u64 = manifest.custom_directories.iter().map(|c| c.size_bytes).sum::<u64>()
+            + manifest.ssh_keys.iter().map(|k| k.size_bytes).sum::<u64>();
         manifest.total_files = total_files;
         manifest.total_size_bytes = total_size_bytes;
 
-        // 9. Create atomic snapshot
+        // 10. Create atomic snapshot
         let checksum = self.storage_port.create_snapshot(
             &archive_items,
             &manifest,

@@ -6,7 +6,7 @@ use tempfile::tempdir;
 
 use domain::entities::package::PackageSource;
 use domain::errors::DomainError;
-use domain::ports::{AgentPort, BrowserPort, PackagePort, StoragePort, SystemPort};
+use domain::ports::{AgentPort, BrowserPort, PackagePort, SshPort, StoragePort, SystemPort};
 use domain::value_objects::{DistroFamily, PackageName};
 
 /// DTO for requesting a full snapshot restoration
@@ -56,6 +56,7 @@ pub struct RestoreReport {
     pub target_distro: DistroFamily,
     pub profiles_restored: Vec<String>,
     pub skills_restored: usize,
+    pub ssh_keys_restored: usize,
     pub packages_installed: Vec<PackageName>,
     pub pending_packages: Vec<PackageName>,
     pub fuse2_missing_warning: bool,
@@ -66,6 +67,7 @@ pub struct RestorePipelineUseCase {
     storage_port: Arc<dyn StoragePort>,
     agent_port: Arc<dyn AgentPort>,
     system_port: Arc<dyn SystemPort>,
+    ssh_port: Arc<dyn SshPort>,
     package_ports: Vec<Arc<dyn PackagePort>>,
 }
 
@@ -75,6 +77,7 @@ impl RestorePipelineUseCase {
         storage_port: Arc<dyn StoragePort>,
         agent_port: Arc<dyn AgentPort>,
         system_port: Arc<dyn SystemPort>,
+        ssh_port: Arc<dyn SshPort>,
         package_ports: Vec<Arc<dyn PackagePort>>,
     ) -> Self {
         Self {
@@ -82,6 +85,7 @@ impl RestorePipelineUseCase {
             storage_port,
             agent_port,
             system_port,
+            ssh_port,
             package_ports,
         }
     }
@@ -163,7 +167,20 @@ impl RestorePipelineUseCase {
         // 6. Check FUSE2 requirement for AppImages
         let fuse2_missing_warning = !manifest.appimages.is_empty() && !self.system_port.is_fuse2_available();
 
-        // 7. Restore Custom Directories
+        // 7. Restore Registered SSH Keys with strict POSIX permissions (0700/0600)
+        let staging_ssh = staging_dir.path().join("ssh");
+        let ssh_keys_restored = if staging_ssh.exists() && !manifest.ssh_keys.is_empty() {
+            self.ssh_port.restore_ssh_keys(
+                &staging_ssh,
+                &req.target_home,
+                &manifest.ssh_keys,
+                req.dry_run,
+            )?
+        } else {
+            0
+        };
+
+        // 8. Restore Custom Directories
         for custom_d in &manifest.custom_directories {
             let custom_staging = staging_dir.path().join(&custom_d.archive_prefix);
             if custom_staging.exists() {
@@ -188,6 +205,7 @@ impl RestorePipelineUseCase {
             target_distro,
             profiles_restored,
             skills_restored: skills_count,
+            ssh_keys_restored,
             packages_installed,
             pending_packages,
             fuse2_missing_warning,

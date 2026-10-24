@@ -31,6 +31,9 @@ pub enum DomainError {
     #[error("Storage security violation: Zip-slip / path traversal detected for '{path}'")]
     SecurityViolation { path: String },
 
+    #[error("SSH operation error: {message}")]
+    SshError { message: String },
+
     #[error("Agent governance error: {message}")]
     AgentGovernanceError { message: String },
 

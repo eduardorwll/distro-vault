@@ -12,7 +12,7 @@ use application::{BackupRequest, RestoreRequest};
 use domain::entities::custom_directory::CustomDirectoryEntry;
 use domain::entities::package::{PackageCategory, PackageScope};
 use domain::entities::selection_filter::SelectionFilter;
-use domain::ports::{AgentPort, BrowserPort, StoragePort};
+use domain::ports::{AgentPort, BrowserPort, SshPort, StoragePort};
 use domain::value_objects::{PackageName, SkillCategory};
 
 fn main() {
@@ -60,6 +60,18 @@ fn handle_backup(container: &AppContainer, args: BackupArgs) -> Result<(), Box<d
         }
         for s in &args.exclude_skills {
             filter.toggle_skill(s.clone());
+        }
+
+        if args.no_ssh {
+            if let Ok(keys) = container.ssh_adapter.scan_ssh_keys(&home) {
+                for k in keys {
+                    filter.exclude_ssh_key(k.file_name);
+                }
+            }
+        } else {
+            for k in &args.exclude_ssh_keys {
+                filter.exclude_ssh_key(k.clone());
+            }
         }
 
         let mut custom_dirs = Vec::new();
@@ -271,12 +283,40 @@ fn handle_interactive(
         ]);
     }
 
-    // 4. Initial custom dirs from CLI flags
+    // 4. Scan registered SSH keys (~/.ssh)
+    if let Ok(keys) = container.ssh_adapter.scan_ssh_keys(&home) {
+        let mut priv_keys = Vec::new();
+        let mut pub_keys = Vec::new();
+        let mut configs = Vec::new();
+
+        for k in keys {
+            let item = TuiItem {
+                id: k.file_name.clone(),
+                name: k.file_name.clone(),
+                details: format!("{} • {:o} • {} bytes", k.file_type.as_str(), k.posix_mode, k.size_bytes),
+                included: true,
+            };
+            match k.file_type {
+                domain::entities::ssh_key::SshFileType::PrivateKey => priv_keys.push(item),
+                domain::entities::ssh_key::SshFileType::PublicKey
+                | domain::entities::ssh_key::SshFileType::Certificate => pub_keys.push(item),
+                _ => configs.push(item),
+            }
+        }
+
+        tui_app.ssh_keys = TuiApp::group_into_rows(vec![
+            ("priv".into(), "CHAVES PRIVADAS (0600 - PROTEÇÃO MÁXIMA)".into(), priv_keys),
+            ("pub".into(), "CHAVES PÚBLICAS & CERTIFICADOS (0644)".into(), pub_keys),
+            ("conf".into(), "CONFIGURAÇÃO, KNOWN HOSTS & DEMAIS".into(), configs),
+        ]);
+    }
+
+    // 5. Initial custom dirs from CLI flags
     for dir in &add_dirs {
         let _ = tui_app.add_custom_directory(&dir.to_string_lossy());
     }
 
-    // 5. Discover existing backups in ~/Antigravity/backups/
+    // 6. Discover existing backups in ~/Antigravity/backups/
     let backups_dir = home.join("Antigravity/backups");
     if backups_dir.exists() {
         if let Ok(entries) = std::fs::read_dir(&backups_dir) {
@@ -348,6 +388,7 @@ fn execute_backup(
     println!("  {} perfis Zen: {}", style("Zen Browser:").bold(), report.manifest.zen_profiles.len());
     println!("  {} skills: {}", style("Agentes IA:").bold(), report.manifest.agent_governance.skills.len());
     println!("  {} pacotes: {}", style("Pacotes Registrados:").bold(), report.manifest.packages.len());
+    println!("  {} chaves/configs: {}", style("Chaves SSH:").bold(), report.manifest.ssh_keys.len());
 
     Ok(())
 }
@@ -387,6 +428,14 @@ fn execute_restore(
     println!("  {} {:?}", style("Perfis Zen Normalizados:").bold(), report.profiles_restored);
     println!("  {} {}", style("Skills Restauradas:").bold(), report.skills_restored);
 
+    if report.ssh_keys_restored > 0 {
+        println!(
+            "  {} {} instaladas com sucesso e permissões restritas (0700 ~/.ssh / 0600 chaves)",
+            style("Chaves SSH:").bold(),
+            report.ssh_keys_restored
+        );
+    }
+
     if !report.packages_installed.is_empty() {
         println!("  {} {} instalados", style("Pacotes:").bold(), report.packages_installed.len());
     }
@@ -424,6 +473,7 @@ fn handle_inspect(container: &AppContainer, args: InspectArgs) -> Result<(), Box
         println!("  {} {} ({} abas, {} spaces)", style("Zen Browser:").bold(), summary.zen_profiles_count, summary.total_tabs, summary.spaces_count);
         println!("  {} {}", style("Pacotes Declarados:").bold(), summary.packages_count);
         println!("  {} {}", style("Skills de IA:").bold(), summary.skills_count);
+        println!("  {} {}", style("Chaves SSH:").bold(), summary.ssh_keys_count);
         println!("  {} {}", style("Pastas Customizadas:").bold(), summary.custom_dirs_count);
         if let Some(chk) = summary.checksum {
             println!("  {} {}", style("Checksum:").bold(), chk.as_str());

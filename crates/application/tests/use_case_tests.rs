@@ -1,11 +1,12 @@
 use std::fs;
+use std::os::unix::fs::PermissionsExt;
 use std::sync::Arc;
 use tempfile::tempdir;
 
 use adapter_agents::LocalAgentAdapter;
 use adapter_browser::{MozLz4Codec, ZenBrowserAdapter};
 use adapter_storage::{CustomDirsHandler, ZstdStorageAdapter};
-use adapter_system::{LinuxSystemAdapter, PacmanAdapter};
+use adapter_system::{LinuxSshAdapter, LinuxSystemAdapter, PacmanAdapter};
 use application::{
     BackupPipelineUseCase, BackupRequest, InspectSnapshotUseCase, RestorePipelineUseCase,
     RestoreRequest, VerifyIntegrityUseCase,
@@ -39,6 +40,18 @@ fn test_full_backup_and_restore_pipeline() {
     ).unwrap();
     fs::write(user_home.join("GEMINI.md"), "# Guidelines\nDefault dir").unwrap();
 
+    let ssh_dir = user_home.join(".ssh");
+    fs::create_dir_all(&ssh_dir).unwrap();
+    fs::write(
+        ssh_dir.join("id_ed25519"),
+        "-----BEGIN OPENSSH PRIVATE KEY-----\nMOCK_KEY_DATA\n-----END OPENSSH PRIVATE KEY-----",
+    ).unwrap();
+    fs::write(
+        ssh_dir.join("id_ed25519.pub"),
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5 mock@test",
+    ).unwrap();
+    fs::write(ssh_dir.join("config"), "Host github.com\n  User git\n").unwrap();
+
     let custom_dir = test_root.join("my_docs");
     fs::create_dir_all(&custom_dir).unwrap();
     fs::write(custom_dir.join("project.md"), "# Secret Distro Project").unwrap();
@@ -49,6 +62,7 @@ fn test_full_backup_and_restore_pipeline() {
     let storage = Arc::new(ZstdStorageAdapter::new());
     let agent = Arc::new(LocalAgentAdapter::new());
     let system = Arc::new(LinuxSystemAdapter::new());
+    let ssh = Arc::new(LinuxSshAdapter::new());
     let pacman: Arc<dyn PackagePort> = Arc::new(PacmanAdapter::new());
     let package_ports = vec![pacman];
 
@@ -58,6 +72,7 @@ fn test_full_backup_and_restore_pipeline() {
         storage.clone(),
         agent.clone(),
         system.clone(),
+        ssh.clone(),
         package_ports.clone(),
     );
 
@@ -86,6 +101,7 @@ fn test_full_backup_and_restore_pipeline() {
     assert_eq!(summary.zen_profiles_count, 1);
     assert_eq!(summary.spaces_count, 1);
     assert_eq!(summary.custom_dirs_count, 1);
+    assert_eq!(summary.ssh_keys_count, 3);
 
     // 5. Test VerifyIntegrityUseCase
     let verify_use_case = VerifyIntegrityUseCase::new(storage.clone());
@@ -104,6 +120,7 @@ fn test_full_backup_and_restore_pipeline() {
         storage,
         agent,
         system,
+        ssh,
         package_ports,
     );
 
@@ -116,6 +133,7 @@ fn test_full_backup_and_restore_pipeline() {
     assert_eq!(restore_report.snapshot_id, "snap-integration-01");
     assert_eq!(restore_report.profiles_restored.len(), 1);
     assert_eq!(restore_report.skills_restored, 1);
+    assert_eq!(restore_report.ssh_keys_restored, 3);
 
     // Verify restored browser profile & normalized ini files
     let restored_prof = restore_target_config.join("7awtlvx8.Default (release)");
@@ -127,6 +145,23 @@ fn test_full_backup_and_restore_pipeline() {
     // Verify restored skills
     let restored_skill = restore_target_home.join(".agents/skills/clean-code/SKILL.md");
     assert!(restored_skill.exists());
+
+    // Verify restored SSH keys with strict POSIX permissions
+    let restored_ssh = restore_target_home.join(".ssh");
+    assert!(restored_ssh.exists());
+    assert_eq!(fs::metadata(&restored_ssh).unwrap().permissions().mode() & 0o777, 0o700);
+
+    let restored_priv = restored_ssh.join("id_ed25519");
+    assert!(restored_priv.exists());
+    assert_eq!(fs::metadata(&restored_priv).unwrap().permissions().mode() & 0o777, 0o600);
+
+    let restored_pub = restored_ssh.join("id_ed25519.pub");
+    assert!(restored_pub.exists());
+    assert_eq!(fs::metadata(&restored_pub).unwrap().permissions().mode() & 0o777, 0o644);
+
+    let restored_conf = restored_ssh.join("config");
+    assert!(restored_conf.exists());
+    assert_eq!(fs::metadata(&restored_conf).unwrap().permissions().mode() & 0o777, 0o600);
 
     // Verify restored custom directories
     let restored_custom_file = restore_target_custom.join("my_docs/project.md");
@@ -152,6 +187,7 @@ fn test_backup_aborts_when_browser_locked() {
         Arc::new(ZstdStorageAdapter::new()),
         Arc::new(LocalAgentAdapter::new()),
         Arc::new(LinuxSystemAdapter::new()),
+        Arc::new(LinuxSshAdapter::new()),
         vec![],
     );
 
@@ -181,6 +217,7 @@ fn test_selection_filter_excludes_items_deterministically() {
         Arc::new(ZstdStorageAdapter::new()),
         Arc::new(LocalAgentAdapter::new()),
         Arc::new(LinuxSystemAdapter::new()),
+        Arc::new(LinuxSshAdapter::new()),
         vec![],
     );
 

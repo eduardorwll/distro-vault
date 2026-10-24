@@ -19,6 +19,7 @@ pub struct SnapshotSummary {
     pub packages_count: usize,
     pub skills_count: usize,
     pub custom_dirs_count: usize,
+    pub ssh_keys_count: usize,
     pub checksum: Option<Checksum>,
 }
 
@@ -48,6 +49,7 @@ impl InspectSnapshotUseCase {
             packages_count: manifest.packages.len(),
             skills_count: manifest.agent_governance.skills.len(),
             custom_dirs_count: manifest.custom_directories.len(),
+            ssh_keys_count: manifest.ssh_keys.len(),
             checksum: manifest.checksum,
         })
     }
