@@ -237,6 +237,27 @@ impl TuiApp {
         }
     }
 
+    pub fn count_selected_items(&self, tab_idx: usize) -> usize {
+        let count_selected = |rows: &[TuiRow]| {
+            rows.iter()
+                .filter(|r| match r {
+                    TuiRow::Item { item, .. } => item.included,
+                    _ => false,
+                })
+                .count()
+        };
+        match tab_idx {
+            0 => count_selected(&self.user_packages),
+            1 => count_selected(&self.system_packages),
+            2 => count_selected(&self.dependency_packages),
+            3 => count_selected(&self.skills),
+            4 => count_selected(&self.appimages),
+            5 => self.custom_dirs.len(),
+            6 => count_selected(&self.zen_spaces),
+            _ => 0,
+        }
+    }
+
     pub fn next_item(&mut self) {
         let len = self.current_list_len();
         if len > 0 {
@@ -321,7 +342,7 @@ impl TuiApp {
                 if let TuiRow::Item { item, .. } = row {
                     if !item.included {
                         if let Ok(name) = PackageName::new(&item.id) {
-                            filt.toggle_package(name);
+                            filt.exclude_package(name);
                         }
                     }
                 }
@@ -330,7 +351,18 @@ impl TuiApp {
 
         scan_packages(&self.user_packages, &mut filter);
         scan_packages(&self.system_packages, &mut filter);
-        scan_packages(&self.dependency_packages, &mut filter);
+
+        for row in &self.dependency_packages {
+            if let TuiRow::Item { item, .. } = row {
+                if item.included {
+                    if let Ok(name) = PackageName::new(&item.id) {
+                        filter.include_dependency(name);
+                    }
+                } else if let Ok(name) = PackageName::new(&item.id) {
+                    filter.exclude_package(name);
+                }
+            }
+        }
 
         for row in &self.skills {
             if let TuiRow::Item { item, .. } = row {

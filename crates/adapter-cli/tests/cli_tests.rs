@@ -119,7 +119,7 @@ fn test_tui_app_state_and_filter_generation() {
         ),
     ]);
 
-    // Setup dummy system packages with headers
+    // Setup dummy system packages with headers (unselected by default)
     app.system_packages = TuiApp::group_into_rows(vec![
         (
             "kernel".to_string(),
@@ -128,7 +128,21 @@ fn test_tui_app_state_and_filter_generation() {
                 id: "linux".to_string(),
                 name: "linux".to_string(),
                 details: "core kernel".to_string(),
-                included: true,
+                included: false,
+            }],
+        ),
+    ]);
+
+    // Setup dummy dependency packages with headers (unselected by default)
+    app.dependency_packages = TuiApp::group_into_rows(vec![
+        (
+            "core_libs".to_string(),
+            "BIBLIOTECAS CORE".to_string(),
+            vec![TuiItem {
+                id: "glibc".to_string(),
+                name: "glibc".to_string(),
+                details: "C runtime".to_string(),
+                included: false,
             }],
         ),
     ]);
@@ -147,6 +161,14 @@ fn test_tui_app_state_and_filter_generation() {
         ),
     ]);
 
+    // Verify initial selection counts
+    assert_eq!(app.count_items(0), 2);
+    assert_eq!(app.count_selected_items(0), 2);
+    assert_eq!(app.count_items(1), 1);
+    assert_eq!(app.count_selected_items(1), 0); // System packages unselected by default
+    assert_eq!(app.count_items(2), 1);
+    assert_eq!(app.count_selected_items(2), 0); // Dependencies unselected by default
+
     // 1. Navigation across tabs (7 tabs now)
     assert_eq!(app.current_tab, 0);
     app.next_tab();
@@ -164,12 +186,14 @@ fn test_tui_app_state_and_filter_generation() {
     // 3. Toggle selection (exclude git at row 2)
     app.toggle_selected();
     assert!(!app.user_packages[2].item().unwrap().included);
+    assert_eq!(app.count_selected_items(0), 1);
 
     // 4. Build filter
     let filter = app.build_selection_filter();
     assert!(filter.is_package_included(&PackageName::new("ripgrep").unwrap()));
     assert!(!filter.is_package_included(&PackageName::new("git").unwrap()));
-    assert!(filter.is_package_included(&PackageName::new("linux").unwrap()));
+    assert!(!filter.is_package_included(&PackageName::new("linux").unwrap())); // Excluded by default
+    assert!(!filter.is_dependency_included(&PackageName::new("glibc").unwrap()));
     assert!(filter.is_skill_included("clean-code"));
 
     // 5. Test Header toggle (toggle all in category)
@@ -183,6 +207,22 @@ fn test_tui_app_state_and_filter_generation() {
     app.toggle_selected();
     assert!(app.user_packages[1].item().unwrap().included);
     assert!(app.user_packages[2].item().unwrap().included);
+
+    // 6. Test toggling system package inclusion
+    app.current_tab = 1;
+    app.cursors[1] = 0; // Header for kernel
+    app.toggle_selected(); // Should turn on linux
+    assert!(app.system_packages[1].item().unwrap().included);
+    let filter_sys = app.build_selection_filter();
+    assert!(filter_sys.is_package_included(&PackageName::new("linux").unwrap()));
+
+    // 7. Test toggling dependency inclusion
+    app.current_tab = 2;
+    app.cursors[2] = 1; // Item glibc
+    app.toggle_selected(); // Should turn on glibc
+    assert!(app.dependency_packages[1].item().unwrap().included);
+    let filter_dep = app.build_selection_filter();
+    assert!(filter_dep.is_dependency_included(&PackageName::new("glibc").unwrap()));
 
     // 6. Custom Directory Addition
     let tmp = tempdir().expect("Failed to create tempdir");

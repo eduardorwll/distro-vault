@@ -126,6 +126,15 @@ impl BackupPipelineUseCase {
                     }
                 }
             }
+            if !req.selection_filter.included_dependencies.is_empty() {
+                if let Ok(deps) = port.query_dependencies() {
+                    for pkg in deps {
+                        if req.selection_filter.is_dependency_included(&pkg.name) {
+                            packages.push(pkg);
+                        }
+                    }
+                }
+            }
         }
 
         // 5. Scan & Filter Agent Governance

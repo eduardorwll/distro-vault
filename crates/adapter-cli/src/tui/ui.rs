@@ -79,13 +79,13 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
 
 fn draw_backup_mode(f: &mut Frame, app: &mut TuiApp, tab_area: Rect, main_area: Rect) {
     let tab_titles = vec![
-        format!("[1] Apps & Usuário ({})", app.count_items(0)),
-        format!("[2] Sistema Low-Level ({})", app.count_items(1)),
-        format!("[3] Dependências ({})", app.count_items(2)),
-        format!("[4] Skills ({})", app.count_items(3)),
-        format!("[5] AppImages ({})", app.count_items(4)),
+        format!("[1] Apps & Usuário ({}/{})", app.count_selected_items(0), app.count_items(0)),
+        format!("[2] Sistema Low-Level ({}/{})", app.count_selected_items(1), app.count_items(1)),
+        format!("[3] Dependências ({}/{})", app.count_selected_items(2), app.count_items(2)),
+        format!("[4] Skills ({}/{})", app.count_selected_items(3), app.count_items(3)),
+        format!("[5] AppImages ({}/{})", app.count_selected_items(4), app.count_items(4)),
         format!("[6] Pastas Extras ({})", app.custom_dirs.len()),
-        format!("[7] Zen Spaces ({})", app.count_items(6)),
+        format!("[7] Zen Spaces ({}/{})", app.count_selected_items(6), app.count_items(6)),
     ];
 
     let tabs = Tabs::new(tab_titles)
@@ -321,21 +321,38 @@ fn render_rows(rows: &[TuiRow], current_cursor: usize) -> Vec<ListItem<'static>>
         .map(|(i, row)| {
             let is_selected = i == current_cursor;
             match row {
-                TuiRow::Header { title, count, .. } => render_header(title, *count, is_selected),
+                TuiRow::Header { category_id, title, count } => {
+                    let selected_count = rows
+                        .iter()
+                        .filter(|r| match r {
+                            TuiRow::Item { category_id: c, item } => c == category_id && item.included,
+                            _ => false,
+                        })
+                        .count();
+                    render_header(title, selected_count, *count, is_selected)
+                }
                 TuiRow::Item { item, .. } => render_item(&item.name, &item.details, item.included, is_selected),
             }
         })
         .collect()
 }
 
-fn render_header(title: &str, count: usize, is_selected: bool) -> ListItem<'static> {
+fn render_header(title: &str, selected: usize, total: usize, is_selected: bool) -> ListItem<'static> {
     let (prefix, text_color, bg_color) = if is_selected {
         ("▶ ", Color::Yellow, Color::Rgb(28, 38, 54))
     } else {
         ("  ", Color::Cyan, Color::Rgb(18, 24, 32))
     };
 
-    let header_label = format!("── [ {} ] ({}) ", title, count);
+    let check = if total == 0 || selected == 0 {
+        "[ ] "
+    } else if selected == total {
+        "[x] "
+    } else {
+        "[-] "
+    };
+
+    let header_label = format!("{}[ {} ] ({}/{}) ", check, title, selected, total);
     let fill = "─".repeat(50usize.saturating_sub(header_label.len()));
 
     let line = Line::from(vec![

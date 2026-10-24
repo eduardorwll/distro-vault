@@ -137,13 +137,14 @@ fn handle_interactive(
         // Explicit packages
         if let Ok(pkgs) = port.query_installed() {
             for p in pkgs {
+                let is_user = p.scope == PackageScope::User;
                 let item = TuiItem {
                     id: p.name.as_str().to_string(),
                     name: p.name.as_str().to_string(),
                     details: format!("{:?} • {}", p.source, p.version.as_deref().unwrap_or("latest")),
-                    included: true,
+                    included: is_user,
                 };
-                if p.scope == PackageScope::User {
+                if is_user {
                     match p.category {
                         PackageCategory::DesktopApp => user_desktop.push(item),
                         PackageCategory::CliTool => user_cli.push(item),
@@ -173,7 +174,7 @@ fn handle_interactive(
                     id: p.name.as_str().to_string(),
                     name: p.name.as_str().to_string(),
                     details: format!("{:?} • {}", p.source, p.version.as_deref().unwrap_or("latest")),
-                    included: true,
+                    included: false,
                 };
                 match p.category {
                     PackageCategory::CoreLibrary => dep_core.push(item),

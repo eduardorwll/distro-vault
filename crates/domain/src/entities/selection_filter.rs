@@ -9,6 +9,8 @@ use crate::value_objects::PackageName;
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct SelectionFilter {
     pub excluded_packages: HashSet<PackageName>,
+    #[serde(default)]
+    pub included_dependencies: HashSet<PackageName>,
     pub excluded_skills: HashSet<String>,
     pub excluded_appimages: HashSet<String>,
     pub excluded_spaces: HashSet<String>,
@@ -24,6 +26,10 @@ impl SelectionFilter {
         !self.excluded_packages.contains(package)
     }
 
+    pub fn is_dependency_included(&self, package: &PackageName) -> bool {
+        self.included_dependencies.contains(package)
+    }
+
     pub fn is_skill_included(&self, skill_name: &str) -> bool {
         !self.excluded_skills.contains(skill_name)
     }
@@ -34,6 +40,18 @@ impl SelectionFilter {
 
     pub fn is_space_included(&self, space_id: &str) -> bool {
         !self.excluded_spaces.contains(space_id)
+    }
+
+    pub fn exclude_package(&mut self, package: PackageName) {
+        self.excluded_packages.insert(package);
+    }
+
+    pub fn include_package(&mut self, package: &PackageName) {
+        self.excluded_packages.remove(package);
+    }
+
+    pub fn include_dependency(&mut self, package: PackageName) {
+        self.included_dependencies.insert(package);
     }
 
     pub fn toggle_package(&mut self, package: PackageName) {
