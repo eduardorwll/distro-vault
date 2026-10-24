@@ -4,8 +4,8 @@ use adapter_agents::LocalAgentAdapter;
 use adapter_browser::ZenBrowserAdapter;
 use adapter_storage::ZstdStorageAdapter;
 use adapter_system::{
-    AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, LinuxSshAdapter, LinuxSystemAdapter,
-    PacmanAdapter,
+    AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, LinuxGitConfigAdapter, LinuxSshAdapter,
+    LinuxSystemAdapter, PacmanAdapter,
 };
 use application::{
     BackupPipelineUseCase, InspectSnapshotUseCase, RestorePipelineUseCase, VerifyIntegrityUseCase,
@@ -24,6 +24,7 @@ pub struct AppContainer {
     pub agent_adapter: Arc<LocalAgentAdapter>,
     pub system_adapter: Arc<LinuxSystemAdapter>,
     pub ssh_adapter: Arc<LinuxSshAdapter>,
+    pub git_config_adapter: Arc<LinuxGitConfigAdapter>,
     pub package_ports: Vec<Arc<dyn PackagePort>>,
 }
 
@@ -34,6 +35,7 @@ impl AppContainer {
         let agent = Arc::new(LocalAgentAdapter::new());
         let system = Arc::new(LinuxSystemAdapter::new());
         let ssh = Arc::new(LinuxSshAdapter::new());
+        let git_config = Arc::new(LinuxGitConfigAdapter::new());
 
         let pacman: Arc<dyn PackagePort> = Arc::new(PacmanAdapter::new());
         let aur: Arc<dyn PackagePort> = Arc::new(AurAdapter::new());
@@ -48,6 +50,7 @@ impl AppContainer {
             agent.clone(),
             system.clone(),
             ssh.clone(),
+            git_config.clone(),
             package_ports.clone(),
         );
 
@@ -57,6 +60,7 @@ impl AppContainer {
             agent.clone(),
             system.clone(),
             ssh.clone(),
+            git_config.clone(),
             package_ports.clone(),
         );
 
@@ -73,6 +77,7 @@ impl AppContainer {
             agent_adapter: agent,
             system_adapter: system,
             ssh_adapter: ssh,
+            git_config_adapter: git_config,
             package_ports,
         }
     }

@@ -6,7 +6,9 @@ use domain::entities::custom_directory::CustomDirectoryEntry;
 use domain::entities::manifest::Manifest;
 use domain::entities::selection_filter::SelectionFilter;
 use domain::errors::DomainError;
-use domain::ports::{AgentPort, BrowserPort, PackagePort, SshPort, StoragePort, SystemPort};
+use domain::ports::{
+    AgentPort, BrowserPort, GitConfigPort, PackagePort, SshPort, StoragePort, SystemPort,
+};
 use domain::value_objects::Checksum;
 
 /// DTO for requesting a full declarative system snapshot
@@ -69,6 +71,7 @@ pub struct BackupPipelineUseCase {
     agent_port: Arc<dyn AgentPort>,
     system_port: Arc<dyn SystemPort>,
     ssh_port: Arc<dyn SshPort>,
+    git_config_port: Arc<dyn GitConfigPort>,
     package_ports: Vec<Arc<dyn PackagePort>>,
 }
 
@@ -79,6 +82,7 @@ impl BackupPipelineUseCase {
         agent_port: Arc<dyn AgentPort>,
         system_port: Arc<dyn SystemPort>,
         ssh_port: Arc<dyn SshPort>,
+        git_config_port: Arc<dyn GitConfigPort>,
         package_ports: Vec<Arc<dyn PackagePort>>,
     ) -> Self {
         Self {
@@ -87,6 +91,7 @@ impl BackupPipelineUseCase {
             agent_port,
             system_port,
             ssh_port,
+            git_config_port,
             package_ports,
         }
     }
@@ -153,10 +158,13 @@ impl BackupPipelineUseCase {
         let mut ssh_keys = self.ssh_port.scan_ssh_keys(&req.user_home)?;
         ssh_keys.retain(|k| req.selection_filter.is_ssh_key_included(&k.file_name));
 
-        // 7. Custom Directories (already attached or filtered)
+        // 7. Scan Global Git Configuration (.gitconfig, .config/git/config)
+        let git_configs = self.git_config_port.scan_git_config(&req.user_home)?;
+
+        // 8. Custom Directories (already attached or filtered)
         let custom_dirs: Vec<CustomDirectoryEntry> = req.custom_directories;
 
-        // 8. Prepare source-to-archive items
+        // 9. Prepare source-to-archive items
         let mut archive_items: Vec<(PathBuf, PathBuf)> = Vec::new();
 
         // Add browser profiles
@@ -192,6 +200,14 @@ impl BackupPipelineUseCase {
             }
         }
 
+        // Add global Git configuration
+        for git_cfg in &git_configs {
+            let disk_path = req.user_home.join(&git_cfg.relative_path);
+            if disk_path.exists() {
+                archive_items.push((disk_path, PathBuf::from("git").join(&git_cfg.relative_path)));
+            }
+        }
+
         // Add custom directories
         for custom_d in &custom_dirs {
             if custom_d.source_path.exists() {
@@ -202,7 +218,7 @@ impl BackupPipelineUseCase {
             }
         }
 
-        // 9. Build Manifest
+        // 10. Build Manifest
         let mut manifest = Manifest::new(
             snapshot_id.clone(),
             created_at_utc,
@@ -214,6 +230,7 @@ impl BackupPipelineUseCase {
         manifest.packages = packages;
         manifest.custom_directories = custom_dirs;
         manifest.ssh_keys = ssh_keys;
+        manifest.git_configs = git_configs;
 
         let total_files: usize = archive_items.len()
             + manifest

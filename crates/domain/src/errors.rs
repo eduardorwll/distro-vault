@@ -34,6 +34,9 @@ pub enum DomainError {
     #[error("SSH operation error: {message}")]
     SshError { message: String },
 
+    #[error("Git configuration error: {message}")]
+    GitConfigError { message: String },
+
     #[error("Agent governance error: {message}")]
     AgentGovernanceError { message: String },
 

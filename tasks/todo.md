@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Todas as Fases (1 a 10) Concluídas com Sucesso (38 testes passando, 0 warnings no Clippy) | Release v0.3.0 Pronta e Publicada
+Status: 🟢 Todas as Fases (1 a 11) Concluídas com Sucesso (39 testes passando, 0 warnings no Clippy) | Release v0.3.0 com Git Global Config Pronta
 
 ---
 
@@ -155,3 +155,22 @@ Status: 🟢 Todas as Fases (1 a 10) Concluídas com Sucesso (38 testes passando
   - **Status:** Concluído. `tasks/todo.md` e `estado_atual.md` sincronizados.
 - [x] **Task 10.4: Commit de Release e Tag Git v0.3.0**
   - **Status:** Concluído. Commit anotado e tag `v0.3.0` criados e enviados para o GitHub via SSH.
+
+---
+
+## Fase 11: Suporte a Backup e Restauração da Configuração Global do Git
+- [x] **Task 11.1: Entidade e Contrato Hexagonal (`GitConfigEntry` & `GitConfigPort`)**
+  - **Status:** Concluído. Entidade pura e trait definidas em `crates/domain/src/entities/git_config.rs` e `crates/domain/src/ports/git_config_port.rs`. `Manifest` expandido com `git_configs`.
+  - **Verificação:** `cargo test -p domain`
+  - **Arquivos:** `crates/domain/src/entities/git_config.rs`, `crates/domain/src/ports/git_config_port.rs`, `crates/domain/src/entities/manifest.rs`
+- [x] **Task 11.2: Adaptador Concreto do Sistema (`LinuxGitConfigAdapter`)**
+  - **Status:** Concluído. Implementação em `crates/adapter-system/src/git_config.rs` com varredura resiliente de `~/.gitconfig` e `~/.config/git/config`, extração de identidade `user.name` e `user.email`, e restauração com permissões POSIX `0644`.
+  - **Verificação:** `cargo test -p adapter-system`
+  - **Arquivos:** `crates/adapter-system/src/git_config.rs`, `crates/adapter-system/src/lib.rs`
+- [x] **Task 11.3: Integração nos Pipelines de Aplicação (`backup.rs` & `restore.rs`)**
+  - **Status:** Concluído. Backup captura arquivos sob prefixo `git/`. Restore implanta a configuração global no diretório alvo do usuário antes da instalação de pacotes de sistema.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/src/backup.rs`, `crates/application/src/restore.rs`
+- [x] **Task 11.4: Apresentação na TUI e CLI (`adapter-cli`)**
+  - **Status:** Concluído. Registro de identidade e arquivos Git exibidos no painel de inspeção da TUI de restauração e nos logs do CLI.
+  - **Arquivos:** `crates/adapter-cli/src/di.rs`, `crates/adapter-cli/src/main.rs`, `crates/adapter-cli/src/tui/ui.rs`

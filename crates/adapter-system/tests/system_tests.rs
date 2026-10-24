@@ -203,3 +203,58 @@ fn test_ssh_adapter_scan_and_permissions() {
     assert_eq!(mode_of("known_hosts"), 0o644);
     assert_eq!(mode_of("id_ed25519-cert.pub"), 0o644);
 }
+
+#[test]
+fn test_git_config_scan_and_restore() {
+    use adapter_system::LinuxGitConfigAdapter;
+    use domain::ports::GitConfigPort;
+
+    let tmp = tempdir().unwrap();
+    let home = tmp.path().join("fake_home");
+    fs::create_dir_all(&home).unwrap();
+
+    let gitconfig_content = r#"
+[user]
+    name = Eduardo
+    email = eduardo@example.com
+    signingkey = 12345678
+[core]
+    editor = nvim
+"#;
+    fs::write(home.join(".gitconfig"), gitconfig_content).unwrap();
+
+    let xdg_git = home.join(".config").join("git");
+    fs::create_dir_all(&xdg_git).unwrap();
+    fs::write(xdg_git.join("config"), "[alias]\n    st = status\n").unwrap();
+
+    let adapter = LinuxGitConfigAdapter::new();
+    let configs = adapter.scan_git_config(&home).expect("Scan git config failed");
+    assert_eq!(configs.len(), 2);
+
+    let global_cfg = configs.iter().find(|c| c.file_name == ".gitconfig").unwrap();
+    assert_eq!(global_cfg.user_name.as_deref(), Some("Eduardo"));
+    assert_eq!(global_cfg.user_email.as_deref(), Some("eduardo@example.com"));
+
+    let xdg_cfg = configs.iter().find(|c| c.file_name == "config").unwrap();
+    assert_eq!(xdg_cfg.relative_path, ".config/git/config");
+
+    // Test restoration
+    let staging_git = tmp.path().join("staging_git");
+    fs::create_dir_all(&staging_git).unwrap();
+    fs::copy(home.join(".gitconfig"), staging_git.join(".gitconfig")).unwrap();
+    let staging_xdg = staging_git.join(".config").join("git");
+    fs::create_dir_all(&staging_xdg).unwrap();
+    fs::copy(xdg_git.join("config"), staging_xdg.join("config")).unwrap();
+
+    let target_home = tmp.path().join("restored_home");
+    let restored_count = adapter
+        .restore_git_config(&staging_git, &target_home, &configs, false)
+        .expect("Restore git config failed");
+    assert_eq!(restored_count, 2);
+
+    assert!(target_home.join(".gitconfig").exists());
+    assert!(target_home.join(".config/git/config").exists());
+
+    let content = fs::read_to_string(target_home.join(".gitconfig")).unwrap();
+    assert!(content.contains("name = Eduardo"));
+}

@@ -496,6 +496,37 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                     Span::styled(key_names.join(", "), Style::default().fg(Color::Cyan)),
                 ]));
             }
+
+            if !m.git_configs.is_empty() {
+                lines.push(Line::from(vec![
+                    Span::styled(
+                        "  👤 Git Global Config: ",
+                        Style::default()
+                            .fg(Color::LightGreen)
+                            .add_modifier(Modifier::BOLD),
+                    ),
+                    Span::styled(
+                        format!("{} arquivo(s) registrado(s)", m.git_configs.len()),
+                        Style::default().fg(Color::White),
+                    ),
+                ]));
+                for g in &m.git_configs {
+                    let identity = match (&g.user_name, &g.user_email) {
+                        (Some(n), Some(e)) => format!("{} <{}>", n, e),
+                        (Some(n), None) => n.clone(),
+                        (None, Some(e)) => e.clone(),
+                        (None, None) => "Configuração detectada".to_string(),
+                    };
+                    lines.push(Line::from(vec![
+                        Span::styled(
+                            format!("     ↳ {}: ", g.file_name),
+                            Style::default().fg(Color::DarkGray),
+                        ),
+                        Span::styled(identity, Style::default().fg(Color::Yellow)),
+                    ]));
+                }
+            }
+
             lines.push(Line::from(vec![
                 Span::styled(
                     "  📁 Pastas Customizadas: ",

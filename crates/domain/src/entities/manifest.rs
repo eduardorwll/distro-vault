@@ -3,6 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::entities::agent_governance::AgentGovernance;
 use crate::entities::appimage::AppImageEntry;
 use crate::entities::custom_directory::CustomDirectoryEntry;
+use crate::entities::git_config::GitConfigEntry;
 use crate::entities::package::PackageEntry;
 use crate::entities::ssh_key::SshKeyEntry;
 use crate::entities::zen_profile::ZenProfile;
@@ -23,6 +24,8 @@ pub struct Manifest {
     pub agent_governance: AgentGovernance,
     #[serde(default)]
     pub ssh_keys: Vec<SshKeyEntry>,
+    #[serde(default)]
+    pub git_configs: Vec<GitConfigEntry>,
     pub checksum: Option<Checksum>,
     pub total_files: usize,
     pub total_size_bytes: u64,
@@ -48,6 +51,7 @@ impl Manifest {
             custom_directories: Vec::new(),
             agent_governance,
             ssh_keys: Vec::new(),
+            git_configs: Vec::new(),
             checksum: None,
             total_files: 0,
             total_size_bytes: 0,

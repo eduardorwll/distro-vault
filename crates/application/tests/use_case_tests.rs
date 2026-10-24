@@ -6,7 +6,7 @@ use tempfile::tempdir;
 use adapter_agents::LocalAgentAdapter;
 use adapter_browser::{MozLz4Codec, ZenBrowserAdapter};
 use adapter_storage::{CustomDirsHandler, ZstdStorageAdapter};
-use adapter_system::{LinuxSshAdapter, LinuxSystemAdapter, PacmanAdapter};
+use adapter_system::{LinuxGitConfigAdapter, LinuxSshAdapter, LinuxSystemAdapter, PacmanAdapter};
 use application::{
     BackupPipelineUseCase, BackupRequest, InspectSnapshotUseCase, RestorePipelineUseCase,
     RestoreRequest, VerifyIntegrityUseCase,
@@ -55,6 +55,13 @@ fn test_full_backup_and_restore_pipeline() {
     .unwrap();
     fs::write(ssh_dir.join("config"), "Host github.com\n  User git\n").unwrap();
 
+    // Global Git configuration
+    fs::write(
+        user_home.join(".gitconfig"),
+        "[user]\n  name = Test User\n  email = test@example.com\n",
+    )
+    .unwrap();
+
     let custom_dir = test_root.join("my_docs");
     fs::create_dir_all(&custom_dir).unwrap();
     fs::write(custom_dir.join("project.md"), "# Secret Distro Project").unwrap();
@@ -66,6 +73,7 @@ fn test_full_backup_and_restore_pipeline() {
     let agent = Arc::new(LocalAgentAdapter::new());
     let system = Arc::new(LinuxSystemAdapter::new());
     let ssh = Arc::new(LinuxSshAdapter::new());
+    let git_config = Arc::new(LinuxGitConfigAdapter::new());
     let pacman: Arc<dyn PackagePort> = Arc::new(PacmanAdapter::new());
     let package_ports = vec![pacman];
 
@@ -76,6 +84,7 @@ fn test_full_backup_and_restore_pipeline() {
         agent.clone(),
         system.clone(),
         ssh.clone(),
+        git_config.clone(),
         package_ports.clone(),
     );
 
@@ -125,7 +134,7 @@ fn test_full_backup_and_restore_pipeline() {
     let restore_target_custom = test_root.join("restored_custom");
 
     let restore_use_case =
-        RestorePipelineUseCase::new(browser, storage, agent, system, ssh, package_ports);
+        RestorePipelineUseCase::new(browser, storage, agent, system, ssh, git_config, package_ports);
 
     let restore_req = RestoreRequest::new(
         &output_archive,
@@ -143,6 +152,10 @@ fn test_full_backup_and_restore_pipeline() {
     assert_eq!(restore_report.profiles_restored.len(), 1);
     assert_eq!(restore_report.skills_restored, 1);
     assert_eq!(restore_report.ssh_keys_restored, 3);
+    assert_eq!(restore_report.git_configs_restored, 1);
+    assert!(restore_target_home.join(".gitconfig").exists());
+    let restored_git_content = fs::read_to_string(restore_target_home.join(".gitconfig")).unwrap();
+    assert!(restored_git_content.contains("name = Test User"));
 
     // Verify restored browser profile & normalized ini files
     let restored_prof = restore_target_config.join("7awtlvx8.Default (release)");
@@ -212,6 +225,7 @@ fn test_backup_aborts_when_browser_locked() {
         Arc::new(LocalAgentAdapter::new()),
         Arc::new(LinuxSystemAdapter::new()),
         Arc::new(LinuxSshAdapter::new()),
+        Arc::new(LinuxGitConfigAdapter::new()),
         vec![],
     );
 
@@ -242,6 +256,7 @@ fn test_selection_filter_excludes_items_deterministically() {
         Arc::new(LocalAgentAdapter::new()),
         Arc::new(LinuxSystemAdapter::new()),
         Arc::new(LinuxSshAdapter::new()),
+        Arc::new(LinuxGitConfigAdapter::new()),
         vec![],
     );
 

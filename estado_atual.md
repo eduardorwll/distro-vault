@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
 Data: 24 de Outubro de 2026
-Status: 🟢 Versão 0.3.0 Publicada | Todas as Fases (1 a 10) Concluídas com Sucesso | 38 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui Homologados com Suporte a SSH, Transcrição Cross-Distro e Explorador de Arquivos/Pastas Unificado
+Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 11) Concluídas com Sucesso | 39 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui com Suporte a SSH, Git Global Config, Transcrição Cross-Distro e Explorador Unificado
 
 ---
 
@@ -41,10 +41,16 @@ Status: 🟢 Versão 0.3.0 Publicada | Todas as Fases (1 a 10) Concluídas com S
 - [x] Navegação intuitiva no sistema de arquivos do usuário (`↑/↓/j/k`, `Enter` para abrir, `Backspace` para subir, `Espaço/S` para confirmar seleção, `Esc/Q` para fechar).
 - [x] Descoberta automática de backups adicionais (`scan_and_add_backup_folder`) para inclusão imediata na lista de snapshots disponíveis.
 
+### Fase 11: Suporte a Backup e Restauração da Configuração Global do Git
+- [x] Entidade `GitConfigEntry` e contrato `GitConfigPort` implementados de forma desacoplada no domínio.
+- [x] Adaptador de sistema `LinuxGitConfigAdapter` varrendo `~/.gitconfig` e `~/.config/git/config`, extraindo metadados informativos de identidade do autor (`user.name`, `user.email`) e restaurando com permissão `0644`.
+- [x] Implantação automática no `$HOME` da máquina alvo executada na fase de recuperação prioritária de dados do usuário (junto com SSH e perfis).
+- [x] Exibição de identidade Git no painel de inspeção de snapshots da TUI e logs detalhados no CLI.
+
 ---
 
 ## 2. Métricas de Qualidade e Compilação
-- `cargo test --workspace` -> **38 testes passando (100% de sucesso)**
+- `cargo test --workspace` -> **39 testes passando (100% de sucesso)**
 - `cargo clippy --workspace -- -D warnings` -> **Zero Warnings Policy rigorosamente mantida**
 - `cargo audit` -> **0 vulnerabilidades / 0 CVEs em 263 dependências**
 - Binário de release atualizado em `bin/distro-vault` e no host do usuário em `/home/eduardorwll/distro-vault`.

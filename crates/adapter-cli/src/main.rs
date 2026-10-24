@@ -697,6 +697,14 @@ fn execute_restore(
         );
     }
 
+    if report.git_configs_restored > 0 {
+        println!(
+            "  {} {} implantada(s) com sucesso no diretório do usuário",
+            style("Configurações Globais Git:").bold(),
+            report.git_configs_restored
+        );
+    }
+
     if !report.packages_installed.is_empty() {
         println!(
             "  {} {} instalados",

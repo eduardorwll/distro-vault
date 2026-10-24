@@ -61,3 +61,7 @@ graph TD
 7. **Zip-Slip & Path Traversal Guard:** O `adapter-storage` bloqueia qualquer extração que tente escapar do diretório alvo.
 8. **Transcrição Canônica Cross-Distro & Staging em Cache:** `transcribe_path_to_target_home` remapeia com precisão caminhos de origem `/home/<source_user>/...` para o diretório `$HOME` da máquina alvo sem exigir manipulação manual de arquivos. Suporte a `--from-staging` acelera recuperações repetidas em cache.
 9. **Explorador de Arquivos e Diretórios Unificado (`FileExplorerState`):** Componente de interface unificado na camada de apresentação (TUI Ratatui) reutilizado de forma modular tanto para navegação e inclusão de pastas customizadas para backup quanto para escaneamento e seleção de snapshots `.tar.zst` para restauração.
+10. **Subsistema de Configuração Global do Git (`GitConfigPort` & `GitConfigEntry`):**
+    - Contrato hexagonal puro desacoplado de I/O em `domain/src/ports/git_config_port.rs`.
+    - `LinuxGitConfigAdapter` varre `~/.gitconfig` e `~/.config/git/config`, extraindo metadados de autor (`user.name`, `user.email`) e empacotando os arquivos verbatim no snapshot sob `git/`.
+    - No restore, restaura com modos POSIX `0644` e pre-unlink defensivo antes da instalação de pacotes de sistema, garantindo recuperação instantânea da identidade Git.

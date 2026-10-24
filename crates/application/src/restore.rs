@@ -6,7 +6,9 @@ use tempfile::{tempdir, tempdir_in, TempDir};
 
 use domain::entities::package::PackageSource;
 use domain::errors::DomainError;
-use domain::ports::{AgentPort, BrowserPort, PackagePort, SshPort, StoragePort, SystemPort};
+use domain::ports::{
+    AgentPort, BrowserPort, GitConfigPort, PackagePort, SshPort, StoragePort, SystemPort,
+};
 use domain::value_objects::{DistroFamily, PackageName};
 
 /// DTO for requesting a full snapshot restoration
@@ -64,6 +66,7 @@ pub struct RestoreReport {
     pub profiles_restored: Vec<String>,
     pub skills_restored: usize,
     pub ssh_keys_restored: usize,
+    pub git_configs_restored: usize,
     pub packages_installed: Vec<PackageName>,
     pub pending_packages: Vec<PackageName>,
     pub fuse2_missing_warning: bool,
@@ -75,6 +78,7 @@ pub struct RestorePipelineUseCase {
     agent_port: Arc<dyn AgentPort>,
     system_port: Arc<dyn SystemPort>,
     ssh_port: Arc<dyn SshPort>,
+    git_config_port: Arc<dyn GitConfigPort>,
     package_ports: Vec<Arc<dyn PackagePort>>,
 }
 
@@ -85,6 +89,7 @@ impl RestorePipelineUseCase {
         agent_port: Arc<dyn AgentPort>,
         system_port: Arc<dyn SystemPort>,
         ssh_port: Arc<dyn SshPort>,
+        git_config_port: Arc<dyn GitConfigPort>,
         package_ports: Vec<Arc<dyn PackagePort>>,
     ) -> Self {
         Self {
@@ -93,6 +98,7 @@ impl RestorePipelineUseCase {
             agent_port,
             system_port,
             ssh_port,
+            git_config_port,
             package_ports,
         }
     }
@@ -176,7 +182,20 @@ impl RestorePipelineUseCase {
             0
         };
 
-        // 6. Restore Custom Directories with Path Transcription to target home
+        // 6. Restore Global Git Configuration (.gitconfig, .config/git/config)
+        let staging_git = staging_path.join("git");
+        let git_configs_restored = if staging_git.exists() && !manifest.git_configs.is_empty() {
+            self.git_config_port.restore_git_config(
+                &staging_git,
+                &req.target_home,
+                &manifest.git_configs,
+                req.dry_run,
+            )?
+        } else {
+            0
+        };
+
+        // 7. Restore Custom Directories with Path Transcription to target home
         for custom_d in &manifest.custom_directories {
             let custom_staging = staging_path.join(&custom_d.archive_prefix);
             if custom_staging.exists() {
@@ -250,6 +269,7 @@ impl RestorePipelineUseCase {
             profiles_restored,
             skills_restored: skills_count,
             ssh_keys_restored,
+            git_configs_restored,
             packages_installed,
             pending_packages,
             fuse2_missing_warning,

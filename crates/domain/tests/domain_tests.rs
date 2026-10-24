@@ -316,3 +316,25 @@ fn test_ssh_key_entity_and_filter() {
     filter.toggle_ssh_key("id_ed25519".to_string());
     assert!(!filter.is_ssh_key_included("id_ed25519"));
 }
+
+#[test]
+fn test_git_config_entry_and_manifest_serialization() {
+    use domain::entities::git_config::GitConfigEntry;
+
+    let git_cfg = GitConfigEntry::new(
+        ".gitconfig",
+        ".gitconfig",
+        Some("Eduardo".to_string()),
+        Some("eduardo@example.com".to_string()),
+        120,
+    );
+
+    assert_eq!(git_cfg.relative_path, ".gitconfig");
+    assert_eq!(git_cfg.file_name, ".gitconfig");
+    assert_eq!(git_cfg.user_name.as_deref(), Some("Eduardo"));
+    assert_eq!(git_cfg.user_email.as_deref(), Some("eduardo@example.com"));
+
+    let json = serde_json::to_string(&git_cfg).expect("serialize git config");
+    let deserialized: GitConfigEntry = serde_json::from_str(&json).expect("deserialize git config");
+    assert_eq!(git_cfg, deserialized);
+}
