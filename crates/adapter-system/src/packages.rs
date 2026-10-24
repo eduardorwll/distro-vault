@@ -6,6 +6,32 @@ use domain::errors::DomainError;
 use domain::ports::PackagePort;
 use domain::value_objects::PackageName;
 
+fn is_omarchy_preinstalled_on_system(name: &str) -> bool {
+    if PackageCategory::is_omarchy_preinstalled(name) {
+        return true;
+    }
+    static DYNAMIC_OMARCHY: std::sync::OnceLock<std::collections::HashSet<String>> =
+        std::sync::OnceLock::new();
+    let set = DYNAMIC_OMARCHY.get_or_init(|| {
+        let mut set = std::collections::HashSet::new();
+        for file in &[
+            "/usr/share/omarchy/install/omarchy-base.packages",
+            "/usr/share/omarchy/install/omarchy-other.packages",
+        ] {
+            if let Ok(content) = std::fs::read_to_string(file) {
+                for line in content.lines() {
+                    let trimmed = line.trim();
+                    if !trimmed.is_empty() && !trimmed.starts_with('#') {
+                        set.insert(trimmed.to_lowercase());
+                    }
+                }
+            }
+        }
+        set
+    });
+    set.contains(&name.to_lowercase())
+}
+
 /// Adapter for Pacman explicit native packages
 #[derive(Debug, Default, Clone)]
 pub struct PacmanAdapter;
@@ -44,7 +70,11 @@ impl PackagePort for PacmanAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
-                    let (scope, category) = PackageCategory::classify(name_str, PackageSource::PacmanNative);
+                    let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::PacmanNative);
+                    if is_omarchy_preinstalled_on_system(name_str) && scope == PackageScope::User {
+                        scope = PackageScope::System;
+                        category = PackageCategory::DistroBase;
+                    }
                     let mut entry = PackageEntry::new(pkg_name, PackageSource::PacmanNative, scope)
                         .with_category(category);
                     if let Some(&ver) = parts.get(1) {
@@ -195,7 +225,11 @@ impl PackagePort for AurAdapter {
             let parts: Vec<&str> = line.split_whitespace().collect();
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
-                    let (scope, category) = PackageCategory::classify(name_str, PackageSource::Aur);
+                    let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::Aur);
+                    if is_omarchy_preinstalled_on_system(name_str) && scope == PackageScope::User {
+                        scope = PackageScope::System;
+                        category = PackageCategory::DistroBase;
+                    }
                     let mut entry = PackageEntry::new(pkg_name, PackageSource::Aur, scope)
                         .with_category(category);
                     if let Some(&ver) = parts.get(1) {

@@ -235,18 +235,31 @@ fn test_package_category_classification() {
     assert_eq!(s, PackageScope::System);
     assert_eq!(c, PackageCategory::NetworkDaemons);
 
-    // User-installed components
+    // Omarchy Pre-installed base packages (Non-user, System scope)
+    let (s, c) = PackageCategory::classify("ripgrep", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::DistroBase);
+
+    let (s, c) = PackageCategory::classify("docker", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::DistroBase);
+
+    let (s, c) = PackageCategory::classify("omacalc", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::DistroBase);
+
+    // User-installed components (not pre-installed by Omarchy)
     let (s, c) = PackageCategory::classify("discord", PackageSource::PacmanNative);
     assert_eq!(s, PackageScope::User);
     assert_eq!(c, PackageCategory::DesktopApp);
 
-    let (s, c) = PackageCategory::classify("ripgrep", PackageSource::PacmanNative);
+    let (s, c) = PackageCategory::classify("dbeaver", PackageSource::PacmanNative);
     assert_eq!(s, PackageScope::User);
-    assert_eq!(c, PackageCategory::CliTool);
+    assert_eq!(c, PackageCategory::DesktopApp);
 
-    let (s, c) = PackageCategory::classify("docker", PackageSource::PacmanNative);
+    let (s, c) = PackageCategory::classify("antigravity-ide", PackageSource::PacmanNative);
     assert_eq!(s, PackageScope::User);
-    assert_eq!(c, PackageCategory::Development);
+    assert_eq!(c, PackageCategory::DesktopApp);
 
     let (s, c) = PackageCategory::classify("org.mozilla.firefox", PackageSource::Flatpak);
     assert_eq!(s, PackageScope::User);
