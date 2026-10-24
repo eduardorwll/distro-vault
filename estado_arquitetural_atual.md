@@ -59,3 +59,5 @@ graph TD
 5. **Codec MozLZ4 Nativo (Deep Module):** Implementado em Rust puro em `adapter-browser` com `lz4_flex`.
 6. **Resolução do Hash de Instalação do Zen:** O `adapter-browser` reescreve dinamicamente as seções `[Install<HASH>]` em `installs.ini` apontando para o perfil restaurado.
 7. **Zip-Slip & Path Traversal Guard:** O `adapter-storage` bloqueia qualquer extração que tente escapar do diretório alvo.
+8. **Transcrição Canônica Cross-Distro & Staging em Cache:** `transcribe_path_to_target_home` remapeia com precisão caminhos de origem `/home/<source_user>/...` para o diretório `$HOME` da máquina alvo sem exigir manipulação manual de arquivos. Suporte a `--from-staging` acelera recuperações repetidas em cache.
+9. **Explorador de Arquivos e Diretórios Unificado (`FileExplorerState`):** Componente de interface unificado na camada de apresentação (TUI Ratatui) reutilizado de forma modular tanto para navegação e inclusão de pastas customizadas para backup quanto para escaneamento e seleção de snapshots `.tar.zst` para restauração.
