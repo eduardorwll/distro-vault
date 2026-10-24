@@ -3,7 +3,9 @@ use std::sync::Arc;
 use adapter_agents::LocalAgentAdapter;
 use adapter_browser::ZenBrowserAdapter;
 use adapter_storage::ZstdStorageAdapter;
-use adapter_system::{AurAdapter, FlatpakAdapter, LinuxSystemAdapter, PacmanAdapter};
+use adapter_system::{
+    AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, LinuxSystemAdapter, PacmanAdapter,
+};
 use application::{
     BackupPipelineUseCase, InspectSnapshotUseCase, RestorePipelineUseCase, VerifyIntegrityUseCase,
 };
@@ -32,8 +34,10 @@ impl AppContainer {
 
         let pacman: Arc<dyn PackagePort> = Arc::new(PacmanAdapter::new());
         let aur: Arc<dyn PackagePort> = Arc::new(AurAdapter::new());
+        let dnf: Arc<dyn PackagePort> = Arc::new(DnfAdapter::new());
+        let apt: Arc<dyn PackagePort> = Arc::new(AptAdapter::new());
         let flatpak: Arc<dyn PackagePort> = Arc::new(FlatpakAdapter::new());
-        let package_ports = vec![pacman, aur, flatpak];
+        let package_ports = vec![pacman, aur, dnf, apt, flatpak];
 
         let backup_use_case = BackupPipelineUseCase::new(
             browser.clone(),

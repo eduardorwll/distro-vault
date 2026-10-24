@@ -1,4 +1,5 @@
-use adapter_system::{AurAdapter, FlatpakAdapter, LinuxSystemAdapter, OsReleaseParser, PacmanAdapter};
+use adapter_system::{AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, LinuxSystemAdapter, OsReleaseParser, PacmanAdapter};
+use domain::entities::package::PackageSource;
 use domain::ports::{PackagePort, SystemPort};
 use domain::value_objects::DistroFamily;
 
@@ -54,4 +55,25 @@ fn test_real_system_package_query() {
         let has_gear = flatpaks.iter().any(|p| p.name.as_str().contains("gearlever"));
         assert!(has_gear, "Expected gearlever in flatpaks");
     }
+}
+
+#[test]
+fn test_apt_and_dnf_adapters_resilience() {
+    let dnf = DnfAdapter::new();
+    assert_eq!(dnf.source(), PackageSource::DnfNative);
+    // On systems without dnf, query_installed returns Ok(empty vec) safely without panic or error
+    let dnf_pkgs = dnf.query_installed().expect("DnfAdapter query_installed must not error");
+    let dnf_deps = dnf.query_dependencies().expect("DnfAdapter query_dependencies must not error");
+    // Verify results are valid collections
+    let _ = dnf_pkgs.len();
+    let _ = dnf_deps.len();
+
+    let apt = AptAdapter::new();
+    assert_eq!(apt.source(), PackageSource::AptNative);
+    // On systems without apt, query_installed returns Ok(empty vec) safely without panic or error
+    let apt_pkgs = apt.query_installed().expect("AptAdapter query_installed must not error");
+    let apt_deps = apt.query_dependencies().expect("AptAdapter query_dependencies must not error");
+    // Verify results are valid collections
+    let _ = apt_pkgs.len();
+    let _ = apt_deps.len();
 }

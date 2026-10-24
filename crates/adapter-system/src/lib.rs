@@ -9,7 +9,7 @@ use domain::ports::SystemPort;
 use domain::value_objects::DistroFamily;
 
 pub use os_release::OsReleaseParser;
-pub use packages::{AurAdapter, FlatpakAdapter, PacmanAdapter};
+pub use packages::{AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, PacmanAdapter};
 pub use process::ProcessManager;
 
 #[derive(Debug, Default, Clone)]

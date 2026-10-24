@@ -6,6 +6,21 @@ use domain::errors::DomainError;
 use domain::ports::PackagePort;
 use domain::value_objects::PackageName;
 
+mod which {
+    use std::path::Path;
+
+    pub fn which(cmd: &str) -> Result<(), ()> {
+        if let Ok(path_var) = std::env::var("PATH") {
+            for dir in path_var.split(':') {
+                if Path::new(dir).join(cmd).is_file() {
+                    return Ok(());
+                }
+            }
+        }
+        Err(())
+    }
+}
+
 fn is_distro_preinstalled_on_system(name: &str) -> bool {
     if PackageCategory::is_distro_preinstalled(name) {
         return true;
@@ -49,6 +64,10 @@ impl PackagePort for PacmanAdapter {
     }
 
     fn query_installed(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        if which::which("pacman").is_err() {
+            return Ok(Vec::new());
+        }
+
         let output = Command::new("pacman")
             .args(["-Qne"])
             .output()
@@ -130,6 +149,10 @@ impl PackagePort for PacmanAdapter {
     }
 
     fn query_dependencies(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        if which::which("pacman").is_err() {
+            return Ok(Vec::new());
+        }
+
         let output = Command::new("pacman")
             .args(["-Qnd"])
             .output()
@@ -172,27 +195,14 @@ impl AurAdapter {
         Self
     }
 
-    fn aur_helper() -> &'static str {
+    fn aur_helper() -> Option<&'static str> {
         if which::which("paru").is_ok() {
-            "paru"
+            Some("paru")
+        } else if which::which("yay").is_ok() {
+            Some("yay")
         } else {
-            "yay"
+            None
         }
-    }
-}
-
-mod which {
-    use std::path::Path;
-
-    pub fn which(cmd: &str) -> Result<(), ()> {
-        if let Ok(path_var) = std::env::var("PATH") {
-            for dir in path_var.split(':') {
-                if Path::new(dir).join(cmd).is_file() {
-                    return Ok(());
-                }
-            }
-        }
-        Err(())
     }
 }
 
@@ -202,7 +212,10 @@ impl PackagePort for AurAdapter {
     }
 
     fn query_installed(&self) -> Result<Vec<PackageEntry>, DomainError> {
-        let helper = Self::aur_helper();
+        let helper = match Self::aur_helper() {
+            Some(h) => h,
+            None => return Ok(Vec::new()),
+        };
         let output = Command::new(helper)
             .args(["-Qme"])
             .output()
@@ -245,6 +258,10 @@ impl PackagePort for AurAdapter {
     }
 
     fn query_dependencies(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        if which::which("pacman").is_err() {
+            return Ok(Vec::new());
+        }
+
         let output = Command::new("pacman")
             .args(["-Qmd"])
             .output()
@@ -287,7 +304,14 @@ impl PackagePort for AurAdapter {
             return Ok(names);
         }
 
-        let helper = Self::aur_helper();
+        let helper = match Self::aur_helper() {
+            Some(h) => h,
+            None => {
+                return Err(DomainError::PackageError {
+                    message: "No AUR helper (paru/yay) available on system".to_string(),
+                })
+            }
+        };
         let name_strs: Vec<&str> = names.iter().map(|n| n.as_str()).collect();
         let status = Command::new(helper)
             .args(["-S", "--needed", "--noconfirm"])
@@ -307,9 +331,313 @@ impl PackagePort for AurAdapter {
     }
 
     fn is_available(&self, name: &PackageName) -> Result<bool, DomainError> {
-        let helper = Self::aur_helper();
+        let helper = match Self::aur_helper() {
+            Some(h) => h,
+            None => return Ok(false),
+        };
         let status = Command::new(helper)
             .args(["-Si", name.as_str()])
+            .output();
+
+        match status {
+            Ok(out) => Ok(out.status.success()),
+            Err(_) => Ok(false),
+        }
+    }
+}
+
+/// Adapter for DNF / RPM native packages (Fedora, RHEL, CentOS)
+#[derive(Debug, Default, Clone)]
+pub struct DnfAdapter;
+
+impl DnfAdapter {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl PackagePort for DnfAdapter {
+    fn source(&self) -> PackageSource {
+        PackageSource::DnfNative
+    }
+
+    fn query_installed(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        if which::which("dnf").is_err() && which::which("dnf5").is_err() && which::which("rpm").is_err() {
+            return Ok(Vec::new());
+        }
+
+        let output = if which::which("dnf5").is_ok() {
+            Command::new("dnf5")
+                .args(["repoquery", "--userinstalled", "--qf", "%{name}\t%{version}-%{release}"])
+                .output()
+        } else if which::which("dnf").is_ok() {
+            Command::new("dnf")
+                .args(["repoquery", "--userinstalled", "--qf", "%{name}\t%{version}-%{release}"])
+                .output()
+        } else {
+            Command::new("rpm")
+                .args(["-qa", "--qf", "%{NAME}\t%{VERSION}-%{RELEASE}\n"])
+                .output()
+        };
+
+        let output = match output {
+            Ok(o) if o.status.success() => o,
+            _ => return Ok(Vec::new()),
+        };
+
+        let mut list = Vec::new();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if let Some(&name_str) = parts.first() {
+                if let Ok(pkg_name) = PackageName::new(name_str) {
+                    let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::DnfNative);
+                    if is_distro_preinstalled_on_system(name_str) && scope == PackageScope::User {
+                        scope = PackageScope::System;
+                        category = PackageCategory::DistroBase;
+                    }
+                    let mut entry = PackageEntry::new(pkg_name, PackageSource::DnfNative, scope)
+                        .with_category(category);
+                    if let Some(&ver) = parts.get(1) {
+                        entry = entry.with_version(ver);
+                    }
+                    list.push(entry);
+                }
+            }
+        }
+
+        Ok(list)
+    }
+
+    fn query_dependencies(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        if which::which("dnf").is_err() && which::which("dnf5").is_err() {
+            return Ok(Vec::new());
+        }
+
+        let cmd = if which::which("dnf5").is_ok() { "dnf5" } else { "dnf" };
+        let output = Command::new(cmd)
+            .args(["repoquery", "--installed", "--unneeded", "--qf", "%{name}\t%{version}-%{release}"])
+            .output();
+
+        let output = match output {
+            Ok(o) if o.status.success() => o,
+            _ => return Ok(Vec::new()),
+        };
+
+        let mut list = Vec::new();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if let Some(&name_str) = parts.first() {
+                if let Ok(pkg_name) = PackageName::new(name_str) {
+                    let category = PackageCategory::classify_dependency(name_str);
+                    let mut entry = PackageEntry::new(pkg_name, PackageSource::DnfNative, PackageScope::System)
+                        .with_category(category)
+                        .as_dependency(true);
+                    if let Some(&ver) = parts.get(1) {
+                        entry = entry.with_version(ver);
+                    }
+                    list.push(entry);
+                }
+            }
+        }
+
+        Ok(list)
+    }
+
+    fn install_batch(
+        &self,
+        packages: &[PackageEntry],
+        dry_run: bool,
+    ) -> Result<Vec<PackageName>, DomainError> {
+        let names: Vec<PackageName> = packages.iter().map(|p| p.name.clone()).collect();
+        if dry_run || names.is_empty() {
+            return Ok(names);
+        }
+
+        let cmd = if which::which("dnf5").is_ok() { "dnf5" } else { "dnf" };
+        let name_strs: Vec<&str> = names.iter().map(|n| n.as_str()).collect();
+        let status = Command::new("sudo")
+            .arg(cmd)
+            .args(["install", "-y"])
+            .args(&name_strs)
+            .status()
+            .map_err(|e| DomainError::PackageError {
+                message: format!("Failed to execute dnf install: {}", e),
+            })?;
+
+        if !status.success() {
+            return Err(DomainError::PackageError {
+                message: "DNF batch installation failed".to_string(),
+            });
+        }
+
+        Ok(names)
+    }
+
+    fn is_available(&self, name: &PackageName) -> Result<bool, DomainError> {
+        let cmd = if which::which("dnf5").is_ok() { "dnf5" } else { "dnf" };
+        let status = Command::new(cmd)
+            .args(["info", name.as_str()])
+            .output();
+
+        match status {
+            Ok(out) => Ok(out.status.success()),
+            Err(_) => Ok(false),
+        }
+    }
+}
+
+/// Adapter for APT / DPKG native packages (Debian, Ubuntu, Pop!_OS, Mint)
+#[derive(Debug, Default, Clone)]
+pub struct AptAdapter;
+
+impl AptAdapter {
+    pub fn new() -> Self {
+        Self
+    }
+}
+
+impl PackagePort for AptAdapter {
+    fn source(&self) -> PackageSource {
+        PackageSource::AptNative
+    }
+
+    fn query_installed(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        if which::which("apt-mark").is_err() && which::which("dpkg-query").is_err() {
+            return Ok(Vec::new());
+        }
+
+        let manual_pkgs: std::collections::HashSet<String> = if which::which("apt-mark").is_ok() {
+            if let Ok(out) = Command::new("apt-mark").arg("showmanual").output() {
+                if out.status.success() {
+                    String::from_utf8_lossy(&out.stdout)
+                        .lines()
+                        .map(|l| l.trim().to_string())
+                        .filter(|l| !l.is_empty())
+                        .collect()
+                } else {
+                    std::collections::HashSet::new()
+                }
+            } else {
+                std::collections::HashSet::new()
+            }
+        } else {
+            std::collections::HashSet::new()
+        };
+
+        let output = if which::which("dpkg-query").is_ok() {
+            Command::new("dpkg-query")
+                .args(["-W", "-f=${Package}\t${Version}\t${Status}\n"])
+                .output()
+        } else {
+            return Ok(Vec::new());
+        };
+
+        let output = match output {
+            Ok(o) if o.status.success() => o,
+            _ => return Ok(Vec::new()),
+        };
+
+        let mut list = Vec::new();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            let parts: Vec<&str> = line.split('\t').collect();
+            if let Some(&name_str) = parts.first() {
+                let status = parts.get(2).copied().unwrap_or("");
+                if !status.contains("installed") && !status.is_empty() {
+                    continue;
+                }
+
+                if !manual_pkgs.is_empty() && !manual_pkgs.contains(name_str) {
+                    continue;
+                }
+
+                if let Ok(pkg_name) = PackageName::new(name_str) {
+                    let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::AptNative);
+                    if is_distro_preinstalled_on_system(name_str) && scope == PackageScope::User {
+                        scope = PackageScope::System;
+                        category = PackageCategory::DistroBase;
+                    }
+                    let mut entry = PackageEntry::new(pkg_name, PackageSource::AptNative, scope)
+                        .with_category(category);
+                    if let Some(&ver) = parts.get(1) {
+                        entry = entry.with_version(ver);
+                    }
+                    list.push(entry);
+                }
+            }
+        }
+
+        Ok(list)
+    }
+
+    fn query_dependencies(&self) -> Result<Vec<PackageEntry>, DomainError> {
+        if which::which("apt-mark").is_err() {
+            return Ok(Vec::new());
+        }
+
+        let output = Command::new("apt-mark")
+            .arg("showauto")
+            .output();
+
+        let output = match output {
+            Ok(o) if o.status.success() => o,
+            _ => return Ok(Vec::new()),
+        };
+
+        let mut list = Vec::new();
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        for line in stdout.lines() {
+            let name_str = line.trim();
+            if name_str.is_empty() {
+                continue;
+            }
+            if let Ok(pkg_name) = PackageName::new(name_str) {
+                let category = PackageCategory::classify_dependency(name_str);
+                let entry = PackageEntry::new(pkg_name, PackageSource::AptNative, PackageScope::System)
+                    .with_category(category)
+                    .as_dependency(true);
+                list.push(entry);
+            }
+        }
+
+        Ok(list)
+    }
+
+    fn install_batch(
+        &self,
+        packages: &[PackageEntry],
+        dry_run: bool,
+    ) -> Result<Vec<PackageName>, DomainError> {
+        let names: Vec<PackageName> = packages.iter().map(|p| p.name.clone()).collect();
+        if dry_run || names.is_empty() {
+            return Ok(names);
+        }
+
+        let name_strs: Vec<&str> = names.iter().map(|n| n.as_str()).collect();
+        let status = Command::new("sudo")
+            .env("DEBIAN_FRONTEND", "noninteractive")
+            .arg("apt-get")
+            .args(["install", "-y", "--no-install-recommends"])
+            .args(&name_strs)
+            .status()
+            .map_err(|e| DomainError::PackageError {
+                message: format!("Failed to execute apt-get install: {}", e),
+            })?;
+
+        if !status.success() {
+            return Err(DomainError::PackageError {
+                message: "APT batch installation failed".to_string(),
+            });
+        }
+
+        Ok(names)
+    }
+
+    fn is_available(&self, name: &PackageName) -> Result<bool, DomainError> {
+        let status = Command::new("apt-cache")
+            .args(["show", name.as_str()])
             .output();
 
         match status {

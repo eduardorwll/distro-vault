@@ -180,6 +180,7 @@ impl PackageCategory {
 
         // 1. Kernel & Firmware
         if n.starts_with("linux")
+            || n.starts_with("kernel")
             || n.contains("firmware")
             || n.contains("ucode")
             || n == "wireless-regdb"
@@ -191,15 +192,22 @@ impl PackageCategory {
         // 2. Base & Boot
         if n == "base"
             || n == "base-devel"
+            || n == "base-files"
+            || n == "base-passwd"
+            || n == "setup"
+            || n == "filesystem"
             || n == "sudo"
             || n == "mkinitcpio"
+            || n == "dracut"
+            || n == "initramfs-tools"
             || n == "limine"
             || n == "efibootmgr"
             || n == "edk2-ovmf"
-            || n == "grub"
-            || n == "systemd"
+            || n.contains("grub")
+            || n.contains("systemd")
             || n == "systemd-sysvcompat"
             || n == "glibc"
+            || n == "glibc-common"
             || n == "coreutils"
             || n.contains("keyring")
         {
@@ -249,6 +257,8 @@ impl PackageCategory {
 
         // 6. Network, Security & System Daemons
         if n.contains("networkmanager")
+            || n.contains("network-manager")
+            || n.contains("firewalld")
             || n.contains("tailscale")
             || n.contains("ufw")
             || n.contains("cups")
@@ -301,14 +311,21 @@ impl PackageCategory {
             return (PackageScope::User, PackageCategory::FontsThemes);
         }
 
-        // 9. Development & Toolchains
+        // 10. Development & Toolchains
         if n.contains("docker")
+            || n == "build-essential"
+            || n == "gcc"
+            || n == "gcc-c++"
+            || n == "g++"
             || n == "git"
             || n == "bun"
             || n == "clang"
             || n == "llvm"
             || n.starts_with("rust")
+            || n.starts_with("cargo")
+            || n.starts_with("golang")
             || n.starts_with("python-")
+            || n.starts_with("python3-")
             || n.starts_with("ruby")
             || n.starts_with("lua")
             || n.contains("dotnet")
@@ -328,11 +345,13 @@ impl PackageCategory {
             return (PackageScope::User, PackageCategory::Development);
         }
 
-        // 10. CLI User Tools
+        // 11. CLI User Tools
         if n == "bat"
+            || n == "batcat"
             || n == "btop"
             || n == "eza"
             || n == "fd"
+            || n == "fd-find"
             || n == "fzf"
             || n == "ripgrep"
             || n == "jq"
