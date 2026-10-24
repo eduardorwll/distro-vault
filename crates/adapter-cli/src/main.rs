@@ -6,7 +6,7 @@ use std::time::Duration;
 
 use adapter_cli::args::{BackupArgs, Cli, Commands, InspectArgs, RestoreArgs, VerifyArgs};
 use adapter_cli::di::AppContainer;
-use adapter_cli::tui::{run_tui, TuiAction, TuiApp, TuiItem, TuiMode};
+use adapter_cli::tui::{run_tui, TuiAction, TuiApp, TuiItem, TuiMode, TuiRow};
 use adapter_storage::CustomDirsHandler;
 use application::{BackupRequest, RestoreRequest};
 use domain::entities::custom_directory::CustomDirectoryEntry;
@@ -147,6 +147,75 @@ fn handle_interactive(
     tui_app.set_mode(initial_mode);
 
     // 1. Scan packages (User vs Low-Level System vs Dependencies)
+    let (user_pkgs, sys_pkgs, dep_pkgs) = scan_package_categories(container);
+    tui_app.user_packages = user_pkgs;
+    tui_app.system_packages = sys_pkgs;
+    tui_app.dependency_packages = dep_pkgs;
+
+    // 2. Scan skills by category
+    tui_app.skills = scan_agent_skills(container, &home);
+
+    // 3. Scan Zen spaces
+    tui_app.zen_spaces = scan_zen_spaces(container, &config);
+
+    // 4. Scan registered SSH keys (~/.ssh)
+    tui_app.ssh_keys = scan_ssh_keys(container, &home);
+
+    // 5. Initial custom dirs from CLI flags
+    for dir in &add_dirs {
+        let _ = tui_app.add_custom_directory(&dir.to_string_lossy());
+    }
+
+    // 6. Discover existing backups in ./backups/ and fallback ~/Antigravity/backups/
+    let backups_dir = default_backups_dir();
+    tui_app.default_backups_dir = backups_dir.clone();
+    populate_snapshots(&mut tui_app, container, &home, &backups_dir);
+
+    // Run TUI loop
+    match run_tui(tui_app)? {
+        Some(TuiAction::Backup {
+            filter,
+            custom_dirs,
+        }) => {
+            let output_archive = {
+                let _ = std::fs::create_dir_all(&backups_dir);
+                let timestamp = chrono_timestamp_slug();
+                backups_dir.join(format!("distro-vault-{}.tar.zst", timestamp))
+            };
+            execute_backup(
+                container,
+                &home,
+                &config,
+                output_archive,
+                *filter,
+                custom_dirs,
+                false,
+            )
+        }
+        Some(TuiAction::Restore {
+            archive_path,
+            install_packages,
+            dry_run,
+        }) => execute_restore(
+            container,
+            &archive_path,
+            &config,
+            &home,
+            target_custom,
+            install_packages,
+            dry_run,
+        ),
+        None => {
+            println!(
+                "{}",
+                style("Operação cancelada pelo usuário na TUI.").yellow()
+            );
+            Ok(())
+        }
+    }
+}
+
+fn scan_package_categories(container: &AppContainer) -> (Vec<TuiRow>, Vec<TuiRow>, Vec<TuiRow>) {
     let mut user_desktop = Vec::new();
     let mut user_cli = Vec::new();
     let mut user_dev = Vec::new();
@@ -232,7 +301,7 @@ fn handle_interactive(
         }
     }
 
-    tui_app.user_packages = TuiApp::group_into_rows(vec![
+    let user_rows = TuiApp::group_into_rows(vec![
         ("desktop".into(), "APPS DESKTOP".into(), user_desktop),
         ("cli".into(), "FERRAMENTAS CLI".into(), user_cli),
         ("dev".into(), "DESENVOLVIMENTO & RUNTIMES".into(), user_dev),
@@ -240,7 +309,7 @@ fn handle_interactive(
         ("user_other".into(), "DEMAIS APLICATIVOS".into(), user_other),
     ]);
 
-    tui_app.system_packages = TuiApp::group_into_rows(vec![
+    let sys_rows = TuiApp::group_into_rows(vec![
         (
             "distro".into(),
             "PACOTES BASE DA DISTRIBUIÇÃO (PRÉ-INSTALADOS)".into(),
@@ -264,7 +333,7 @@ fn handle_interactive(
         ),
     ]);
 
-    tui_app.dependency_packages = TuiApp::group_into_rows(vec![
+    let dep_rows = TuiApp::group_into_rows(vec![
         (
             "core_libs".into(),
             "BIBLIOTECAS CORE C/C++".into(),
@@ -292,8 +361,11 @@ fn handle_interactive(
         ),
     ]);
 
-    // 2. Scan skills by category
-    if let Ok(gov) = container.agent_adapter.scan_governance(&home) {
+    (user_rows, sys_rows, dep_rows)
+}
+
+fn scan_agent_skills(container: &AppContainer, home: &Path) -> Vec<TuiRow> {
+    if let Ok(gov) = container.agent_adapter.scan_governance(home) {
         let mut skill_arch = Vec::new();
         let mut skill_design = Vec::new();
         let mut skill_sec = Vec::new();
@@ -320,7 +392,7 @@ fn handle_interactive(
             }
         }
 
-        tui_app.skills = TuiApp::group_into_rows(vec![
+        TuiApp::group_into_rows(vec![
             ("arch".into(), "ARQUITETURA & MODELAGEM".into(), skill_arch),
             ("design".into(), "DESIGN & CLEAN CODE".into(), skill_design),
             ("sec".into(), "SEGURANÇA & QUALITY GATES".into(), skill_sec),
@@ -331,11 +403,14 @@ fn handle_interactive(
                 "DEMAIS HABILIDADES DE IA".into(),
                 skill_gen,
             ),
-        ]);
+        ])
+    } else {
+        Vec::new()
     }
+}
 
-    // 3. Scan Zen spaces
-    if let Ok(profiles) = container.browser_adapter.scan_profiles(&config) {
+fn scan_zen_spaces(container: &AppContainer, config: &Path) -> Vec<TuiRow> {
+    if let Ok(profiles) = container.browser_adapter.scan_profiles(config) {
         let mut spaces = Vec::new();
         for prof in profiles {
             for space in prof.spaces {
@@ -347,15 +422,18 @@ fn handle_interactive(
                 });
             }
         }
-        tui_app.zen_spaces = TuiApp::group_into_rows(vec![(
+        TuiApp::group_into_rows(vec![(
             "spaces".into(),
             "WORKSPACES & ESPAÇOS DO NAVEGADOR".into(),
             spaces,
-        )]);
+        )])
+    } else {
+        Vec::new()
     }
+}
 
-    // 4. Scan registered SSH keys (~/.ssh)
-    if let Ok(keys) = container.ssh_adapter.scan_ssh_keys(&home) {
+fn scan_ssh_keys(container: &AppContainer, home: &Path) -> Vec<TuiRow> {
+    if let Ok(keys) = container.ssh_adapter.scan_ssh_keys(home) {
         let mut priv_keys = Vec::new();
         let mut pub_keys = Vec::new();
         let mut configs = Vec::new();
@@ -380,7 +458,7 @@ fn handle_interactive(
             }
         }
 
-        tui_app.ssh_keys = TuiApp::group_into_rows(vec![
+        TuiApp::group_into_rows(vec![
             (
                 "priv".into(),
                 "CHAVES PRIVADAS (0600 - PROTEÇÃO MÁXIMA)".into(),
@@ -396,19 +474,19 @@ fn handle_interactive(
                 "CONFIGURAÇÃO, KNOWN HOSTS & DEMAIS".into(),
                 configs,
             ),
-        ]);
+        ])
+    } else {
+        Vec::new()
     }
+}
 
-    // 5. Initial custom dirs from CLI flags
-    for dir in &add_dirs {
-        let _ = tui_app.add_custom_directory(&dir.to_string_lossy());
-    }
-
-    // 6. Discover existing backups in ./backups/ and fallback ~/Antigravity/backups/
-    let backups_dir = default_backups_dir();
-    tui_app.default_backups_dir = backups_dir.clone();
-
-    let mut scan_dirs = vec![backups_dir.clone()];
+fn populate_snapshots(
+    tui_app: &mut TuiApp,
+    container: &AppContainer,
+    home: &Path,
+    backups_dir: &Path,
+) {
+    let mut scan_dirs = vec![backups_dir.to_path_buf()];
     let legacy_backups_dir = home.join("Antigravity/backups");
     if legacy_backups_dir != backups_dir && legacy_backups_dir.exists() {
         scan_dirs.push(legacy_backups_dir);
@@ -431,49 +509,6 @@ fn handle_interactive(
                     }
                 }
             }
-        }
-    }
-
-    // Run TUI loop
-    match run_tui(tui_app)? {
-        Some(TuiAction::Backup {
-            filter,
-            custom_dirs,
-        }) => {
-            let output_archive = {
-                let _ = std::fs::create_dir_all(&backups_dir);
-                let timestamp = chrono_timestamp_slug();
-                backups_dir.join(format!("distro-vault-{}.tar.zst", timestamp))
-            };
-            execute_backup(
-                container,
-                &home,
-                &config,
-                output_archive,
-                *filter,
-                custom_dirs,
-                false,
-            )
-        }
-        Some(TuiAction::Restore {
-            archive_path,
-            install_packages,
-            dry_run,
-        }) => execute_restore(
-            container,
-            &archive_path,
-            &config,
-            &home,
-            target_custom,
-            install_packages,
-            dry_run,
-        ),
-        None => {
-            println!(
-                "{}",
-                style("Operação cancelada pelo usuário na TUI.").yellow()
-            );
-            Ok(())
         }
     }
 }
