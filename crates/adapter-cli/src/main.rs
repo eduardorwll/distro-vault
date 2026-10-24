@@ -198,7 +198,7 @@ fn handle_interactive(
     ]);
 
     tui_app.system_packages = TuiApp::group_into_rows(vec![
-        ("omarchy".into(), "PACOTES BASE OMARCHY (PRÉ-INSTALADOS)".into(), sys_distro),
+        ("distro".into(), "PACOTES BASE DA DISTRIBUIÇÃO (PRÉ-INSTALADOS)".into(), sys_distro),
         ("kernel".into(), "KERNEL & FIRMWARE".into(), sys_kernel),
         ("base".into(), "BASE & BOOTLOADER".into(), sys_base),
         ("drivers".into(), "DRIVERS & HARDWARE".into(), sys_drivers),

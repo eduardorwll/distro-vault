@@ -72,7 +72,7 @@ impl PackageCategory {
             Self::NetworkDaemons => "Rede & Daemons",
             Self::FileSystems => "Sistemas de Arquivos",
             Self::CompositorPlumbing => "Compositor & Display",
-            Self::DistroBase => "Base Omarchy",
+            Self::DistroBase => "Base da Distribuição",
             Self::SystemOther => "Sistema Low-Level",
             Self::CoreLibrary => "Bibliotecas Core C/C++",
             Self::GraphicsMediaLib => "Gráficos & Multimídia",
@@ -152,13 +152,22 @@ impl PackageCategory {
         }
     }
 
-    /// Checks whether a package is pre-installed out-of-the-box by Omarchy Linux
-    pub fn is_omarchy_preinstalled(name: &str) -> bool {
+    /// Checks whether a package is pre-installed out-of-the-box by Linux distributions (Arch, Omarchy, Fedora, Debian, etc.)
+    pub fn is_distro_preinstalled(name: &str) -> bool {
         let n = name.to_lowercase();
-        if n.starts_with("omarchy") || n.starts_with("oma") {
+        if n.starts_with("omarchy")
+            || n.starts_with("oma")
+            || n.starts_with("cachyos")
+            || n.starts_with("endeavouros")
+        {
             return true;
         }
-        OMARCHY_PREINSTALLED_PACKAGES.binary_search(&n.as_str()).is_ok()
+        DISTRO_PREINSTALLED_PACKAGES.binary_search(&n.as_str()).is_ok()
+    }
+
+    /// Alias for is_distro_preinstalled
+    pub fn is_omarchy_preinstalled(name: &str) -> bool {
+        Self::is_distro_preinstalled(name)
     }
 
     /// Classifies a package name and source into (PackageScope, PackageCategory)
@@ -276,8 +285,8 @@ impl PackageCategory {
             return (PackageScope::System, PackageCategory::CompositorPlumbing);
         }
 
-        // 8. Omarchy & Distro Pre-Installed Base Packages (Non-User)
-        if Self::is_omarchy_preinstalled(&n) {
+        // 8. Distro Pre-Installed Base Packages (Non-User)
+        if Self::is_distro_preinstalled(&n) {
             return (PackageScope::System, PackageCategory::DistroBase);
         }
 
@@ -449,44 +458,65 @@ impl PackageEntry {
     }
 }
 
-/// Comprehensive list of packages pre-installed out-of-the-box by the Omarchy ISO and installer.
+/// Comprehensive list of packages pre-installed out-of-the-box by Linux distribution ISOs and installers
+/// (Arch Linux base, Omarchy, Fedora core/standard, Debian/Ubuntu standard base, CachyOS, EndeavourOS).
 /// These packages represent the distribution base and are excluded from user-installed backups by default.
-pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
+pub const DISTRO_PREINSTALLED_PACKAGES: &[&str] = &[
     "aether",
     "alsa-utils",
     "apple-bcm-firmware-fetcher",
     "apple-t2-audio-config",
+    "apt",
+    "archlinux-appstream-data",
+    "archlinux-keyring",
     "asdcontrol",
     "asusctl",
+    "audit-libs",
     "autoconf-archive",
     "avahi",
     "base",
     "base-devel",
+    "base-files",
+    "base-passwd",
     "bash-completion",
     "bat",
+    "binutils",
     "bluez",
     "bluez-tools",
     "bluez-utils",
     "bolt",
     "brightnessctl",
     "broadcom-wl-dkms",
+    "bsdutils",
     "btop",
     "btrfs-progs",
+    "ca-certificates",
     "chromium",
     "clang",
     "cliamp",
+    "coreutils",
+    "crypto-policies",
     "cups",
     "cups-filters",
     "cups-pk-helper",
+    "dash",
     "ddcutil",
+    "debconf",
+    "debian-archive-keyring",
     "dell-xps-touchpad-haptics",
+    "diffutils",
     "dkms",
+    "dnf",
+    "dnf-plugins-core",
     "docker",
     "docker-buildx",
     "docker-compose",
     "dosfstools",
     "dotnet-runtime",
+    "dpkg",
+    "dracut",
     "dua-cli",
+    "e2fsprogs",
     "egl-wayland",
     "evince",
     "exfatprogs",
@@ -498,23 +528,37 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "fcitx5-gtk",
     "fcitx5-qt",
     "fd",
+    "fedora-release",
+    "fedora-repos",
     "ffmpegthumbnailer",
+    "file",
+    "filesystem",
+    "findutils",
+    "firewalld",
     "fontconfig",
     "foot",
     "fzf",
+    "gcc-libs",
     "git",
+    "glibc-common",
     "gnome-disk-utility",
     "gnome-keyring",
     "gnome-themes-extra",
+    "gnupg",
     "gpu-screen-recorder",
+    "grep",
     "grim",
+    "groff",
+    "grub2-common",
     "gst-plugin-pipewire",
     "gtk4-layer-shell",
     "gum",
     "gvfs-mtp",
     "gvfs-nfs",
     "gvfs-smb",
+    "gzip",
     "herdr",
+    "hostname",
     "hyprland",
     "hyprland-guiutils",
     "hyprland-preview-share-picker",
@@ -523,14 +567,19 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "imagemagick",
     "imv",
     "inetutils",
+    "init-system-helpers",
     "inotify-tools",
     "intel-ipu7-camera",
     "intel-lpmd",
     "intel-media-driver",
     "inxi",
+    "iproute2",
+    "iputils",
     "jq",
+    "kbd",
     "kdenlive",
     "kernel-modules-hook",
+    "kmod",
     "lazydocker",
     "lazygit",
     "learn-omarchy",
@@ -540,11 +589,13 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "libpulse",
     "libreoffice-fresh",
     "libsecret",
+    "libtool",
     "libva-intel-driver",
     "libva-nvidia-driver",
     "libvips",
     "libvpl",
     "libyaml",
+    "licenses",
     "limine",
     "limine-mkinitcpio-hook",
     "limine-snapper-sync",
@@ -557,18 +608,28 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "linux-t2-headers",
     "llvm",
     "localsend",
+    "logrotate",
     "lsp-plugins-lv2",
     "lua51",
     "luarocks",
+    "m4",
     "macbook12-spi-driver-dkms",
+    "make",
     "man-db",
+    "man-pages",
     "mariadb-libs",
+    "microdnf",
     "mise-bin",
+    "mkinitcpio-busybox",
     "moonlight-qt",
     "mpv",
     "mpv-mpris",
+    "nano",
     "nautilus",
     "nautilus-python",
+    "ncurses-base",
+    "ncurses-bin",
+    "net-tools",
     "networkmanager",
     "noto-fonts",
     "noto-fonts-cjk",
@@ -613,17 +674,25 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "omawake-bin",
     "omawrite",
     "omazed",
+    "pacman",
     "pacman-contrib",
     "pamixer",
+    "patch",
+    "pciutils",
     "pinta",
     "pipewire",
     "pipewire-alsa",
     "pipewire-jack",
     "pipewire-pulse",
+    "pkgconf",
     "plocate",
     "plymouth",
+    "polkit",
     "postgresql-libs",
     "power-profiles-daemon",
+    "procps",
+    "procps-ng",
+    "psmisc",
     "python-gobject",
     "python-poetry-core",
     "qemu-user-static-binfmt",
@@ -633,8 +702,13 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "qt6-wayland",
     "quickshell",
     "ripgrep",
+    "rpm",
     "ruby",
     "sddm",
+    "sed",
+    "selinux-policy",
+    "setup",
+    "shadow",
     "slurp",
     "snapper",
     "socat",
@@ -642,10 +716,13 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "starship",
     "sushi",
     "system-config-printer",
+    "sysvinit-utils",
     "t2fanrd",
+    "tar",
     "tensaku",
     "tesseract",
     "tesseract-data-eng",
+    "texinfo",
     "thermald",
     "tldr",
     "tmux",
@@ -656,17 +733,24 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "ttfx",
     "tuxedo-drivers-nocompatcheck-dkms",
     "tzupdate",
+    "ubuntu-keyring",
+    "ubuntu-minimal",
+    "ubuntu-standard",
     "udiskie",
     "ufw",
     "ufw-docker",
     "unzip",
     "usage",
+    "usbutils",
+    "util-linux",
     "uwsm",
+    "vim-minimal",
     "vpl-gpu-rt",
     "vulkan-asahi",
     "vulkan-intel",
     "vulkan-radeon",
     "webp-pixbuf-loader",
+    "which",
     "whois",
     "wireless-regdb",
     "wireplumber",
@@ -677,6 +761,7 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "xdg-desktop-portal-hyprland",
     "xdg-terminal-exec",
     "xournalpp",
+    "xz",
     "yaru-icon-theme",
     "yay",
     "yay-debug",
@@ -685,4 +770,8 @@ pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = &[
     "zbar",
     "zoxide",
     "zram-generator",
+    "zstd",
 ];
+
+/// Legacy alias for DISTRO_PREINSTALLED_PACKAGES
+pub const OMARCHY_PREINSTALLED_PACKAGES: &[&str] = DISTRO_PREINSTALLED_PACKAGES;

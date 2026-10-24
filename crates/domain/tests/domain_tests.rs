@@ -235,7 +235,7 @@ fn test_package_category_classification() {
     assert_eq!(s, PackageScope::System);
     assert_eq!(c, PackageCategory::NetworkDaemons);
 
-    // Omarchy Pre-installed base packages (Non-user, System scope)
+    // Distro Pre-installed base packages (Non-user, System scope) - Arch, Fedora, Debian, etc.
     let (s, c) = PackageCategory::classify("ripgrep", PackageSource::PacmanNative);
     assert_eq!(s, PackageScope::System);
     assert_eq!(c, PackageCategory::DistroBase);
@@ -244,11 +244,19 @@ fn test_package_category_classification() {
     assert_eq!(s, PackageScope::System);
     assert_eq!(c, PackageCategory::DistroBase);
 
+    let (s, c) = PackageCategory::classify("dnf", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::DistroBase);
+
+    let (s, c) = PackageCategory::classify("apt", PackageSource::PacmanNative);
+    assert_eq!(s, PackageScope::System);
+    assert_eq!(c, PackageCategory::DistroBase);
+
     let (s, c) = PackageCategory::classify("omacalc", PackageSource::PacmanNative);
     assert_eq!(s, PackageScope::System);
     assert_eq!(c, PackageCategory::DistroBase);
 
-    // User-installed components (not pre-installed by Omarchy)
+    // User-installed components (not pre-installed by distro)
     let (s, c) = PackageCategory::classify("discord", PackageSource::PacmanNative);
     assert_eq!(s, PackageScope::User);
     assert_eq!(c, PackageCategory::DesktopApp);

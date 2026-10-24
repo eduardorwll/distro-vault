@@ -6,17 +6,18 @@ use domain::errors::DomainError;
 use domain::ports::PackagePort;
 use domain::value_objects::PackageName;
 
-fn is_omarchy_preinstalled_on_system(name: &str) -> bool {
-    if PackageCategory::is_omarchy_preinstalled(name) {
+fn is_distro_preinstalled_on_system(name: &str) -> bool {
+    if PackageCategory::is_distro_preinstalled(name) {
         return true;
     }
-    static DYNAMIC_OMARCHY: std::sync::OnceLock<std::collections::HashSet<String>> =
+    static DYNAMIC_DISTRO_PKGS: std::sync::OnceLock<std::collections::HashSet<String>> =
         std::sync::OnceLock::new();
-    let set = DYNAMIC_OMARCHY.get_or_init(|| {
+    let set = DYNAMIC_DISTRO_PKGS.get_or_init(|| {
         let mut set = std::collections::HashSet::new();
         for file in &[
             "/usr/share/omarchy/install/omarchy-base.packages",
             "/usr/share/omarchy/install/omarchy-other.packages",
+            "/etc/calamares/modules/packages.conf",
         ] {
             if let Ok(content) = std::fs::read_to_string(file) {
                 for line in content.lines() {
@@ -71,7 +72,7 @@ impl PackagePort for PacmanAdapter {
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
                     let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::PacmanNative);
-                    if is_omarchy_preinstalled_on_system(name_str) && scope == PackageScope::User {
+                    if is_distro_preinstalled_on_system(name_str) && scope == PackageScope::User {
                         scope = PackageScope::System;
                         category = PackageCategory::DistroBase;
                     }
@@ -226,7 +227,7 @@ impl PackagePort for AurAdapter {
             if let Some(&name_str) = parts.first() {
                 if let Ok(pkg_name) = PackageName::new(name_str) {
                     let (mut scope, mut category) = PackageCategory::classify(name_str, PackageSource::Aur);
-                    if is_omarchy_preinstalled_on_system(name_str) && scope == PackageScope::User {
+                    if is_distro_preinstalled_on_system(name_str) && scope == PackageScope::User {
                         scope = PackageScope::System;
                         category = PackageCategory::DistroBase;
                     }
