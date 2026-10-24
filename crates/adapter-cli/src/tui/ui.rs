@@ -7,6 +7,7 @@ use ratatui::{
 };
 
 use super::app::{InputTarget, TuiApp, TuiMode, TuiRow};
+use super::explorer::{ExplorerEntryKind, ExplorerTarget, FileExplorerState};
 
 pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     let chunks = Layout::default()
@@ -65,11 +66,11 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     } else {
         match app.mode {
             TuiMode::Backup => Span::styled(
-                " [Tab] Alternar Aba  [↑/↓] Navegar  [Espaço] Alternar Item/Grupo  [A] Add Pasta  [Enter] Snapshot  [F3] Modo Recuperar  [Q] Sair ",
+                " [Tab] Alternar Aba  [↑/↓] Navegar  [Espaço] Alternar  [A] Explorador de Pastas  [Enter] Snapshot  [F3] Modo Recuperar  [Q] Sair ",
                 Style::default().fg(Color::DarkGray),
             ),
             TuiMode::Restore => Span::styled(
-                " [↑/↓] Selecionar Snapshot  [P] Alternar Pacotes  [D] Alternar Dry-Run  [A] Outro Arquivo  [Enter/R] RESTAURAR  [F2] Modo Backup  [Q] Sair ",
+                " [↑/↓] Selecionar Snapshot  [P] Pacotes  [D] Dry-Run  [A] Explorador de Arquivo/Pasta  [Enter/R] RESTAURAR  [F2] Modo Backup  [Q] Sair ",
                 Style::default().fg(Color::DarkGray),
             ),
         }
@@ -83,6 +84,11 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     // 5. Input Popup (Custom Directory or Snapshot Path)
     if app.input_mode {
         render_input_popup(f, &app.input_buffer, app.input_target);
+    }
+
+    // 6. Unified Interactive File & Directory Explorer Modal
+    if app.file_explorer.is_open {
+        render_file_explorer(f, &mut app.file_explorer);
     }
 }
 
@@ -807,4 +813,130 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             Constraint::Percentage((100 - percent_x) / 2),
         ])
         .split(popup_layout[1])[1]
+}
+
+fn render_file_explorer(f: &mut Frame, explorer: &mut FileExplorerState) {
+    let area = centered_rect(80, 75, f.area());
+    f.render_widget(Clear, area);
+
+    let (title, help_action) = match explorer.target {
+        ExplorerTarget::CustomDir => (
+            " 📂 Navegador: Selecionar Pasta para Backup ",
+            "[Espaço/S] Selecionar Esta Pasta para Backup",
+        ),
+        ExplorerTarget::SnapshotOrFolder => (
+            " 📂 Navegador: Selecionar Arquivo (.tar.zst) ou Pasta de Backups ",
+            "[Espaço/S] Escanear Todos os Backups Desta Pasta",
+        ),
+    };
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Span::styled(
+            title,
+            Style::default()
+                .fg(Color::Cyan)
+                .add_modifier(Modifier::BOLD),
+        ))
+        .style(Style::default().bg(Color::Rgb(18, 22, 28)).fg(Color::White));
+
+    let inner_chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(2), // Path header
+            Constraint::Min(5),    // List of files/directories
+            Constraint::Length(2), // Instructions / Footer
+        ])
+        .split(block.inner(area));
+
+    f.render_widget(block, area);
+
+    // Current path header
+    let path_line = Line::from(vec![
+        Span::styled(
+            " 📍 Diretório: ",
+            Style::default()
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        ),
+        Span::styled(
+            explorer.current_dir.display().to_string(),
+            Style::default()
+                .fg(Color::White)
+                .add_modifier(Modifier::BOLD),
+        ),
+    ]);
+    f.render_widget(Paragraph::new(path_line), inner_chunks[0]);
+
+    // Items list
+    let items: Vec<ListItem> = if explorer.entries.is_empty() {
+        vec![ListItem::new(Line::from(Span::styled(
+            "   (Diretório vazio ou sem arquivos compatíveis)",
+            Style::default().fg(Color::DarkGray),
+        )))]
+    } else {
+        explorer
+            .entries
+            .iter()
+            .map(|entry| {
+                let line = match entry.kind {
+                    ExplorerEntryKind::ParentDir => Line::from(vec![
+                        Span::styled(" 📁 ", Style::default().fg(Color::Cyan)),
+                        Span::styled(
+                            &entry.name,
+                            Style::default()
+                                .fg(Color::Cyan)
+                                .add_modifier(Modifier::BOLD),
+                        ),
+                    ]),
+                    ExplorerEntryKind::Directory => Line::from(vec![
+                        Span::styled(" 📁 ", Style::default().fg(Color::Cyan)),
+                        Span::styled(&entry.name, Style::default().fg(Color::White)),
+                        Span::styled("/", Style::default().fg(Color::DarkGray)),
+                    ]),
+                    ExplorerEntryKind::SnapshotArchive => {
+                        let size_mb = (entry.size_bytes as f64) / 1024.0 / 1024.0;
+                        Line::from(vec![
+                            Span::styled(" 📦 ", Style::default().fg(Color::Green)),
+                            Span::styled(
+                                &entry.name,
+                                Style::default()
+                                    .fg(Color::Green)
+                                    .add_modifier(Modifier::BOLD),
+                            ),
+                            Span::styled(
+                                format!(" ({:.1} MB)", size_mb),
+                                Style::default().fg(Color::DarkGray),
+                            ),
+                        ])
+                    }
+                };
+                ListItem::new(line)
+            })
+            .collect()
+    };
+
+    let list = List::new(items)
+        .highlight_style(
+            Style::default()
+                .bg(Color::Rgb(35, 45, 60))
+                .fg(Color::Yellow)
+                .add_modifier(Modifier::BOLD),
+        )
+        .highlight_symbol("▶ ");
+
+    f.render_stateful_widget(list, inner_chunks[1], &mut explorer.list_state);
+
+    // Explorer footer help
+    let help_line = Line::from(vec![Span::styled(
+        format!(
+            " [↑/↓/j/k] Navegar  •  [Enter] Abrir  •  {}  •  [Backspace] Subir  •  [Esc/Q] Fechar ",
+            help_action
+        ),
+        Style::default().fg(Color::DarkGray),
+    )]);
+    f.render_widget(
+        Paragraph::new(help_line).alignment(Alignment::Center),
+        inner_chunks[2],
+    );
 }

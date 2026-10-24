@@ -2,8 +2,42 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::path::PathBuf;
 
 use super::app::{InputTarget, TuiApp, TuiMode};
+use super::explorer::{ExplorerSelection, ExplorerTarget};
 
 pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
+    // 1. Interactive File & Directory Explorer handling
+    if app.file_explorer.is_open {
+        match key.code {
+            KeyCode::Up | KeyCode::Char('k') => {
+                app.file_explorer.prev();
+            }
+            KeyCode::Down | KeyCode::Char('j') => {
+                app.file_explorer.next();
+            }
+            KeyCode::Backspace => {
+                app.file_explorer.go_up();
+            }
+            KeyCode::Enter => {
+                let target = app.file_explorer.target;
+                if let Some(sel) = app.file_explorer.enter_or_select() {
+                    apply_explorer_selection(app, target, sel);
+                }
+            }
+            KeyCode::Char(' ') | KeyCode::Char('s') | KeyCode::Char('S') => {
+                let target = app.file_explorer.target;
+                if let Some(sel) = app.file_explorer.confirm_selection() {
+                    apply_explorer_selection(app, target, sel);
+                }
+            }
+            KeyCode::Esc | KeyCode::Char('q') | KeyCode::Char('Q') => {
+                app.file_explorer.close();
+                app.status_message = Some("Navegação cancelada.".to_string());
+            }
+            _ => {}
+        }
+        return;
+    }
+
     if app.input_mode {
         match key.code {
             KeyCode::Enter => {
@@ -87,9 +121,10 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
                 app.toggle_selected();
             }
             KeyCode::Char('a') | KeyCode::Char('A') => {
-                app.input_target = InputTarget::CustomDir;
-                app.input_mode = true;
-                app.input_buffer.clear();
+                let start = std::env::var("HOME")
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|_| PathBuf::from("/"));
+                app.file_explorer.open(&start, ExplorerTarget::CustomDir);
             }
             KeyCode::Enter | KeyCode::F(10) => {
                 app.should_start_backup = true;
@@ -116,9 +151,8 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
                 app.toggle_restore_dry_run();
             }
             KeyCode::Char('a') | KeyCode::Char('A') => {
-                app.input_target = InputTarget::SnapshotPath;
-                app.input_mode = true;
-                app.input_buffer.clear();
+                let start = app.default_backups_dir.clone();
+                app.file_explorer.open(&start, ExplorerTarget::SnapshotOrFolder);
             }
             KeyCode::Enter | KeyCode::Char('r') | KeyCode::Char('R') | KeyCode::F(10) => {
                 app.should_start_restore = true;
@@ -130,6 +164,38 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
                 app.should_quit = true;
             }
             _ => {}
+        },
+    }
+}
+
+fn apply_explorer_selection(app: &mut TuiApp, target: ExplorerTarget, sel: ExplorerSelection) {
+    match target {
+        ExplorerTarget::CustomDir => match sel {
+            ExplorerSelection::Directory(path) => {
+                match app.add_custom_directory(&path.to_string_lossy()) {
+                    Ok(_) => {
+                        app.status_message = Some(format!("Pasta adicionada para backup: {}", path.display()));
+                    }
+                    Err(e) => {
+                        app.status_message = Some(format!("Erro ao adicionar pasta: {}", e));
+                    }
+                }
+            }
+            ExplorerSelection::SnapshotFile(_) => {}
+        },
+        ExplorerTarget::SnapshotOrFolder => match sel {
+            ExplorerSelection::SnapshotFile(path) => {
+                app.add_snapshot_file(path.clone(), None);
+                app.status_message = Some(format!("Snapshot adicionado: {}", path.display()));
+            }
+            ExplorerSelection::Directory(path) => {
+                let count = app.scan_and_add_backup_folder(&path);
+                app.status_message = Some(format!(
+                    "Pasta de backups selecionada: {} ({} snapshots encontrados)",
+                    path.display(),
+                    count
+                ));
+            }
         },
     }
 }

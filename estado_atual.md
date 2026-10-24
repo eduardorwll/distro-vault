@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
 Data: 24 de Outubro de 2026
-Status: 🟢 Todas as Fases (1 a 8) Concluídas com Sucesso | 37 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui Homologados com Suporte a SSH e Transcrição Cross-Distro
+Status: 🟢 Todas as Fases (1 a 9) Concluídas com Sucesso | 38 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui Homologados com Suporte a SSH, Transcrição Cross-Distro e Explorador de Arquivos/Pastas Unificado
 
 ---
 
@@ -36,10 +36,15 @@ Status: 🟢 Todas as Fases (1 a 8) Concluídas com Sucesso | 37 Testes Passando
 - [x] Modo de Recuperação (`TuiMode::Restore`) com alertas visuais de necessidade de `sudo`, detalhamento POSIX de chaves SSH, preview de transcrição de caminhos e detecção em tempo real de staging acelerado em cache.
 - [x] Gerenciamento RAII com `TerminalGuard` garantindo restauração limpa do terminal.
 
+### Fase 9: Navegador Interativo Unificado de Arquivos e Diretórios (Explorer Modal)
+- [x] Modal interativo unificado (`FileExplorerState` e `render_file_explorer`) reutilizado tanto para adicionar pastas customizadas para backup quanto para escanear/selecionar diretórios e arquivos de snapshot para restauração.
+- [x] Navegação intuitiva no sistema de arquivos do usuário (`↑/↓/j/k`, `Enter` para abrir, `Backspace` para subir, `Espaço/S` para confirmar seleção, `Esc/Q` para fechar).
+- [x] Descoberta automática de backups adicionais (`scan_and_add_backup_folder`) para inclusão imediata na lista de snapshots disponíveis.
+
 ---
 
 ## 2. Métricas de Qualidade e Compilação
-- `cargo test --workspace` -> **37 testes passando (100% de sucesso)**
+- `cargo test --workspace` -> **38 testes passando (100% de sucesso)**
 - `cargo clippy --workspace -- -D warnings` -> **Zero Warnings Policy rigorosamente mantida**
 - `cargo audit` -> **0 vulnerabilidades / 0 CVEs em 263 dependências**
 - Binário de release atualizado em `bin/distro-vault` e no host do usuário em `/home/eduardorwll/distro-vault`.

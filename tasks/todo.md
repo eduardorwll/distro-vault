@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso (32 testes passando, 0 warnings no Clippy) | TUI Ratatui e CLI Prontos para Homologação
+Status: 🟢 Todas as Fases (1 a 9) Concluídas com Sucesso (38 testes passando, 0 warnings no Clippy) | TUI Ratatui e CLI Prontos para Homologação
 
 ---
 
@@ -123,3 +123,20 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso (32 testes passando,
 - [x] **Task 8.5: TUI Enriquecida para Modo de Recuperação (`crates/adapter-cli/src/tui/`)**
   - **Status:** Concluído. Exibição de alertas de `sudo`, detalhamento POSIX de chaves SSH (`0700`/`0600`), mapeamento de transcrição de pastas, detecção dinâmica de staging em cache e orientações claras de execução.
   - **Arquivos:** `crates/adapter-cli/src/tui/ui.rs`, `crates/adapter-cli/src/tui/app.rs`, `crates/adapter-cli/src/tui/runner.rs`
+
+---
+
+## Fase 9: Navegador Interativo Unificado de Arquivos e Diretórios (Explorer Modal)
+- [x] **Task 9.1: Componente Unificado de Navegação no Filesystem (`FileExplorerState`)**
+  - **Status:** Concluído. Estrutura unificada e desacoplada em `crates/adapter-cli/src/tui/explorer.rs` com suporte aos modos `CustomDir` (Backup) e `SnapshotOrFolder` (Restore). Testado com suíte de testes unitários dedicada.
+  - **Verificação:** `cargo test -p adapter-cli`
+  - **Arquivos:** `crates/adapter-cli/src/tui/explorer.rs`, `crates/adapter-cli/src/tui/mod.rs`
+- [x] **Task 9.2: Integração de Eventos e Atalhos de Teclado no Explorer Modal**
+  - **Status:** Concluído. Roteamento de eventos com navegação suave (`↑/↓/j/k`), expansão de diretório (`Enter`), confirmação de seleção de pasta (`Espaço/S`), subida de diretório (`Backspace`) e fechamento (`Esc/Q`).
+  - **Arquivos:** `crates/adapter-cli/src/tui/events.rs`
+- [x] **Task 9.3: Integração no Estado da Aplicação e Varredura de Backups (`TuiApp`)**
+  - **Status:** Concluído. Integração do modal no `TuiApp` com função `scan_and_add_backup_folder` para importar instantaneamente snapshots `.tar.zst` descobertos em diretórios selecionados pelo usuário, e `add_custom_directory` para backup.
+  - **Arquivos:** `crates/adapter-cli/src/tui/app.rs`
+- [x] **Task 9.4: Renderização Visual do Modal de Exploração (`render_file_explorer`)**
+  - **Status:** Concluído. Renderização limpa em Ratatui com cabeçalho de caminho atual, ícones contextuais (`📁`, `📦`), badges de tamanho em MB, highlight de cursor ativo e rodapé informativo de navegação.
+  - **Arquivos:** `crates/adapter-cli/src/tui/ui.rs`

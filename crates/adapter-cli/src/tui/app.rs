@@ -7,6 +7,8 @@ use domain::entities::manifest::Manifest;
 use domain::entities::selection_filter::SelectionFilter;
 use domain::value_objects::PackageName;
 
+use super::explorer::FileExplorerState;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TuiMode {
     #[default]
@@ -95,6 +97,7 @@ pub struct TuiApp {
     pub input_mode: bool,
     pub input_target: InputTarget,
     pub input_buffer: String,
+    pub file_explorer: FileExplorerState,
     pub status_message: Option<String>,
     pub default_backups_dir: PathBuf,
     pub should_quit: bool,
@@ -138,6 +141,7 @@ impl TuiApp {
             input_mode: false,
             input_target: InputTarget::CustomDir,
             input_buffer: String::new(),
+            file_explorer: FileExplorerState::new(),
             status_message: None,
             default_backups_dir,
             should_quit: false,
@@ -355,6 +359,26 @@ impl TuiApp {
         self.custom_dirs.push(inspected);
         self.status_message = Some(format!("Diretório adicionado com sucesso: {}", path_str));
         Ok(())
+    }
+
+    pub fn scan_and_add_backup_folder(&mut self, folder: &std::path::Path) -> usize {
+        let mut count = 0;
+        if let Ok(entries) = std::fs::read_dir(folder) {
+            let mut paths: Vec<_> = entries
+                .flatten()
+                .map(|e| e.path())
+                .filter(|p| p.is_file() && p.to_string_lossy().ends_with(".tar.zst"))
+                .collect();
+            paths.sort_by(|a, b| b.cmp(a));
+            for p in paths {
+                if !self.snapshots.iter().any(|s| s.path == p) {
+                    self.add_snapshot_file(p, None);
+                    count += 1;
+                }
+            }
+        }
+        self.default_backups_dir = folder.to_path_buf();
+        count
     }
 
     pub fn build_selection_filter(&self) -> SelectionFilter {
