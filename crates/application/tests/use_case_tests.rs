@@ -204,6 +204,31 @@ fn test_full_backup_and_restore_pipeline() {
         fs::read_to_string(restored_custom_file).unwrap(),
         "# Secret Distro Project"
     );
+
+    // 7. Test Selective Restore with SelectionFilter
+    let mut selective_filter = SelectionFilter::new();
+    selective_filter.set_restore_zen(false);
+    selective_filter.set_restore_git_config(false);
+    selective_filter.exclude_ssh_key("id_ed25519".to_string());
+    selective_filter.toggle_custom_dir("my_docs".to_string());
+
+    let selective_home = test_root.join("selective_home");
+    let selective_config = test_root.join("selective_config");
+    let selective_custom = test_root.join("selective_custom");
+
+    let sel_req = RestoreRequest::new(&output_archive, &selective_config, &selective_home)
+        .with_custom_base(&selective_custom)
+        .with_filter(selective_filter);
+
+    let sel_report = restore_use_case
+        .execute(sel_req)
+        .expect("Selective restore failed");
+    assert_eq!(sel_report.profiles_restored.len(), 0);
+    assert_eq!(sel_report.git_configs_restored, 0);
+    assert_eq!(sel_report.ssh_keys_restored, 2);
+    assert!(!selective_home.join(".ssh/id_ed25519").exists());
+    assert!(selective_home.join(".ssh/id_ed25519.pub").exists());
+    assert!(!selective_custom.join("my_docs/project.md").exists());
 }
 
 #[test]

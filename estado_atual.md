@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
 Data: 24 de Outubro de 2026
-Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 11) Concluídas com Sucesso | 39 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui com Suporte a SSH, Git Global Config, Transcrição Cross-Distro e Explorador Unificado
+Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 12) Concluídas com Sucesso | 42 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui com Menus Drop Hierárquicos de Restore, SSH, Git Global Config, Transcrição Cross-Distro e Explorador Unificado
 
 ---
 
@@ -47,11 +47,18 @@ Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 11) Co
 - [x] Implantação automática no `$HOME` da máquina alvo executada na fase de recuperação prioritária de dados do usuário (junto com SSH e perfis).
 - [x] Exibição de identidade Git no painel de inspeção de snapshots da TUI e logs detalhados no CLI.
 
+### Fase 12: Seleção Granular de Itens no Restore com Menus Drop / Colapsáveis na TUI
+- [x] `SelectionFilter` expandido no Core Domain com flags (`restore_zen`, `restore_git_config`) e exclusão granular de diretórios customizados.
+- [x] `RestorePipelineUseCase` condicionando a extração e restauração de cada subsistema com base no filtro selecionado.
+- [x] Árvore hierárquica interativa (`RestoreTreeState`) com nós de categoria e nós folhas de itens individuais (Pacotes, AppImages, Perfis Zen, Chaves SSH, Skills de IA, Configuração Git e Diretórios Customizados).
+- [x] Menus drop com expansão/recolhimento dinâmico (`Enter`, `→`, `←`, `e`), alternância em lote e individual de checkboxes (`Espaço`, `x`).
+- [x] Navegação por foco duplo (`Tab`) entre a lista de snapshots disponíveis e a árvore de seleção hierárquica à direita.
+
 ---
 
 ## 2. Métricas de Qualidade e Compilação
-- `cargo test --workspace` -> **39 testes passando (100% de sucesso)**
-- `cargo clippy --workspace -- -D warnings` -> **Zero Warnings Policy rigorosamente mantida**
+- `cargo test --workspace` -> **42 testes passando (100% de sucesso)**
+- `cargo clippy --workspace --all-targets -- -D warnings` -> **Zero Warnings Policy rigorosamente mantida**
 - `cargo audit` -> **0 vulnerabilidades / 0 CVEs em 263 dependências**
 - Binário de release atualizado em `bin/distro-vault` e no host do usuário em `/home/eduardorwll/distro-vault`.
 - [x] **`VerifyIntegrityUseCase` (`verify.rs`):** Validação de integridade criptográfica SHA-256 e teste estrutural de blocos.

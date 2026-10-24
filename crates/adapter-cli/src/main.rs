@@ -124,6 +124,7 @@ fn handle_restore(
             from_staging: args.from_staging,
             install_packages: args.install_packages,
             dry_run: args.dry_run,
+            selection_filter: None,
         };
         execute_restore(container, params)
     } else {
@@ -201,6 +202,7 @@ fn handle_interactive(
             from_staging,
             install_packages,
             dry_run,
+            selection_filter,
         }) => {
             let params = RestoreExecutionParams {
                 archive: &archive_path,
@@ -210,6 +212,7 @@ fn handle_interactive(
                 from_staging,
                 install_packages,
                 dry_run,
+                selection_filter: selection_filter.map(|f| *f),
             };
             execute_restore(container, params)
         }
@@ -611,6 +614,7 @@ struct RestoreExecutionParams<'a> {
     from_staging: Option<PathBuf>,
     install_packages: bool,
     dry_run: bool,
+    selection_filter: Option<SelectionFilter>,
 }
 
 fn execute_restore(
@@ -665,6 +669,10 @@ fn execute_restore(
 
     if let Some(staging) = params.from_staging {
         req = req.with_staging_override(staging);
+    }
+
+    if let Some(filter) = params.selection_filter {
+        req = req.with_filter(filter);
     }
 
     let report = container.restore_use_case.execute(req)?;

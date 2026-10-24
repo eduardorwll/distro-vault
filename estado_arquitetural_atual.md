@@ -65,3 +65,7 @@ graph TD
     - Contrato hexagonal puro desacoplado de I/O em `domain/src/ports/git_config_port.rs`.
     - `LinuxGitConfigAdapter` varre `~/.gitconfig` e `~/.config/git/config`, extraindo metadados de autor (`user.name`, `user.email`) e empacotando os arquivos verbatim no snapshot sob `git/`.
     - No restore, restaura com modos POSIX `0644` e pre-unlink defensivo antes da instalação de pacotes de sistema, garantindo recuperação instantânea da identidade Git.
+11. **Restauração Granular com Árvore Hierárquica e Menus Drop (`RestoreTreeState`):**
+    - Contrato expandido no Core Domain em `SelectionFilter` com flags de sistema (`restore_zen`, `restore_git_config`) e exclusão granular de diretórios customizados (`excluded_custom_dirs`).
+    - Na apresentação (TUI Ratatui), a estrutura hierárquica `RestoreTreeState` organiza o manifesto em categorias colapsáveis com menus drop (`Enter/→/←/e`) e nós de itens individuais, permitindo seleção/desseleção em lote ou por item (`Espaço/x`). Foco duplo navegável com `Tab`.
+    - No caso de uso `RestorePipelineUseCase`, a extração e implantação de pacotes, AppImages, perfis do Zen Browser, chaves SSH, skills de IA, pastas extras e configurações Git respeitam estritamente as seleções do usuário.

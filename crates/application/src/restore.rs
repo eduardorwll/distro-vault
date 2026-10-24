@@ -5,6 +5,7 @@ use std::sync::Arc;
 use tempfile::{tempdir, tempdir_in, TempDir};
 
 use domain::entities::package::PackageSource;
+use domain::entities::selection_filter::SelectionFilter;
 use domain::errors::DomainError;
 use domain::ports::{
     AgentPort, BrowserPort, GitConfigPort, PackagePort, SshPort, StoragePort, SystemPort,
@@ -21,6 +22,7 @@ pub struct RestoreRequest {
     pub staging_override: Option<PathBuf>,
     pub install_packages: bool,
     pub dry_run: bool,
+    pub selection_filter: Option<SelectionFilter>,
 }
 
 impl RestoreRequest {
@@ -37,7 +39,13 @@ impl RestoreRequest {
             staging_override: None,
             install_packages: false,
             dry_run: false,
+            selection_filter: None,
         }
+    }
+
+    pub fn with_filter(mut self, filter: SelectionFilter) -> Self {
+        self.selection_filter = Some(filter);
+        self
     }
 
     pub fn with_packages(mut self, install: bool, dry_run: bool) -> Self {
@@ -145,9 +153,19 @@ impl RestorePipelineUseCase {
 
         // 3. Restore Browser Profiles & Normalize Hashes
         let mut profiles_restored = Vec::new();
+        let should_restore_zen = req
+            .selection_filter
+            .as_ref()
+            .map(|f| f.restore_zen)
+            .unwrap_or(true);
         let staging_browser = staging_path.join("browser");
-        if staging_browser.exists() {
+        if staging_browser.exists() && should_restore_zen {
             for prof in &manifest.zen_profiles {
+                if let Some(ref filter) = req.selection_filter {
+                    if !filter.is_space_included(prof.id.as_str()) {
+                        continue;
+                    }
+                }
                 let prof_staging_path = staging_browser.join(prof.id.as_str());
                 if prof_staging_path.exists() {
                     if !req.dry_run {
@@ -163,19 +181,31 @@ impl RestorePipelineUseCase {
 
         // 4. Restore Agent Governance
         let staging_agents = staging_path.join("agents");
-        let skills_count = manifest.agent_governance.skills.len();
-        if staging_agents.exists() && !req.dry_run {
+        let mut skills_count = manifest.agent_governance.skills.len();
+        if let Some(ref filter) = req.selection_filter {
+            skills_count = manifest
+                .agent_governance
+                .skills
+                .iter()
+                .filter(|s| filter.is_skill_included(&s.name))
+                .count();
+        }
+        if staging_agents.exists() && !req.dry_run && skills_count > 0 {
             self.agent_port
                 .restore_governance(&staging_agents, &req.target_home)?;
         }
 
         // 5. Restore Registered SSH Keys with strict POSIX permissions (0700/0600)
         let staging_ssh = staging_path.join("ssh");
-        let ssh_keys_restored = if staging_ssh.exists() && !manifest.ssh_keys.is_empty() {
+        let mut target_ssh_keys = manifest.ssh_keys.clone();
+        if let Some(ref filter) = req.selection_filter {
+            target_ssh_keys.retain(|k| filter.is_ssh_key_included(&k.file_name));
+        }
+        let ssh_keys_restored = if staging_ssh.exists() && !target_ssh_keys.is_empty() {
             self.ssh_port.restore_ssh_keys(
                 &staging_ssh,
                 &req.target_home,
-                &manifest.ssh_keys,
+                &target_ssh_keys,
                 req.dry_run,
             )?
         } else {
@@ -184,7 +214,12 @@ impl RestorePipelineUseCase {
 
         // 6. Restore Global Git Configuration (.gitconfig, .config/git/config)
         let staging_git = staging_path.join("git");
-        let git_configs_restored = if staging_git.exists() && !manifest.git_configs.is_empty() {
+        let should_restore_git = req
+            .selection_filter
+            .as_ref()
+            .map(|f| f.restore_git_config)
+            .unwrap_or(true);
+        let git_configs_restored = if staging_git.exists() && should_restore_git && !manifest.git_configs.is_empty() {
             self.git_config_port.restore_git_config(
                 &staging_git,
                 &req.target_home,
@@ -197,6 +232,11 @@ impl RestorePipelineUseCase {
 
         // 7. Restore Custom Directories with Path Transcription to target home
         for custom_d in &manifest.custom_directories {
+            if let Some(ref filter) = req.selection_filter {
+                if !filter.is_custom_dir_included(&custom_d.id) {
+                    continue;
+                }
+            }
             let custom_staging = staging_path.join(&custom_d.archive_prefix);
             if custom_staging.exists() {
                 let target_dest = if let Some(ref base) = req.target_custom_base {
@@ -221,11 +261,15 @@ impl RestorePipelineUseCase {
             }
         }
 
-        // 7. Check FUSE2 requirement for AppImages
+        // 8. Check FUSE2 requirement for AppImages
+        let mut appimages_to_check = manifest.appimages.clone();
+        if let Some(ref filter) = req.selection_filter {
+            appimages_to_check.retain(|a| filter.is_appimage_included(&a.name));
+        }
         let fuse2_missing_warning =
-            !manifest.appimages.is_empty() && !self.system_port.is_fuse2_available();
+            !appimages_to_check.is_empty() && !self.system_port.is_fuse2_available();
 
-        // 8. Detect Target Distro & Package Dispatch
+        // 9. Detect Target Distro & Package Dispatch
         let target_distro = self
             .system_port
             .detect_distro()
@@ -241,7 +285,14 @@ impl RestorePipelineUseCase {
                 let matching_pkgs: Vec<_> = manifest
                     .packages
                     .iter()
-                    .filter(|p| p.source == port_source)
+                    .filter(|p| {
+                        p.source == port_source
+                            && req
+                                .selection_filter
+                                .as_ref()
+                                .map(|f| f.is_package_included(&p.name))
+                                .unwrap_or(true)
+                    })
                     .cloned()
                     .collect();
 

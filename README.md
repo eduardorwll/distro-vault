@@ -12,6 +12,8 @@
 - 📦 **Multi-Distro Package Engine:** Gerenciamento declarativo para `pacman`, `aur` (`paru`/`yay`), `flatpak`, `dnf`, `apt` e `nix`.
 - 🚀 **AppImage & Gear Lever Vault:** Preservação de binários portáteis em `~/AppImages` e garantia da biblioteca `FUSE 2` no host destino.
 - 🤖 **Agent Ecosystem Sync:** Exportação declarativa de regras e das 19 skills essenciais de agentes de IA com desreferenciamento de symlinks para execução em qualquer SO.
+- ⚙️ **Git Global Config Auto-Deployment:** Backup e restauração automática de `~/.gitconfig` e `~/.config/git/config` com preservação de identidade de autor.
+- 🌲 **Restore Granular com Menus Drop:** Interface TUI Ratatui interativa permitindo selecionar exatamente quais componentes restaurar (apps, chaves SSH, pacotes, agentes, config Git e pastas customizadas) com navegação em árvore e menus colapsáveis.
 - 🔒 **Secrets & POSIX Integrity:** Preservação estrita de modos `0700` e `0600` em chaves SSH/GPG e compactação Zstandard de alta velocidade com Zip-Slip Guard.
 
 ---

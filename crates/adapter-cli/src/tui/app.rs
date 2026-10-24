@@ -8,6 +8,14 @@ use domain::entities::selection_filter::SelectionFilter;
 use domain::value_objects::PackageName;
 
 use super::explorer::FileExplorerState;
+use super::restore_tree::RestoreTreeState;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum RestoreFocus {
+    #[default]
+    SnapshotsList,
+    ItemTree,
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum TuiMode {
@@ -90,6 +98,8 @@ pub struct TuiApp {
     pub snapshots: Vec<SnapshotItem>,
     pub snapshot_cursor: usize,
     pub snapshot_list_state: ListState,
+    pub restore_focus: RestoreFocus,
+    pub restore_tree: RestoreTreeState,
     pub restore_install_packages: bool,
     pub restore_dry_run: bool,
     pub should_start_restore: bool,
@@ -135,6 +145,8 @@ impl TuiApp {
             snapshots: Vec::new(),
             snapshot_cursor: 0,
             snapshot_list_state: ListState::default(),
+            restore_focus: RestoreFocus::default(),
+            restore_tree: RestoreTreeState::default(),
             restore_install_packages: true,
             restore_dry_run: false,
             should_start_restore: false,
@@ -157,6 +169,7 @@ impl TuiApp {
         self.mode = mode;
         if mode == TuiMode::Restore && !self.snapshots.is_empty() {
             self.snapshot_list_state.select(Some(self.snapshot_cursor));
+            self.sync_restore_tree();
         }
     }
 
@@ -167,10 +180,30 @@ impl TuiApp {
         }
     }
 
+    pub fn sync_restore_tree(&mut self) {
+        if let Some(snap) = self.selected_snapshot() {
+            if let Some(ref m) = snap.manifest {
+                self.restore_tree = RestoreTreeState::from_manifest(m);
+            } else {
+                self.restore_tree = RestoreTreeState::default();
+            }
+        } else {
+            self.restore_tree = RestoreTreeState::default();
+        }
+    }
+
+    pub fn toggle_restore_focus(&mut self) {
+        self.restore_focus = match self.restore_focus {
+            RestoreFocus::SnapshotsList => RestoreFocus::ItemTree,
+            RestoreFocus::ItemTree => RestoreFocus::SnapshotsList,
+        };
+    }
+
     pub fn next_snapshot(&mut self) {
         if !self.snapshots.is_empty() {
             self.snapshot_cursor = (self.snapshot_cursor + 1).min(self.snapshots.len() - 1);
             self.snapshot_list_state.select(Some(self.snapshot_cursor));
+            self.sync_restore_tree();
         }
     }
 
@@ -178,6 +211,7 @@ impl TuiApp {
         if self.snapshot_cursor > 0 {
             self.snapshot_cursor -= 1;
             self.snapshot_list_state.select(Some(self.snapshot_cursor));
+            self.sync_restore_tree();
         }
     }
 
@@ -216,6 +250,7 @@ impl TuiApp {
         );
         self.snapshot_cursor = 0;
         self.snapshot_list_state.select(Some(0));
+        self.sync_restore_tree();
     }
 
     pub fn prev_tab(&mut self) {
@@ -378,6 +413,7 @@ impl TuiApp {
             }
         }
         self.default_backups_dir = folder.to_path_buf();
+        self.sync_restore_tree();
         count
     }
 

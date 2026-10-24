@@ -1,7 +1,7 @@
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::path::PathBuf;
 
-use super::app::{InputTarget, TuiApp, TuiMode};
+use super::app::{InputTarget, RestoreFocus, TuiApp, TuiMode};
 use super::explorer::{ExplorerSelection, ExplorerTarget};
 
 pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
@@ -138,11 +138,34 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
             _ => {}
         },
         TuiMode::Restore => match key.code {
-            KeyCode::Down | KeyCode::Char('j') => {
-                app.next_snapshot();
+            KeyCode::Tab | KeyCode::BackTab => {
+                app.toggle_restore_focus();
             }
-            KeyCode::Up | KeyCode::Char('k') => {
-                app.prev_snapshot();
+            KeyCode::Down | KeyCode::Char('j') => match app.restore_focus {
+                RestoreFocus::SnapshotsList => app.next_snapshot(),
+                RestoreFocus::ItemTree => app.restore_tree.next(),
+            },
+            KeyCode::Up | KeyCode::Char('k') => match app.restore_focus {
+                RestoreFocus::SnapshotsList => app.prev_snapshot(),
+                RestoreFocus::ItemTree => app.restore_tree.prev(),
+            },
+            KeyCode::Enter => match app.restore_focus {
+                RestoreFocus::SnapshotsList => {
+                    app.restore_focus = RestoreFocus::ItemTree;
+                }
+                RestoreFocus::ItemTree => {
+                    app.restore_tree.toggle_expanded();
+                }
+            },
+            KeyCode::Right | KeyCode::Left | KeyCode::Char('e') | KeyCode::Char('E') => {
+                if app.restore_focus == RestoreFocus::ItemTree {
+                    app.restore_tree.toggle_expanded();
+                }
+            }
+            KeyCode::Char(' ') | KeyCode::Char('x') | KeyCode::Char('X') => {
+                if app.restore_focus == RestoreFocus::ItemTree {
+                    app.restore_tree.toggle_selected();
+                }
             }
             KeyCode::Char('p') | KeyCode::Char('P') => {
                 app.toggle_restore_install_packages();
@@ -154,11 +177,15 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
                 let start = app.default_backups_dir.clone();
                 app.file_explorer.open(&start, ExplorerTarget::SnapshotOrFolder);
             }
-            KeyCode::Enter | KeyCode::Char('r') | KeyCode::Char('R') | KeyCode::F(10) => {
+            KeyCode::Char('r') | KeyCode::Char('R') | KeyCode::F(10) => {
                 app.should_start_restore = true;
             }
             KeyCode::Char('q') | KeyCode::Char('Q') | KeyCode::Esc => {
-                app.should_quit = true;
+                if app.restore_focus == RestoreFocus::ItemTree {
+                    app.restore_focus = RestoreFocus::SnapshotsList;
+                } else {
+                    app.should_quit = true;
+                }
             }
             KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
                 app.should_quit = true;

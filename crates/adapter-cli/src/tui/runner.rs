@@ -27,6 +27,7 @@ pub enum TuiAction {
         from_staging: Option<PathBuf>,
         install_packages: bool,
         dry_run: bool,
+        selection_filter: Option<Box<SelectionFilter>>,
     },
 }
 
@@ -69,11 +70,13 @@ pub fn run_tui(mut app: TuiApp) -> io::Result<Option<TuiAction>> {
         if app.should_start_restore {
             if let Some(snap) = app.selected_snapshot() {
                 let from_staging = app.detect_staging_for_selected();
+                let selection_filter = Some(Box::new(app.restore_tree.build_selection_filter()));
                 return Ok(Some(TuiAction::Restore {
                     archive_path: snap.path.clone(),
                     from_staging,
                     install_packages: app.restore_install_packages,
                     dry_run: app.restore_dry_run,
+                    selection_filter,
                 }));
             } else {
                 app.status_message = Some("Nenhum snapshot selecionado para restaurar.".into());

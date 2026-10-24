@@ -6,8 +6,9 @@ use ratatui::{
     Frame,
 };
 
-use super::app::{InputTarget, TuiApp, TuiMode, TuiRow};
+use super::app::{InputTarget, RestoreFocus, TuiApp, TuiMode, TuiRow};
 use super::explorer::{ExplorerEntryKind, ExplorerTarget, FileExplorerState};
+use super::restore_tree::VisibleTreeNode;
 
 pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     let chunks = Layout::default()
@@ -69,10 +70,16 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
                 " [Tab] Alternar Aba  [↑/↓] Navegar  [Espaço] Alternar  [A] Explorador de Pastas  [Enter] Snapshot  [F3] Modo Recuperar  [Q] Sair ",
                 Style::default().fg(Color::DarkGray),
             ),
-            TuiMode::Restore => Span::styled(
-                " [↑/↓] Selecionar Snapshot  [P] Pacotes  [D] Dry-Run  [A] Explorador de Arquivo/Pasta  [Enter/R] RESTAURAR  [F2] Modo Backup  [Q] Sair ",
-                Style::default().fg(Color::DarkGray),
-            ),
+            TuiMode::Restore => match app.restore_focus {
+                RestoreFocus::SnapshotsList => Span::styled(
+                    " [↑/↓] Snapshots  [Tab] Focar Árvore de Dump  [P] Pacotes  [D] Dry-Run  [A] Arquivo  [Enter] Focar Dump  [R] RESTAURAR  [Q] Sair ",
+                    Style::default().fg(Color::DarkGray),
+                ),
+                RestoreFocus::ItemTree => Span::styled(
+                    " [↑/↓] Navegar Árvore  [Enter/→] Abrir/Fechar Drop  [Espaço] Marcar/Desmarcar  [Tab] Voltar a Snapshots  [R] RESTAURAR  [Q] Sair ",
+                    Style::default().fg(Color::Cyan),
+                ),
+            },
         }
     };
 
@@ -334,10 +341,22 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
             .collect()
     };
 
+    let (left_border_color, left_title) = match app.restore_focus {
+        RestoreFocus::SnapshotsList => (
+            Color::Green,
+            " 📂 Snapshots Disponíveis [Foco Ativo: ↑/↓ para navegar, Tab para Árvore] ",
+        ),
+        RestoreFocus::ItemTree => (
+            Color::DarkGray,
+            " 📂 Snapshots Disponíveis [Pressione Tab para Focar] ",
+        ),
+    };
+
     let list_widget = List::new(list_items).block(
         Block::default()
             .borders(Borders::ALL)
-            .title(" 📂 Snapshots Disponíveis "),
+            .border_style(Style::default().fg(left_border_color))
+            .title(left_title),
     );
 
     if !app.snapshots.is_empty() {
@@ -345,330 +364,238 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
     }
     f.render_stateful_widget(list_widget, cols[0], &mut app.snapshot_list_state);
 
-    // Right Column: Details & Preview
-    let details_widget = if let Some(snap) = app.selected_snapshot() {
-        let mut lines = Vec::new();
-        lines.push(Line::from(vec![
-            Span::styled(
-                "Arquivo: ",
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(
-                snap.path.display().to_string(),
-                Style::default().fg(Color::White),
-            ),
-        ]));
-        lines.push(Line::from(vec![
-            Span::styled(
-                "Tamanho: ",
-                Style::default()
-                    .fg(Color::Cyan)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            Span::styled(
-                format!(
-                    "{:.2} MB ({} bytes)",
-                    snap.size_bytes as f64 / 1_048_576.0,
-                    snap.size_bytes
-                ),
-                Style::default().fg(Color::White),
-            ),
-        ]));
+    // Right Column: Interactive Drop Tree & Execution Parameters
+    if let Some(snap) = app.selected_snapshot() {
+        let right_chunks = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints([
+                Constraint::Length(4), // Metadados do Snapshot
+                Constraint::Min(8),    // Árvore de Seleção Granular com Drop/Collapse
+                Constraint::Length(4), // Opções de Restauração & Execução
+            ])
+            .split(cols[1]);
 
-        if let Some(ref m) = snap.manifest {
-            lines.push(Line::from(vec![
-                Span::styled(
-                    "Snapshot ID: ",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    &m.snapshot_id,
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-            ]));
-            lines.push(Line::from(vec![
-                Span::styled(
-                    "Criado em: ",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(&m.created_at_utc, Style::default().fg(Color::White)),
-            ]));
-            lines.push(Line::from(vec![
-                Span::styled(
-                    "Host Origem: ",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(&m.source_host, Style::default().fg(Color::White)),
-                Span::styled(
-                    "  •  Distro Origem: ",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!("{}", m.source_distro),
-                    Style::default()
-                        .fg(Color::Green)
-                        .add_modifier(Modifier::BOLD),
-                ),
-            ]));
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![Span::styled(
-                "── CONTEÚDO CATALOGADO ──",
-                Style::default()
-                    .fg(Color::DarkGray)
-                    .add_modifier(Modifier::BOLD),
-            )]));
-            let total_tabs: usize = m.zen_profiles.iter().map(|p| p.total_tabs()).sum();
-            lines.push(Line::from(vec![
-                Span::styled(
-                    "  🌐 Zen Browser: ",
-                    Style::default()
-                        .fg(Color::Magenta)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!(
-                        "{} perfis, {} abas ativas",
-                        m.zen_profiles.len(),
-                        total_tabs
-                    ),
-                    Style::default().fg(Color::White),
-                ),
-            ]));
-            lines.push(Line::from(vec![
-                Span::styled(
-                    "  🤖 Agentes IA: ",
-                    Style::default()
-                        .fg(Color::Blue)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!(
-                        "{} skills registradas (~/.agents/skills)",
-                        m.agent_governance.skills.len()
-                    ),
-                    Style::default().fg(Color::White),
-                ),
-            ]));
-            lines.push(Line::from(vec![
-                Span::styled(
-                    "  📦 Pacotes: ",
-                    Style::default()
-                        .fg(Color::Green)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!("{} pacotes no catálogo declarativo", m.packages.len()),
-                    Style::default().fg(Color::White),
-                ),
-            ]));
-            lines.push(Line::from(vec![
-                Span::styled(
-                    "  🔑 Chaves SSH: ",
-                    Style::default()
-                        .fg(Color::Yellow)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!("{} arquivos cadastrados (~/.ssh)", m.ssh_keys.len()),
-                    Style::default().fg(Color::White),
-                ),
-            ]));
-            if !m.ssh_keys.is_empty() {
-                lines.push(Line::from(vec![
-                    Span::styled("     ↳ Hardening POSIX: ", Style::default().fg(Color::DarkGray)),
-                    Span::styled("~/.ssh (0700) • Chaves (0600) • Públicas (0644)", Style::default().fg(Color::Green)),
-                ]));
-                let key_names: Vec<&str> = m.ssh_keys.iter().map(|k| k.file_name.as_str()).collect();
-                lines.push(Line::from(vec![
-                    Span::styled("     ↳ Arquivos: ", Style::default().fg(Color::DarkGray)),
-                    Span::styled(key_names.join(", "), Style::default().fg(Color::Cyan)),
-                ]));
-            }
-
-            if !m.git_configs.is_empty() {
-                lines.push(Line::from(vec![
-                    Span::styled(
-                        "  👤 Git Global Config: ",
-                        Style::default()
-                            .fg(Color::LightGreen)
-                            .add_modifier(Modifier::BOLD),
-                    ),
-                    Span::styled(
-                        format!("{} arquivo(s) registrado(s)", m.git_configs.len()),
-                        Style::default().fg(Color::White),
-                    ),
-                ]));
-                for g in &m.git_configs {
-                    let identity = match (&g.user_name, &g.user_email) {
-                        (Some(n), Some(e)) => format!("{} <{}>", n, e),
-                        (Some(n), None) => n.clone(),
-                        (None, Some(e)) => e.clone(),
-                        (None, None) => "Configuração detectada".to_string(),
-                    };
-                    lines.push(Line::from(vec![
-                        Span::styled(
-                            format!("     ↳ {}: ", g.file_name),
-                            Style::default().fg(Color::DarkGray),
-                        ),
-                        Span::styled(identity, Style::default().fg(Color::Yellow)),
-                    ]));
-                }
-            }
-
-            lines.push(Line::from(vec![
-                Span::styled(
-                    "  📁 Pastas Customizadas: ",
-                    Style::default()
-                        .fg(Color::Cyan)
-                        .add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    format!(
-                        "{} diretórios arquivados",
-                        m.custom_directories.len()
-                    ),
-                    Style::default().fg(Color::White),
-                ),
-            ]));
-            if !m.custom_directories.is_empty() {
-                lines.push(Line::from(vec![
-                    Span::styled("     ↳ Transcrição: ", Style::default().fg(Color::DarkGray)),
-                    Span::styled("/home/<origem>/... ➔ ~/ (Automático)", Style::default().fg(Color::LightCyan)),
-                ]));
-                for d in m.custom_directories.iter().take(3) {
-                    let folder_name = d.source_path.file_name().and_then(|n| n.to_str()).unwrap_or(d.label.as_str());
-                    lines.push(Line::from(vec![
-                        Span::styled(format!("       • {} ", d.label), Style::default().fg(Color::White)),
-                        Span::styled(format!("➔ ~/{folder_name}"), Style::default().fg(Color::DarkGray)),
-                    ]));
-                }
-                if m.custom_directories.len() > 3 {
-                    lines.push(Line::from(vec![
-                        Span::styled(format!("       ... e mais {} pastas", m.custom_directories.len() - 3), Style::default().fg(Color::DarkGray)),
-                    ]));
-                }
-            }
-            if let Some(ref cs) = m.checksum {
-                lines.push(Line::from(vec![
-                    Span::styled("  🔒 SHA-256: ", Style::default().fg(Color::DarkGray)),
-                    Span::styled(cs.as_str(), Style::default().fg(Color::DarkGray)),
-                ]));
-            }
-        } else {
-            lines.push(Line::from(""));
-            lines.push(Line::from(vec![Span::styled(
-                "⚠️  Manifesto não pôde ser pré-visualizado para este arquivo.",
-                Style::default().fg(Color::Yellow),
-            )]));
-        }
-
-        lines.push(Line::from(""));
-        lines.push(Line::from(vec![Span::styled(
-            "── OPÇÕES DE RESTAURAÇÃO ──",
-            Style::default()
-                .fg(Color::DarkGray)
-                .add_modifier(Modifier::BOLD),
-        )]));
-        let pkg_indicator = if app.restore_install_packages {
-            Span::styled(
-                " [x] ATIVADO (reinstala pacotes via gerenciador)",
-                Style::default()
-                    .fg(Color::Green)
-                    .add_modifier(Modifier::BOLD),
+        let (distro_line, size_mb) = if let Some(ref m) = snap.manifest {
+            (
+                format!("{} (Host: {})", m.source_distro, m.source_host),
+                snap.size_bytes as f64 / 1_048_576.0,
             )
         } else {
-            Span::styled(
-                " [ ] DESATIVADO (restaura apenas configs/navegador/skills)",
-                Style::default().fg(Color::Red),
+            (
+                "Desconhecida".to_string(),
+                snap.size_bytes as f64 / 1_048_576.0,
             )
         };
-        lines.push(Line::from(vec![
-            Span::styled(
-                "  [P] Instalação de Pacotes: ",
-                Style::default()
-                    .fg(Color::White)
-                    .add_modifier(Modifier::BOLD),
+
+        let meta_lines = vec![
+            Line::from(vec![
+                Span::styled(
+                    " Snapshot: ",
+                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    &snap.filename,
+                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(format!("  ({:.2} MB)", size_mb), Style::default().fg(Color::Gray)),
+                Span::styled("  •  Origem: ", Style::default().fg(Color::Yellow)),
+                Span::styled(distro_line, Style::default().fg(Color::White)),
+            ]),
+            Line::from(vec![if staging_detected.is_some() {
+                Span::styled(
+                    " ⚡ Cache Staging Detectado: Restauração instantânea disponível sem descompactar!",
+                    Style::default().fg(Color::LightGreen),
+                )
+            } else {
+                Span::styled(
+                    " 📦 Arquivo Compactado Zstandard (.tar.zst) pronto para extração seletiva.",
+                    Style::default().fg(Color::DarkGray),
+                )
+            }]),
+        ];
+        let meta_block = Block::default()
+            .borders(Borders::ALL)
+            .title(" 🔍 Informações do Snapshot ");
+        f.render_widget(Paragraph::new(meta_lines).block(meta_block), right_chunks[0]);
+
+        // Chunk 1: Interactive Drop Tree
+        let (tree_border_color, tree_title) = match app.restore_focus {
+            RestoreFocus::ItemTree => (
+                Color::Cyan,
+                " 🗂️ Seleção Granular do Dump [Foco Ativo: [Espaço] Marcar • [Enter/→] Abrir Drop • [Tab] Voltar] ",
             ),
-            pkg_indicator,
-        ]));
+            RestoreFocus::SnapshotsList => (
+                Color::DarkGray,
+                " 🗂️ Seleção Granular do Dump [Pressione Tab para Interagir com os Menus Drop] ",
+            ),
+        };
 
-        if app.restore_install_packages {
-            lines.push(Line::from(vec![
-                Span::styled("      ⚠️  Atenção: ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
-                Span::styled("A senha 'sudo' será solicitada no terminal após [Enter]", Style::default().fg(Color::Yellow)),
-            ]));
-        } else {
-            lines.push(Line::from(vec![
-                Span::styled("      🛡️  Espaço de Usuário: ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
-                Span::styled("Restauração segura sem necessidade de permissões root", Style::default().fg(Color::Green)),
-            ]));
-        }
-
-        if let Some(ref stg) = staging_detected {
-            lines.push(Line::from(vec![
-                Span::styled("  ⚡ Staging em Cache: ", Style::default().fg(Color::LightGreen).add_modifier(Modifier::BOLD)),
-                Span::styled(format!("{} (Restauração instantânea!)", stg.display()), Style::default().fg(Color::LightGreen)),
-            ]));
-        }
-
-        let dry_indicator = if app.restore_dry_run {
-            Span::styled(
-                " [x] ATIVADO (simula sem alterar o sistema)",
-                Style::default()
-                    .fg(Color::Yellow)
-                    .add_modifier(Modifier::BOLD),
-            )
-        } else {
-            Span::styled(
-                " [ ] DESATIVADO (restauração real nos discos)",
+        let visible_nodes = app.restore_tree.visible_nodes();
+        let tree_items: Vec<ListItem> = if visible_nodes.is_empty() {
+            vec![ListItem::new(Line::from(vec![Span::styled(
+                "   Nenhum componente catalogado no manifesto deste snapshot.",
                 Style::default().fg(Color::DarkGray),
-            )
+            )]))]
+        } else {
+            visible_nodes
+                .iter()
+                .enumerate()
+                .map(|(i, node)| {
+                    let is_cursor =
+                        app.restore_focus == RestoreFocus::ItemTree && i == app.restore_tree.cursor;
+                    match node {
+                        VisibleTreeNode::Category(cat_idx) => {
+                            let cat = &app.restore_tree.categories[*cat_idx];
+                            let drop_icon = if cat.is_expanded { "▼ " } else { "► " };
+                            let check_box = if cat.is_selected {
+                                Span::styled(
+                                    "[x] ",
+                                    Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+                                )
+                            } else {
+                                Span::styled("[ ] ", Style::default().fg(Color::DarkGray))
+                            };
+                            let count_info = format!(
+                                " ({}/{} selecionados)",
+                                cat.selected_count(),
+                                cat.items.len()
+                            );
+                            let line = Line::from(vec![
+                                Span::styled(
+                                    drop_icon,
+                                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+                                ),
+                                check_box,
+                                Span::styled(cat.icon, Style::default()),
+                                Span::raw(" "),
+                                Span::styled(
+                                    &cat.title,
+                                    Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+                                ),
+                                Span::styled(count_info, Style::default().fg(Color::Gray)),
+                            ]);
+                            let bg = if is_cursor {
+                                Color::Rgb(35, 45, 60)
+                            } else {
+                                Color::Reset
+                            };
+                            ListItem::new(line).style(Style::default().bg(bg))
+                        }
+                        VisibleTreeNode::Item(cat_idx, item_idx) => {
+                            let cat = &app.restore_tree.categories[*cat_idx];
+                            let item = &cat.items[*item_idx];
+                            let branch = if *item_idx + 1 == cat.items.len() {
+                                "   └── "
+                            } else {
+                                "   ├── "
+                            };
+                            let check_box = if item.is_selected {
+                                Span::styled(
+                                    "[x] ",
+                                    Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+                                )
+                            } else {
+                                Span::styled("[ ] ", Style::default().fg(Color::DarkGray))
+                            };
+                            let sub = item.sublabel.as_deref().unwrap_or("");
+                            let line = Line::from(vec![
+                                Span::styled(branch, Style::default().fg(Color::DarkGray)),
+                                check_box,
+                                Span::styled(&item.label, Style::default().fg(Color::White)),
+                                if !sub.is_empty() {
+                                    Span::styled(format!("  ({})", sub), Style::default().fg(Color::Gray))
+                                } else {
+                                    Span::raw("")
+                                },
+                            ]);
+                            let bg = if is_cursor {
+                                Color::Rgb(35, 45, 60)
+                            } else {
+                                Color::Reset
+                            };
+                            ListItem::new(line).style(Style::default().bg(bg))
+                        }
+                    }
+                })
+                .collect()
         };
-        lines.push(Line::from(vec![
-            Span::styled(
-                "  [D] Modo Simulação (Dry-Run): ",
-                Style::default()
-                    .fg(Color::White)
-                    .add_modifier(Modifier::BOLD),
-            ),
-            dry_indicator,
-        ]));
 
-        lines.push(Line::from(""));
-        lines.push(Line::from(vec![Span::styled(
-            "👉 Pressione [Enter] ou [R] para restaurar. (A TUI fechará e continuará no terminal).",
-            Style::default()
-                .fg(Color::Green)
-                .add_modifier(Modifier::BOLD),
-        )]));
-
-        Paragraph::new(lines).block(
+        let tree_widget = List::new(tree_items).block(
             Block::default()
                 .borders(Borders::ALL)
-                .title(" 🔍 Inspeção & Detalhes do Snapshot "),
-        )
+                .border_style(Style::default().fg(tree_border_color))
+                .title(tree_title),
+        );
+
+        if app.restore_focus == RestoreFocus::ItemTree && !visible_nodes.is_empty() {
+            app.restore_tree
+                .list_state
+                .select(Some(app.restore_tree.cursor));
+        } else {
+            app.restore_tree.list_state.select(None);
+        }
+        f.render_stateful_widget(
+            tree_widget,
+            right_chunks[1],
+            &mut app.restore_tree.list_state,
+        );
+
+        // Chunk 2: Options
+        let pkg_indicator = if app.restore_install_packages {
+            Span::styled(
+                "[x] ATIVADO",
+                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+            )
+        } else {
+            Span::styled("[ ] DESATIVADO", Style::default().fg(Color::DarkGray))
+        };
+        let dry_indicator = if app.restore_dry_run {
+            Span::styled(
+                "[x] ATIVADO (Simulação)",
+                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+            )
+        } else {
+            Span::styled("[ ] DESATIVADO (Execução Real)", Style::default().fg(Color::DarkGray))
+        };
+
+        let options_lines = vec![
+            Line::from(vec![
+                Span::styled(
+                    " [P] Pacotes: ",
+                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                ),
+                pkg_indicator,
+                Span::styled(
+                    "   •   [D] Dry-Run: ",
+                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+                ),
+                dry_indicator,
+            ]),
+            Line::from(vec![
+                Span::styled(
+                    " 👉 [Enter/R] RESTAURAR ",
+                    Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
+                ),
+                Span::styled(
+                    "(Recupera apenas os itens marcados na árvore com transcrição automática para $HOME)",
+                    Style::default().fg(Color::Gray),
+                ),
+            ]),
+        ];
+
+        let options_block = Block::default()
+            .borders(Borders::ALL)
+            .title(" ⚙️ Parâmetros de Execução ");
+        f.render_widget(Paragraph::new(options_lines).block(options_block), right_chunks[2]);
     } else {
-        Paragraph::new(vec![
+        let empty_p = Paragraph::new(vec![
             Line::from(""),
             Line::from("  Nenhum snapshot selecionado."),
             Line::from("  Use as setas [↑/↓] para navegar ou pressione 'A' para adicionar um arquivo .tar.zst."),
         ])
-        .block(Block::default().borders(Borders::ALL).title(" 🔍 Inspeção "))
-    };
-
-    f.render_widget(details_widget, cols[1]);
+        .block(Block::default().borders(Borders::ALL).title(" 🔍 Inspeção "));
+        f.render_widget(empty_p, cols[1]);
+    }
 }
 
 fn render_rows(rows: &[TuiRow], current_cursor: usize) -> Vec<ListItem<'static>> {

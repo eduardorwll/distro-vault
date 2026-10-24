@@ -338,3 +338,23 @@ fn test_git_config_entry_and_manifest_serialization() {
     let deserialized: GitConfigEntry = serde_json::from_str(&json).expect("deserialize git config");
     assert_eq!(git_cfg, deserialized);
 }
+
+#[test]
+fn test_selection_filter_granular_restore_options() {
+    let mut filter = domain::entities::SelectionFilter::new();
+    assert!(filter.restore_zen);
+    assert!(filter.restore_git_config);
+    assert!(filter.is_custom_dir_included("my-docs"));
+
+    filter.set_restore_zen(false);
+    assert!(!filter.restore_zen);
+
+    filter.set_restore_git_config(false);
+    assert!(!filter.restore_git_config);
+
+    filter.toggle_custom_dir("my-docs".to_string());
+    assert!(!filter.is_custom_dir_included("my-docs"));
+
+    filter.toggle_custom_dir("my-docs".to_string());
+    assert!(filter.is_custom_dir_included("my-docs"));
+}

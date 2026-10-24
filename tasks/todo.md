@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Todas as Fases (1 a 11) Concluídas com Sucesso (39 testes passando, 0 warnings no Clippy) | Release v0.3.0 com Git Global Config Pronta
+Status: 🟢 Todas as Fases (1 a 12) Concluídas com Sucesso (42 testes passando, 0 warnings no Clippy) | Release v0.3.0 Pronta com Menus Drop de Restore Granular e Git Global Config
 
 ---
 
@@ -174,3 +174,22 @@ Status: 🟢 Todas as Fases (1 a 11) Concluídas com Sucesso (39 testes passando
 - [x] **Task 11.4: Apresentação na TUI e CLI (`adapter-cli`)**
   - **Status:** Concluído. Registro de identidade e arquivos Git exibidos no painel de inspeção da TUI de restauração e nos logs do CLI.
   - **Arquivos:** `crates/adapter-cli/src/di.rs`, `crates/adapter-cli/src/main.rs`, `crates/adapter-cli/src/tui/ui.rs`
+
+---
+
+## Fase 12: Seleção Granular de Itens no Restore com Menus Drop / Colapsáveis na TUI
+- [x] **Task 12.1: Expansão do `SelectionFilter` no Domínio (`crates/domain`)**
+  - **Status:** Concluído. Adicionados campos `restore_zen`, `restore_git_config`, `excluded_custom_dirs: HashSet<String>` e métodos utilitários `is_custom_dir_included`, `toggle_custom_dir`, `set_restore_zen`, `set_restore_git_config`. Teste unitário dedicado `test_selection_filter_granular_restore_options`.
+  - **Verificação:** `cargo test -p domain`
+  - **Arquivos:** `crates/domain/src/entities/selection_filter.rs`, `crates/domain/tests/domain_tests.rs`
+- [x] **Task 12.2: Filtragem Granular no Caso de Uso de Restauração (`crates/application`)**
+  - **Status:** Concluído. `RestoreRequest` enriquecido com `selection_filter: Option<SelectionFilter>`. `RestorePipelineUseCase::execute` condiciona restauração de Zen Browser, chaves SSH, skills de agentes, pastas customizadas, pacotes de sistema, verificação de fuse2 de AppImages e Git global config de acordo com os filtros.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/src/restore.rs`, `crates/application/tests/use_case_tests.rs`
+- [x] **Task 12.3: Árvore Hierárquica Interativa (`RestoreTreeState`) no Adapter CLI**
+  - **Status:** Concluído. Implementado `crates/adapter-cli/src/tui/restore_tree.rs` com categorias (`Pacotes do Sistema`, `AppImages`, `Navegador Zen`, `Chaves SSH`, `AI Agent Skills`, `Configuração Global Git`, `Diretórios Customizados`), nós filhos recolhíveis/expansíveis (`Enter`, `→`, `←`, `e`), alternância de seleção em lote ou individual (`Espaço`, `x`) e geração automática de `SelectionFilter`.
+  - **Verificação:** `cargo test -p adapter-cli`
+  - **Arquivos:** `crates/adapter-cli/src/tui/restore_tree.rs`, `crates/adapter-cli/src/tui/mod.rs`
+- [x] **Task 12.4: Alternância de Foco e Redesenho da TUI de Restauração**
+  - **Status:** Concluído. Adicionado `RestoreFocus` (`SnapshotsList` vs `ItemTree`) alternável via `Tab`. TUI redesenhada em painel duplo com árvore hierárquica à direita exibindo ramificações (`├──`, `└──`), glifos colapsáveis (`▼`, `►`), caixas de seleção (`[x]`, `[ ]`) e cursor com scroll dinâmico.
+  - **Arquivos:** `crates/adapter-cli/src/tui/app.rs`, `crates/adapter-cli/src/tui/events.rs`, `crates/adapter-cli/src/tui/ui.rs`, `crates/adapter-cli/src/tui/runner.rs`, `crates/adapter-cli/src/main.rs`
