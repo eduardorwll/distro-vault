@@ -32,26 +32,27 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso | 32 Testes Passando
 - [x] Rota padrão para backups: `~/Antigravity/backups/distro-vault-<timestamp>.tar.zst`.
 
 ### Fase 6: TUI Interativa com Ratatui (`crates/adapter-cli/src/tui/`)
-- [x] Interface de terminal a 60 FPS com 7 abas navegáveis, categorizando pacotes do sistema vs. usuário vs. dependências:
-  - `[1] Apps & Usuário`: softwares instalados explicitamente pelo usuário (apps desktop como Discord, navegadores, ferramentas CLI como ripgrep/bat, runtimes dev como Docker, Flatpaks).
-  - `[2] Sistema Low-Level`: pacotes essenciais do sistema operacional (Kernel & Firmware, Base & Boot, Drivers & GPU, Filesystems como Btrfs, Rede & Daemons, Audio/Video core).
-  - `[3] Dependências`: dependências do sistema e de bibliotecas não instaladas diretamente pelo usuário (`pacman -Qnd` e `pacman -Qmd`), organizadas por headers:
-    - *Bibliotecas Core do Sistema (C/C++)* (glibc, openssl, systemd-libs, etc.)
-    - *Gráficos, Vídeo & Codecs* (mesa, ffmpeg, wayland, etc.)
-    - *Runtimes & Linguagens* (python, nodejs, perl, etc.)
-    - *Ferramentas de Build & Toolchain* (cmake, gcc-libs, etc.)
-    - *Dependências Gerais & Utilitários*
-  - `[4] Skills`: skills de IA e governança de agentes (`~/.agents/skills`).
-  - `[5] AppImages`: aplicativos AppImage e Gear Lever.
-  - `[6] Pastas Extras`: listagem e modal interativo (`A`) para adicionar pastas customizadas com cálculo dinâmico de arquivos e MB.
-  - `[7] Zen Spaces`: visualização de workspaces e abas ativas do Zen Browser.
-- [x] **Headers de Categoria com Alternância em Lote:**
-  - Cabeçalhos estilizados delimitando cada categoria em vez de listagem alfabética plana.
-  - Pressionar `[Espaço]` em um cabeçalho alterna em lote todos os itens daquela categoria (se algum estiver desmarcado, marca todos; se todos estiverem marcados, desmarca todos).
-- [x] **Correção do Viewport Scrolling:**
-  - Migração de renderização stateless (`render_widget`) para `render_stateful_widget` utilizando `ListState` para cada uma das 7 abas.
-  - O cursor e a lista acompanham a navegação suavemente ao rolar além do último item visível na tela.
-- [x] Teclas de navegação: `[Tab]` para alternar aba, `[↑/↓]` para navegar, `[Espaço]` para alternar seleção (item ou categoria inteira), `[A]` para adicionar pasta, `[Enter/F10]` para iniciar snapshot, `[Q/Esc]` para sair.
+- [x] **Arquitetura Unificada de Modos (Backup & Recuperação):**
+  - Comutação em tempo real via `[F2]` (Modo Backup) e `[F3]` (Modo Recuperação) ou tecla `[M]`.
+  - Execução de `distro-vault` ou `distro-vault backup` inicia por padrão no Modo Backup.
+  - Execução de `distro-vault restore` (sem argumentos) abre a TUI diretamente no Modo Recuperação.
+- [x] **Painel Interativo de Recuperação / Restore (`TuiMode::Restore`):**
+  - Varredura e listagem automática de snapshots em `~/Antigravity/backups/*.tar.zst` com data, nome e tamanho.
+  - Modal interativo (`[A]`) para abrir e inspecionar arquivos `.tar.zst` arbitrários.
+  - Painel de inspeção em tempo real exibindo metadados do manifesto:
+    - ID do snapshot, data UTC, máquina e distribuição de origem.
+    - Comparação com a distribuição atual (mesma distro vs. alerta visual de Distro-Hop).
+    - Contadores de perfis Zen Browser (com total de abas), skills de IA, pacotes e pastas customizadas.
+    - Checksum SHA-256 declarado.
+  - Alternância de parâmetros de restauração diretamente na interface:
+    - `[P]`: Alternar reinstalação automática de pacotes (SIM/NÃO).
+    - `[D]`: Alternar modo de simulação Dry-Run (LIGADO/DESLIGADO).
+  - Tecla de execução: `[Enter]` ou `[R]` restaura o snapshot selecionado com restauração limpa do terminal.
+- [x] **Modo Snapshot / Backup (`TuiMode::Backup`):**
+  - Interface de 7 abas navegáveis categorizando pacotes do sistema vs. usuário vs. dependências (`[1] Apps & Usuário`, `[2] Sistema Low-Level`, `[3] Dependências`, `[4] Skills`, `[5] AppImages`, `[6] Pastas Extras`, `[7] Zen Spaces`).
+  - Cabeçalhos de categoria estilizados com batch toggle (`[Espaço]`).
+  - Scroll dinâmico com `ListState` e `render_stateful_widget`.
+  - Tecla de execução: `[Enter]` ou `[F10]` gera o snapshot declarativo.
 - [x] Gerenciamento RAII com `TerminalGuard` garantindo restauração automática do terminal mesmo em pânicos ou SIGINT.
 
 ### Governança & Skills dos Livros Oficiais de Rust

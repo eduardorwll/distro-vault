@@ -65,8 +65,8 @@ pub struct BackupArgs {
 
 #[derive(Debug, Args, Clone)]
 pub struct RestoreArgs {
-    /// Path to the .tar.zst snapshot archive to restore
-    pub archive: PathBuf,
+    /// Path to the .tar.zst snapshot archive to restore (if omitted, opens interactive TUI)
+    pub archive: Option<PathBuf>,
 
     /// Automatically install declarative packages through distro backends
     #[arg(long, default_value_t = false)]

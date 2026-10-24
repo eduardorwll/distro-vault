@@ -3,8 +3,32 @@ use ratatui::widgets::ListState;
 
 use adapter_storage::CustomDirsHandler;
 use domain::entities::custom_directory::CustomDirectoryEntry;
+use domain::entities::manifest::Manifest;
 use domain::entities::selection_filter::SelectionFilter;
 use domain::value_objects::PackageName;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum TuiMode {
+    #[default]
+    Backup,
+    Restore,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum InputTarget {
+    #[default]
+    CustomDir,
+    SnapshotPath,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SnapshotItem {
+    pub path: PathBuf,
+    pub filename: String,
+    pub size_bytes: u64,
+    pub modified_at: String,
+    pub manifest: Option<Manifest>,
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct TuiItem {
@@ -48,6 +72,7 @@ impl TuiRow {
 }
 
 pub struct TuiApp {
+    pub mode: TuiMode,
     pub current_tab: usize,
     pub user_packages: Vec<TuiRow>,
     pub system_packages: Vec<TuiRow>,
@@ -58,7 +83,16 @@ pub struct TuiApp {
     pub zen_spaces: Vec<TuiRow>,
     pub cursors: [usize; 7],
     pub list_states: [ListState; 7],
+    // Restore mode fields
+    pub snapshots: Vec<SnapshotItem>,
+    pub snapshot_cursor: usize,
+    pub snapshot_list_state: ListState,
+    pub restore_install_packages: bool,
+    pub restore_dry_run: bool,
+    pub should_start_restore: bool,
+    // Input / Modal fields
     pub input_mode: bool,
+    pub input_target: InputTarget,
     pub input_buffer: String,
     pub status_message: Option<String>,
     pub should_quit: bool,
@@ -68,6 +102,7 @@ pub struct TuiApp {
 impl TuiApp {
     pub fn new() -> Self {
         Self {
+            mode: TuiMode::Backup,
             current_tab: 0,
             user_packages: Vec::new(),
             system_packages: Vec::new(),
@@ -86,7 +121,14 @@ impl TuiApp {
                 ListState::default(),
                 ListState::default(),
             ],
+            snapshots: Vec::new(),
+            snapshot_cursor: 0,
+            snapshot_list_state: ListState::default(),
+            restore_install_packages: true,
+            restore_dry_run: false,
+            should_start_restore: false,
             input_mode: false,
+            input_target: InputTarget::CustomDir,
             input_buffer: String::new(),
             status_message: None,
             should_quit: false,
@@ -96,6 +138,68 @@ impl TuiApp {
 
     pub fn next_tab(&mut self) {
         self.current_tab = (self.current_tab + 1) % 7;
+    }
+
+    pub fn set_mode(&mut self, mode: TuiMode) {
+        self.mode = mode;
+        if mode == TuiMode::Restore && !self.snapshots.is_empty() {
+            self.snapshot_list_state.select(Some(self.snapshot_cursor));
+        }
+    }
+
+    pub fn toggle_mode(&mut self) {
+        match self.mode {
+            TuiMode::Backup => self.set_mode(TuiMode::Restore),
+            TuiMode::Restore => self.set_mode(TuiMode::Backup),
+        }
+    }
+
+    pub fn next_snapshot(&mut self) {
+        if !self.snapshots.is_empty() {
+            self.snapshot_cursor = (self.snapshot_cursor + 1).min(self.snapshots.len() - 1);
+            self.snapshot_list_state.select(Some(self.snapshot_cursor));
+        }
+    }
+
+    pub fn prev_snapshot(&mut self) {
+        if self.snapshot_cursor > 0 {
+            self.snapshot_cursor -= 1;
+            self.snapshot_list_state.select(Some(self.snapshot_cursor));
+        }
+    }
+
+    pub fn selected_snapshot(&self) -> Option<&SnapshotItem> {
+        self.snapshots.get(self.snapshot_cursor)
+    }
+
+    pub fn toggle_restore_install_packages(&mut self) {
+        self.restore_install_packages = !self.restore_install_packages;
+    }
+
+    pub fn toggle_restore_dry_run(&mut self) {
+        self.restore_dry_run = !self.restore_dry_run;
+    }
+
+    pub fn add_snapshot_file(&mut self, path: PathBuf, manifest: Option<Manifest>) {
+        let filename = path
+            .file_name()
+            .map(|n| n.to_string_lossy().to_string())
+            .unwrap_or_else(|| "backup.tar.zst".to_string());
+        let size_bytes = path.metadata().map(|m| m.len()).unwrap_or(0);
+        let modified_at = manifest
+            .as_ref()
+            .map(|m| m.created_at_utc.clone())
+            .unwrap_or_else(|| "Data desconhecida".to_string());
+
+        self.snapshots.insert(0, SnapshotItem {
+            path,
+            filename,
+            size_bytes,
+            modified_at,
+            manifest,
+        });
+        self.snapshot_cursor = 0;
+        self.snapshot_list_state.select(Some(0));
     }
 
     pub fn prev_tab(&mut self) {

@@ -30,7 +30,7 @@ fn test_cli_parsing_subcommands() {
         _ => panic!("Expected Backup command"),
     }
 
-    // 2. Restore command
+    // 2. Restore command (with explicit archive)
     let parsed_restore = Cli::try_parse_from([
         "distro-vault",
         "restore",
@@ -42,9 +42,20 @@ fn test_cli_parsing_subcommands() {
 
     match parsed_restore.command {
         Some(Commands::Restore(r)) => {
-            assert_eq!(r.archive.to_str().unwrap(), "/tmp/snapshot.tar.zst");
+            assert_eq!(r.archive.as_ref().unwrap().to_str().unwrap(), "/tmp/snapshot.tar.zst");
             assert!(r.install_packages);
             assert!(r.dry_run);
+        }
+        _ => panic!("Expected Restore command"),
+    }
+
+    // 2.1 Restore command (interactive, without archive)
+    let parsed_interactive_restore = Cli::try_parse_from(["distro-vault", "restore"])
+        .expect("Failed to parse interactive restore args");
+
+    match parsed_interactive_restore.command {
+        Some(Commands::Restore(r)) => {
+            assert!(r.archive.is_none());
         }
         _ => panic!("Expected Restore command"),
     }
@@ -183,4 +194,31 @@ fn test_tui_app_state_and_filter_generation() {
     assert!(res.is_ok());
     assert_eq!(app.custom_dirs.len(), 1);
     assert_eq!(app.custom_dirs[0].file_count, 1);
+
+    // 7. Mode toggling and Restore mode state
+    assert_eq!(app.mode, adapter_cli::tui::TuiMode::Backup);
+    app.toggle_mode();
+    assert_eq!(app.mode, adapter_cli::tui::TuiMode::Restore);
+
+    // Add dummy snapshot file
+    let snap_path = tmp.path().join("distro-vault-test.tar.zst");
+    std::fs::write(&snap_path, b"test content").unwrap();
+    app.add_snapshot_file(snap_path.clone(), None);
+
+    assert_eq!(app.snapshots.len(), 1);
+    assert_eq!(app.selected_snapshot().unwrap().filename, "distro-vault-test.tar.zst");
+    assert_eq!(app.snapshot_cursor, 0);
+
+    // Test restore options toggle
+    assert!(app.restore_install_packages);
+    app.toggle_restore_install_packages();
+    assert!(!app.restore_install_packages);
+
+    assert!(!app.restore_dry_run);
+    app.toggle_restore_dry_run();
+    assert!(app.restore_dry_run);
+
+    // Toggle back to Backup
+    app.toggle_mode();
+    assert_eq!(app.mode, adapter_cli::tui::TuiMode::Backup);
 }
