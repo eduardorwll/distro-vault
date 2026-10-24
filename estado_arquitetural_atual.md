@@ -74,3 +74,6 @@ graph TD
     - Desacoplamento estrito exigindo apenas a porta `StoragePort`. Extração em staging temporário protegido por RAII `StagingCleanupGuard`.
     - Poda do `Manifest` e filtragem atômica de arquivos com recálculo determinístico de `total_files`, `total_size_bytes` e geração de novo checksum criptográfico SHA-256.
     - Acionado via CLI (`distro-vault slice`) ou diretamente na TUI através do atalho `[S] Salvar Sub-Dump`.
+13. **Planejamento de Extensão Arquitetural (v1.1.0+):**
+    - **Porta de Configuração do Usuário (`ConfigPort`):** Mapeamento e persistência declarativa em TOML (`~/.config/distro-vault/config.toml`) para customização de diretórios base de entrada e saída.
+    - **Ergonomia e De-bloating da TUI:** Segregação modular entre modos de visualização (compacto vs detalhado) e extração de parâmetros de execução em submenus modais independentes.

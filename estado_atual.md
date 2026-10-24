@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
 Data: 24 de Outubro de 2026
-Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 13) Concluídas com Sucesso | 43 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui com Menus Drop Hierárquicos de Restore, Geração de Sub-Dumps (Slice), SSH, Git Global Config, Transcrição Cross-Distro e Explorador Unificado
+Status: 🟢 Versão 1.0.0 Oficial Publicada | Todas as Fases (1 a 14) Concluídas com Sucesso | 43 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui com Menus Drop Hierárquicos de Restore, Geração de Sub-Dumps (Slice), SSH, Git Global Config, Transcrição Cross-Distro e Explorador Unificado | Fase 15 (Roadmap Futuro v1.1.0+) Mapeada
 
 ---
 
@@ -59,6 +59,16 @@ Status: 🟢 Versão 0.3.0 Pronta para Publicação | Todas as Fases (1 a 13) Co
 - [x] Poda do `Manifest` e filtragem atômica de arquivos para empacotar um novo snapshot `.tar.zst` autocontido com novo checksum SHA-256.
 - [x] Subcomando CLI `distro-vault slice <ORIGEM> -o <DESTINO>` suportando filtros de linha de comando (`--exclude-package`, `--no-ssh`, etc.) e modo interativo.
 - [x] Atalho `[S]` / `[s]` na TUI de restauração para gerar o sub-dump derivado instantaneamente a partir das marcações da árvore.
+
+### Fase 14: Marco 1.0.0 de Lançamento e Documentação Completa
+- [x] Versão `1.0.0` elevada no workspace Cargo e sincronizada em todos os crates internos.
+- [x] `README.md` reescrito integralmente com guia visual da TUI, tabela completa de atalhos, referência de todos os subcomandos CLI (`backup`, `restore`, `slice`, `inspect`, `verify`), arquitetura hexagonal e garantias de segurança.
+- [x] Auditoria de segurança confirmada (zero credenciais ou segredos em versionamento, 43 testes passando e zero warnings no Clippy).
+- [x] Publicação da tag e release oficial `v1.0.0` no GitHub.
+
+### Fase 15: Roadmap Futuro (v1.1.0+) — Personalização de I/O e Refinamento Ergonômico da TUI
+- [ ] Personalização dinâmica de diretórios de entrada e saída na TUI com persistência em `~/.config/distro-vault/config.toml`.
+- [ ] Refinamento e desinchaço ergonômico dos menus na TUI, com modal dedicado para configurações de execução e visualização compacta/expandida.
 
 ---
 

@@ -1,6 +1,6 @@
 # Checklist de Tarefas e Roadmap — distro-vault
 
-Status: 🟢 Todas as Fases (1 a 13) Concluídas com Sucesso (43 testes passando, 0 warnings no Clippy) | Release v0.3.0 Pronta com Menus Drop de Restore Granular, Sub-Dumps (Slice) e Git Global Config
+Status: 🟢 Todas as Fases (1 a 14) Concluídas com Sucesso (43 testes passando, 0 warnings no Clippy) | Release Oficial v1.0.0 Publicada | Fase 15 (Roadmap Futuro v1.1.0+) Mapeada
 
 ---
 
@@ -212,3 +212,35 @@ Status: 🟢 Todas as Fases (1 a 13) Concluídas com Sucesso (43 testes passando
 - [x] **Task 13.4: Gatilho TUI `[S]` "Salvar Sub-Dump" no Modo Restore**
   - **Status:** Concluído. Tecla `[S]` / `[s]` mapeada no modo restore da TUI gerando automaticamente `<origem>-subset-<timestamp>.tar.zst` na pasta de backups a partir das caixas marcadas na árvore hierárquica.
   - **Arquivos:** `crates/adapter-cli/src/tui/app.rs`, `crates/adapter-cli/src/tui/events.rs`, `crates/adapter-cli/src/tui/ui.rs`, `crates/adapter-cli/src/tui/runner.rs`
+
+---
+
+## Fase 14: Marco 1.0.0 de Lançamento e Documentação Completa
+- [x] **Task 14.1: Elevação de Versão no Workspace para 1.0.0**
+  - **Status:** Concluído. `version = "1.0.0"` atualizado no `Cargo.toml` raiz e propagado em `Cargo.lock` para os 7 crates internos.
+  - **Verificação:** `cargo check --workspace`
+  - **Arquivos:** `Cargo.toml`, `Cargo.lock`
+- [x] **Task 14.2: Reescrita e Expansão Completa do `README.md`**
+  - **Status:** Concluído. Documentação abrangente cobrindo visão geral, guia visual da TUI, tabela completa de teclas de atalho, referência de todos os subcomandos CLI (`backup`, `restore`, `slice`, `inspect`, `verify`), arquitetura hexagonal e garantias de segurança.
+  - **Arquivos:** `README.md`
+- [x] **Task 14.3: Atualização dos Registros Vivos de Arquitetura**
+  - **Status:** Concluído. `tasks/todo.md`, `estado_atual.md` e `estado_arquitetural_atual.md` sincronizados para a versão estável 1.0.0.
+  - **Arquivos:** `tasks/todo.md`, `estado_atual.md`, `estado_arquitetural_atual.md`
+- [x] **Task 14.4: Auditoria de Segurança Pré-Commit e Validação Global**
+  - **Status:** Concluído. 43 testes de unidade e integração passando, Zero Warnings no Clippy (`-D warnings`) e zero credenciais/tokens rastreados.
+  - **Verificação:** `cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings`
+- [x] **Task 14.5: Build de Release Otimizada e Empacotamento de Assets**
+  - **Status:** Concluído. Binários compilados via `cargo build --release` e sincronizados em `bin/distro-vault` e `~/distro-vault`.
+  - **Arquivos:** `bin/distro-vault`, `~/distro-vault`
+- [x] **Task 14.6: Push para Branch Remota e Publicação da Release v1.0.0**
+  - **Status:** Concluído. Push em `master` e `main`, criação da tag `v1.0.0` e release oficial no GitHub.
+
+---
+
+## Fase 15: Roadmap Futuro (v1.1.0+) — Personalização de Diretórios de I/O e Refinamento Ergonômico da TUI
+- [ ] **Task 15.1: Seletor Interativo e Personalização de Diretórios de Entrada & Saída**
+  - **Descrição:** Adicionar modal e interface na TUI para alterar em tempo de execução os diretórios base de leitura de backups e diretório alvo de geração de novos snapshots/sub-dumps.
+  - **Persistência:** Salvar preferências em `~/.config/distro-vault/config.toml`.
+- [ ] **Task 15.2: Desinchaço e Separação Ergonômica dos Menus na TUI**
+  - **Descrição:** Redesenho visual dos painéis da TUI para eliminar densidade textual nos cabeçalhos e rodapés, promovendo uma interface mais minimalista e limpa.
+  - **Submenus Modais:** Extrair os parâmetros de execução (`[P] Pacotes`, `[D] Dry-Run`) para um submenu modal dedicado de configurações, liberando área útil para a visualização da árvore hierárquica.
