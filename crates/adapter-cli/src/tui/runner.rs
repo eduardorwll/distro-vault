@@ -24,6 +24,7 @@ pub enum TuiAction {
     },
     Restore {
         archive_path: PathBuf,
+        from_staging: Option<PathBuf>,
         install_packages: bool,
         dry_run: bool,
     },
@@ -67,8 +68,10 @@ pub fn run_tui(mut app: TuiApp) -> io::Result<Option<TuiAction>> {
 
         if app.should_start_restore {
             if let Some(snap) = app.selected_snapshot() {
+                let from_staging = app.detect_staging_for_selected();
                 return Ok(Some(TuiAction::Restore {
                     archive_path: snap.path.clone(),
+                    from_staging,
                     install_packages: app.restore_install_packages,
                     dry_run: app.restore_dry_run,
                 }));

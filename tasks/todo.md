@@ -103,3 +103,23 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso (32 testes passando,
   - **Status:** Concluído. 263 dependências auditadas contra 1.351 avisos oficiais da RustSec. Zero vulnerabilidades / 0 CVEs.
 - [x] **Task 7.2: Auditoria SAST de Vetores de Ataque (CWE-22, CWE-409, CWE-78, CWE-59, CWE-732)**
   - **Status:** Concluído. Cobertura estrita com Zip-Slip guard, teto de 128 MB contra decompression bombs, execução sem shell interpolation e modos de arquivo POSIX 0700/0600.
+
+---
+
+## Fase 8: Resiliência de Restauração, Transcrição Cross-Distro & TUI de Recuperação
+- [x] **Task 8.1: Transcrição Canônica de Caminhos de Usuário (`RestorePipelineUseCase`)**
+  - **Status:** Concluído. Função pura `transcribe_path_to_target_home` remapeia automaticamente qualquer `/home/<source_user>/...` para `target_home/...` preservando a estrutura exata do usuário. Testado com 4 asserções unitárias.
+  - **Verificação:** `cargo test -p application`
+  - **Arquivos:** `crates/application/src/restore.rs`, `crates/application/src/lib.rs`, `crates/application/tests/use_case_tests.rs`
+- [x] **Task 8.2: Reordenação do Pipeline de Restauração e Prioridade de Dados do Usuário**
+  - **Status:** Concluído. Restauração de configurações vitais (Perfis Zen, Agentes, Chaves SSH e Pastas Customizadas) movida para o início do pipeline, ocorrendo ANTES da instalação de pacotes de sistema, prevenindo que falhas de rede ou sudo bloqueiem a recuperação de dados.
+  - **Arquivos:** `crates/application/src/restore.rs`
+- [x] **Task 8.3: Acelerador de Staging em Cache (`--from-staging`)**
+  - **Status:** Concluído. Suporte a `staging_override` em `RestoreRequest` e CLI flag `--from-staging`, permitindo reutilizar diretórios já descompactados em cache em segundos sem desgastar I/O de disco.
+  - **Arquivos:** `crates/application/src/restore.rs`, `crates/adapter-cli/src/args.rs`, `crates/adapter-cli/src/main.rs`
+- [x] **Task 8.4: Gestão de Privilégios `sudo` e Preservação de Usuário**
+  - **Status:** Concluído. `execute_restore` valida previamente `sudo -v` de forma limpa no terminal antes de iniciar spinners quando pacotes estão ativados. `default_home()` inspeciona `SUDO_USER` para evitar poluição de `/root`.
+  - **Arquivos:** `crates/adapter-cli/src/main.rs`
+- [x] **Task 8.5: TUI Enriquecida para Modo de Recuperação (`crates/adapter-cli/src/tui/`)**
+  - **Status:** Concluído. Exibição de alertas de `sudo`, detalhamento POSIX de chaves SSH (`0700`/`0600`), mapeamento de transcrição de pastas, detecção dinâmica de staging em cache e orientações claras de execução.
+  - **Arquivos:** `crates/adapter-cli/src/tui/ui.rs`, `crates/adapter-cli/src/tui/app.rs`, `crates/adapter-cli/src/tui/runner.rs`

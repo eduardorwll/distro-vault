@@ -170,6 +170,11 @@ impl SshPort for LinuxSshAdapter {
                 }
             }
 
+            // Remove existing destination file to avoid permission conflicts on readonly keys
+            if target_file.exists() || target_file.is_symlink() {
+                let _ = fs::remove_file(&target_file);
+            }
+
             // Copy file content
             fs::copy(&source_file, &target_file).map_err(|e| DomainError::SshError {
                 message: format!(

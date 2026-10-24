@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
-use tempfile::tempdir;
+use tempfile::{tempdir, tempdir_in, TempDir};
 
 use domain::entities::package::PackageSource;
 use domain::errors::DomainError;
@@ -16,6 +16,7 @@ pub struct RestoreRequest {
     pub target_config_root: PathBuf,
     pub target_home: PathBuf,
     pub target_custom_base: Option<PathBuf>,
+    pub staging_override: Option<PathBuf>,
     pub install_packages: bool,
     pub dry_run: bool,
 }
@@ -31,6 +32,7 @@ impl RestoreRequest {
             target_config_root: target_config_root.into(),
             target_home: target_home.into(),
             target_custom_base: None,
+            staging_override: None,
             install_packages: false,
             dry_run: false,
         }
@@ -44,6 +46,11 @@ impl RestoreRequest {
 
     pub fn with_custom_base(mut self, base: impl Into<PathBuf>) -> Self {
         self.target_custom_base = Some(base.into());
+        self
+    }
+
+    pub fn with_staging_override(mut self, staging: impl Into<PathBuf>) -> Self {
+        self.staging_override = Some(staging.into());
         self
     }
 }
@@ -91,20 +98,48 @@ impl RestorePipelineUseCase {
     }
 
     pub fn execute(&self, req: RestoreRequest) -> Result<RestoreReport, DomainError> {
-        // 1. Read manifest from archive stream
-        let manifest = self.storage_port.read_manifest(&req.archive_path)?;
+        // 1. Read manifest from staging or archive stream
+        let manifest = if let Some(ref override_path) = req.staging_override {
+            let manifest_file = override_path.join("manifest.json");
+            if manifest_file.exists() {
+                let file = fs::File::open(&manifest_file).map_err(|e| DomainError::ManifestError {
+                    message: format!("Failed to open manifest in staging: {}", e),
+                })?;
+                serde_json::from_reader(file).map_err(|e| DomainError::ManifestError {
+                    message: format!("Failed to parse manifest in staging: {}", e),
+                })?
+            } else {
+                self.storage_port.read_manifest(&req.archive_path)?
+            }
+        } else {
+            self.storage_port.read_manifest(&req.archive_path)?
+        };
 
-        // 2. Extract snapshot into isolated staging area
-        let staging_dir = tempdir().map_err(|e| DomainError::ManifestError {
-            message: format!("Failed to create staging directory for restoration: {}", e),
-        })?;
-
-        self.storage_port
-            .extract_snapshot(&req.archive_path, staging_dir.path())?;
+        // 2. Extract snapshot into isolated staging area (or use existing staging override)
+        let _staging_guard: Option<TempDir>;
+        let staging_path: &Path = if let Some(ref override_path) = req.staging_override {
+            _staging_guard = None;
+            override_path.as_path()
+        } else {
+            let dir = create_staging_dir(&req.target_home, &req.archive_path).map_err(|e| {
+                DomainError::ManifestError {
+                    message: format!("Failed to create staging directory for restoration: {}", e),
+                }
+            })?;
+            self.storage_port
+                .extract_snapshot(&req.archive_path, dir.path())?;
+            _staging_guard = Some(dir);
+            _staging_guard
+                .as_ref()
+                .map(|d| d.path())
+                .ok_or_else(|| DomainError::ManifestError {
+                    message: "Unexpected failure retrieving staging directory path".to_string(),
+                })?
+        };
 
         // 3. Restore Browser Profiles & Normalize Hashes
         let mut profiles_restored = Vec::new();
-        let staging_browser = staging_dir.path().join("browser");
+        let staging_browser = staging_path.join("browser");
         if staging_browser.exists() {
             for prof in &manifest.zen_profiles {
                 let prof_staging_path = staging_browser.join(prof.id.as_str());
@@ -121,14 +156,57 @@ impl RestorePipelineUseCase {
         }
 
         // 4. Restore Agent Governance
-        let staging_agents = staging_dir.path().join("agents");
+        let staging_agents = staging_path.join("agents");
         let skills_count = manifest.agent_governance.skills.len();
         if staging_agents.exists() && !req.dry_run {
             self.agent_port
                 .restore_governance(&staging_agents, &req.target_home)?;
         }
 
-        // 5. Detect Target Distro & Package Dispatch
+        // 5. Restore Registered SSH Keys with strict POSIX permissions (0700/0600)
+        let staging_ssh = staging_path.join("ssh");
+        let ssh_keys_restored = if staging_ssh.exists() && !manifest.ssh_keys.is_empty() {
+            self.ssh_port.restore_ssh_keys(
+                &staging_ssh,
+                &req.target_home,
+                &manifest.ssh_keys,
+                req.dry_run,
+            )?
+        } else {
+            0
+        };
+
+        // 6. Restore Custom Directories with Path Transcription to target home
+        for custom_d in &manifest.custom_directories {
+            let custom_staging = staging_path.join(&custom_d.archive_prefix);
+            if custom_staging.exists() {
+                let target_dest = if let Some(ref base) = req.target_custom_base {
+                    base.join(&custom_d.id)
+                } else {
+                    transcribe_path_to_target_home(&custom_d.source_path, &req.target_home)
+                };
+
+                if !req.dry_run {
+                    if let Some(parent) = target_dest.parent() {
+                        let _ = fs::create_dir_all(parent);
+                    }
+                    copy_dir_recursively(&custom_staging, &target_dest).map_err(|e| {
+                        DomainError::ManifestError {
+                            message: format!(
+                                "Failed to restore custom directory {:?} to {:?}: {}",
+                                custom_d.id, target_dest, e
+                            ),
+                        }
+                    })?;
+                }
+            }
+        }
+
+        // 7. Check FUSE2 requirement for AppImages
+        let fuse2_missing_warning =
+            !manifest.appimages.is_empty() && !self.system_port.is_fuse2_available();
+
+        // 8. Detect Target Distro & Package Dispatch
         let target_distro = self
             .system_port
             .detect_distro()
@@ -165,42 +243,6 @@ impl RestorePipelineUseCase {
             }
         }
 
-        // 6. Check FUSE2 requirement for AppImages
-        let fuse2_missing_warning =
-            !manifest.appimages.is_empty() && !self.system_port.is_fuse2_available();
-
-        // 7. Restore Registered SSH Keys with strict POSIX permissions (0700/0600)
-        let staging_ssh = staging_dir.path().join("ssh");
-        let ssh_keys_restored = if staging_ssh.exists() && !manifest.ssh_keys.is_empty() {
-            self.ssh_port.restore_ssh_keys(
-                &staging_ssh,
-                &req.target_home,
-                &manifest.ssh_keys,
-                req.dry_run,
-            )?
-        } else {
-            0
-        };
-
-        // 8. Restore Custom Directories
-        for custom_d in &manifest.custom_directories {
-            let custom_staging = staging_dir.path().join(&custom_d.archive_prefix);
-            if custom_staging.exists() {
-                let target_dest = if let Some(ref base) = req.target_custom_base {
-                    base.join(&custom_d.id)
-                } else {
-                    custom_d.source_path.clone()
-                };
-
-                if !req.dry_run {
-                    if let Some(parent) = target_dest.parent() {
-                        let _ = fs::create_dir_all(parent);
-                    }
-                    let _ = copy_dir_recursively(&custom_staging, &target_dest);
-                }
-            }
-        }
-
         Ok(RestoreReport {
             snapshot_id: manifest.snapshot_id,
             source_distro: manifest.source_distro,
@@ -215,7 +257,60 @@ impl RestorePipelineUseCase {
     }
 }
 
-fn copy_dir_recursively(src: &std::path::Path, dst: &std::path::Path) -> std::io::Result<()> {
+/// Transcribes an absolute path from the source distribution/user to the target user home directory.
+/// If the path was inside a user home (e.g. `/home/<source_user>/...`), it re-roots it under `target_home`.
+pub fn transcribe_path_to_target_home(original: &Path, target_home: &Path) -> PathBuf {
+    let components: Vec<_> = original.components().collect();
+    if components.len() >= 3 {
+        if let (
+            std::path::Component::RootDir,
+            std::path::Component::Normal(home_dir),
+            std::path::Component::Normal(_user),
+        ) = (components[0], components[1], components[2])
+        {
+            if home_dir == "home" {
+                let mut relative = PathBuf::new();
+                for comp in &components[3..] {
+                    relative.push(comp);
+                }
+                return target_home.join(relative);
+            }
+        }
+    }
+
+    if original.is_relative() {
+        target_home.join(original)
+    } else {
+        original.to_path_buf()
+    }
+}
+
+fn create_staging_dir(target_home: &Path, archive_path: &Path) -> std::io::Result<TempDir> {
+    let user_cache = target_home.join(".cache");
+    if user_cache.is_dir() {
+        if let Ok(dir) = tempdir_in(&user_cache) {
+            return Ok(dir);
+        }
+    }
+
+    if let Some(archive_parent) = archive_path.parent() {
+        if archive_parent.is_dir() {
+            if let Ok(dir) = tempdir_in(archive_parent) {
+                return Ok(dir);
+            }
+        }
+    }
+
+    if target_home.is_dir() {
+        if let Ok(dir) = tempdir_in(target_home) {
+            return Ok(dir);
+        }
+    }
+
+    tempdir()
+}
+
+fn copy_dir_recursively(src: &Path, dst: &Path) -> std::io::Result<()> {
     if !dst.exists() {
         fs::create_dir_all(dst)?;
     }
@@ -226,7 +321,12 @@ fn copy_dir_recursively(src: &std::path::Path, dst: &std::path::Path) -> std::io
         if path.is_dir() {
             copy_dir_recursively(&path, &dest)?;
         } else {
-            fs::copy(&path, &dest)?;
+            if dest.exists() || dest.is_symlink() {
+                let _ = fs::remove_file(&dest);
+            }
+            if fs::rename(&path, &dest).is_err() {
+                fs::copy(&path, &dest)?;
+            }
         }
     }
     Ok(())

@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
-Data: 23 de Outubro de 2026
-Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso | 32 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui Homologados
+Data: 24 de Outubro de 2026
+Status: 🟢 Todas as Fases (1 a 8) Concluídas com Sucesso | 37 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui Homologados com Suporte a SSH e Transcrição Cross-Distro
 
 ---
 
@@ -10,19 +10,39 @@ Status: 🟢 Todas as Fases (1 a 6) Concluídas com Sucesso | 32 Testes Passando
 ### Fase 1: Core Domain & Ports (`crates/domain`)
 - [x] Arquitetura Hexagonal pura com isolamento total de I/O.
 - [x] Value Objects: `ProfileId`, `PackageName`, `DistroFamily`, `Checksum`, `UnixMode`, `SkillCategory`.
-- [x] Entidades: `Manifest`, `ZenProfile`, `PackageEntry`, `AppImageEntry`, `AgentGovernance`, `CustomDirectoryEntry`, `SelectionFilter`.
-- [x] Portas Hexagonais: `BrowserPort`, `PackagePort`, `StoragePort`, `AgentPort`, `SystemPort`.
+- [x] Entidades: `Manifest`, `ZenProfile`, `PackageEntry`, `AppImageEntry`, `AgentGovernance`, `CustomDirectoryEntry`, `SelectionFilter`, `SshKeyEntry`.
+- [x] Portas Hexagonais: `BrowserPort`, `PackagePort`, `StoragePort`, `AgentPort`, `SystemPort`, `SshPort`.
 
 ### Fase 2: Low-Level Adapters (Módulos Profundos)
 - [x] **`crates/adapter-browser`:** MozLZ4 Codec com verificação de magic header `mozLz40\0`, tamanho LE e bomb guard (128 MB), normalizador CityHash64 v1 (UTF-16LE) em `installs.ini` e `profiles.ini` com sweep & bind para `Default=1`, e trait `BrowserPort` (8 testes passando).
 - [x] **`crates/adapter-storage`:** Streaming `.tar.zst` (zstd level 3) com `ZipSlipGuard` (rejeição de escapes `..`, caminhos absolutos, symlinks perigosos e dispositivos especiais), modos POSIX (`0700`/`0600`), integridade SHA-256 e pastas customizadas em `custom/<slug>` (3 testes passando).
 - [x] **`crates/adapter-agents`:** Scanner de regras e skills com parsing YAML frontmatter e desreferenciação física de links simbólicos para portabilidade fora do Omarchy (3 testes passando).
-- [x] **`crates/adapter-system`:** Parser `/etc/os-release`, monitor `/proc`, verificação de `libfuse2` e dispatchers para `pacman`, `paru`/`yay` e `flatpak` (3 testes passando).
+- [x] **`crates/adapter-system`:** Parser `/etc/os-release`, monitor `/proc`, verificação de `libfuse2`, scanner e restaurador POSIX de chaves SSH (`0700`/`0600`), e dispatchers para `pacman`, `paru`/`yay` e `flatpak` (5 testes passando).
 
 ### Fase 3: Application Use Cases & Pipelines (`crates/application`)
-- [x] **`BackupPipelineUseCase` (`backup.rs`):** Orquestração completa do snapshot: lock check com encerramento gracioso via `/proc`, agregação de navegadores, pacotes, agentes e pastas customizadas, aplicação do `SelectionFilter` e geração atômica com checksum SHA-256.
-- [x] **`RestorePipelineUseCase` (`restore.rs`):** Orquestração da restauração: extração segura com Zip-Slip guard em staging, restauração e normalização dos perfis do Zen Browser (`Default=1`), reinstalação física de skills de IA, despacho de pacotes (mesma distro vs. distro-hop), checagem de FUSE2 e suporte completo a `--dry-run`.
+- [x] **`BackupPipelineUseCase` (`backup.rs`):** Orquestração completa do snapshot: lock check com encerramento gracioso via `/proc`, agregação de navegadores, pacotes, agentes, chaves SSH e pastas customizadas, aplicação do `SelectionFilter` e geração atômica com checksum SHA-256.
+- [x] **`RestorePipelineUseCase` (`restore.rs`):** Orquestração da restauração reordenada priorizando dados do usuário (Zen Browser, Agentes, Chaves SSH com 0700/0600, Pastas Customizadas com transcrição canônica cross-distro para `$HOME`, antes de pacotes de sistema). Suporte a `staging_override` e criação de staging em disco (`~/.cache`).
 - [x] **`InspectSnapshotUseCase` (`inspect.rs`):** Leitura de metadados em alta velocidade lendo apenas o `manifest.json` do topo do stream Zstandard sem descompactar o arquivo.
+- [x] **`VerifyIntegrityUseCase` (`verify.rs`):** Validação de integridade criptográfica SHA-256 e teste estrutural de blocos.
+
+### Fase 4: CLI Adapter & Composition Root (`crates/adapter-cli`)
+- [x] Subcomandos Clap 4.5: `backup`, `restore`, `inspect`, `verify`.
+- [x] Flags expandidas: `--from-staging`, `--target-home`, `--target-config`, `--target-custom`, `--install-packages`, `--dry-run`.
+- [x] Resolução inteligente de `$HOME` via `SUDO_USER` prevenindo poluição em `/root` quando executado via `sudo`.
+- [x] Validação limpa e antecipada de `sudo -v` antes de iniciar spinners de progresso.
+
+### Fase 6 & 8: TUI Interativa com Ratatui (`crates/adapter-cli/src/tui/`)
+- [x] 8 abas navegáveis categorizando pacotes, skills, AppImages, pastas customizadas, Zen spaces e Chaves SSH.
+- [x] Modo de Recuperação (`TuiMode::Restore`) com alertas visuais de necessidade de `sudo`, detalhamento POSIX de chaves SSH, preview de transcrição de caminhos e detecção em tempo real de staging acelerado em cache.
+- [x] Gerenciamento RAII com `TerminalGuard` garantindo restauração limpa do terminal.
+
+---
+
+## 2. Métricas de Qualidade e Compilação
+- `cargo test --workspace` -> **37 testes passando (100% de sucesso)**
+- `cargo clippy --workspace -- -D warnings` -> **Zero Warnings Policy rigorosamente mantida**
+- `cargo audit` -> **0 vulnerabilidades / 0 CVEs em 263 dependências**
+- Binário de release atualizado em `bin/distro-vault` e no host do usuário em `/home/eduardorwll/distro-vault`.
 - [x] **`VerifyIntegrityUseCase` (`verify.rs`):** Validação de integridade criptográfica SHA-256 e teste estrutural de blocos.
 
 ### Fase 4: CLI Adapter & Composition Root (`crates/adapter-cli`)

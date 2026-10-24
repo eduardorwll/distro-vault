@@ -442,6 +442,52 @@ impl TuiApp {
         }
         rows
     }
+
+    pub fn detect_staging_for_selected(&self) -> Option<PathBuf> {
+        let snap = self.selected_snapshot()?;
+        let target_manifest = snap.manifest.as_ref()?;
+
+        if let Ok(user_home) = std::env::var("HOME") {
+            let cache_dir = PathBuf::from(user_home).join(".cache");
+            if let Some(found) = Self::find_matching_staging(&cache_dir, &target_manifest.snapshot_id) {
+                return Some(found);
+            }
+        }
+
+        if let Some(parent) = self.default_backups_dir.parent() {
+            let cache_dir = parent.join(".cache");
+            if let Some(found) = Self::find_matching_staging(&cache_dir, &target_manifest.snapshot_id) {
+                return Some(found);
+            }
+        }
+
+        None
+    }
+
+    fn find_matching_staging(cache_dir: &std::path::Path, expected_snapshot_id: &str) -> Option<PathBuf> {
+        if let Ok(entries) = std::fs::read_dir(cache_dir) {
+            for entry in entries.flatten() {
+                let p = entry.path();
+                if p.is_dir()
+                    && p.file_name()
+                        .and_then(|n| n.to_str())
+                        .is_some_and(|s| s.starts_with(".tmp"))
+                {
+                    let manifest_file = p.join("manifest.json");
+                    if manifest_file.exists() {
+                        if let Ok(file) = std::fs::File::open(&manifest_file) {
+                            if let Ok(m) = serde_json::from_reader::<_, Manifest>(file) {
+                                if m.snapshot_id == expected_snapshot_id {
+                                    return Some(p);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        None
+    }
 }
 
 impl Default for TuiApp {

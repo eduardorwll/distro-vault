@@ -205,15 +205,22 @@ fn draw_backup_mode(f: &mut Frame, app: &mut TuiApp, tab_area: Rect, main_area: 
 }
 
 fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area: Rect) {
-    let pkg_label = if app.restore_install_packages {
-        "SIM"
+    let (pkg_label, pkg_color) = if app.restore_install_packages {
+        ("SIM (Exige sudo no terminal)", Color::Yellow)
     } else {
-        "NÃO"
+        ("NÃO (Sem sudo)", Color::Green)
     };
     let dry_label = if app.restore_dry_run {
         "ATIVADO (Simulação)"
     } else {
         "DESATIVADO"
+    };
+
+    let staging_detected = app.detect_staging_for_selected();
+    let staging_tag = if staging_detected.is_some() {
+        "  •  ⚡ Cache Staging Ativo"
+    } else {
+        ""
     };
 
     let banner = Paragraph::new(Line::from(vec![
@@ -238,14 +245,14 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
             Style::default().fg(Color::White),
         ),
         Span::styled(
-            "[P] Instalar Pacotes: ",
+            "[P] Pacotes: ",
             Style::default()
                 .fg(Color::Green)
                 .add_modifier(Modifier::BOLD),
         ),
         Span::styled(
             format!("{}  •  ", pkg_label),
-            Style::default().fg(Color::White),
+            Style::default().fg(pkg_color).add_modifier(Modifier::BOLD),
         ),
         Span::styled(
             "[D] Dry-Run: ",
@@ -254,6 +261,12 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                 .add_modifier(Modifier::BOLD),
         ),
         Span::styled(dry_label, Style::default().fg(Color::White)),
+        Span::styled(
+            staging_tag,
+            Style::default()
+                .fg(Color::LightGreen)
+                .add_modifier(Modifier::BOLD),
+        ),
     ]))
     .alignment(Alignment::Center)
     .block(
@@ -462,25 +475,54 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                         .add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
-                    format!("{} chaves/arquivos registrados (~/.ssh)", m.ssh_keys.len()),
+                    format!("{} arquivos cadastrados (~/.ssh)", m.ssh_keys.len()),
                     Style::default().fg(Color::White),
                 ),
             ]));
+            if !m.ssh_keys.is_empty() {
+                lines.push(Line::from(vec![
+                    Span::styled("     ↳ Hardening POSIX: ", Style::default().fg(Color::DarkGray)),
+                    Span::styled("~/.ssh (0700) • Chaves (0600) • Públicas (0644)", Style::default().fg(Color::Green)),
+                ]));
+                let key_names: Vec<&str> = m.ssh_keys.iter().map(|k| k.file_name.as_str()).collect();
+                lines.push(Line::from(vec![
+                    Span::styled("     ↳ Arquivos: ", Style::default().fg(Color::DarkGray)),
+                    Span::styled(key_names.join(", "), Style::default().fg(Color::Cyan)),
+                ]));
+            }
             lines.push(Line::from(vec![
                 Span::styled(
-                    "  📁 Pastas Extras: ",
+                    "  📁 Pastas Customizadas: ",
                     Style::default()
                         .fg(Color::Cyan)
                         .add_modifier(Modifier::BOLD),
                 ),
                 Span::styled(
                     format!(
-                        "{} diretórios customizados arquivados",
+                        "{} diretórios arquivados",
                         m.custom_directories.len()
                     ),
                     Style::default().fg(Color::White),
                 ),
             ]));
+            if !m.custom_directories.is_empty() {
+                lines.push(Line::from(vec![
+                    Span::styled("     ↳ Transcrição: ", Style::default().fg(Color::DarkGray)),
+                    Span::styled("/home/<origem>/... ➔ ~/ (Automático)", Style::default().fg(Color::LightCyan)),
+                ]));
+                for d in m.custom_directories.iter().take(3) {
+                    let folder_name = d.source_path.file_name().and_then(|n| n.to_str()).unwrap_or(d.label.as_str());
+                    lines.push(Line::from(vec![
+                        Span::styled(format!("       • {} ", d.label), Style::default().fg(Color::White)),
+                        Span::styled(format!("➔ ~/{folder_name}"), Style::default().fg(Color::DarkGray)),
+                    ]));
+                }
+                if m.custom_directories.len() > 3 {
+                    lines.push(Line::from(vec![
+                        Span::styled(format!("       ... e mais {} pastas", m.custom_directories.len() - 3), Style::default().fg(Color::DarkGray)),
+                    ]));
+                }
+            }
             if let Some(ref cs) = m.checksum {
                 lines.push(Line::from(vec![
                     Span::styled("  🔒 SHA-256: ", Style::default().fg(Color::DarkGray)),
@@ -525,6 +567,25 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
             pkg_indicator,
         ]));
 
+        if app.restore_install_packages {
+            lines.push(Line::from(vec![
+                Span::styled("      ⚠️  Atenção: ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+                Span::styled("A senha 'sudo' será solicitada no terminal após [Enter]", Style::default().fg(Color::Yellow)),
+            ]));
+        } else {
+            lines.push(Line::from(vec![
+                Span::styled("      🛡️  Espaço de Usuário: ", Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)),
+                Span::styled("Restauração segura sem necessidade de permissões root", Style::default().fg(Color::Green)),
+            ]));
+        }
+
+        if let Some(ref stg) = staging_detected {
+            lines.push(Line::from(vec![
+                Span::styled("  ⚡ Staging em Cache: ", Style::default().fg(Color::LightGreen).add_modifier(Modifier::BOLD)),
+                Span::styled(format!("{} (Restauração instantânea!)", stg.display()), Style::default().fg(Color::LightGreen)),
+            ]));
+        }
+
         let dry_indicator = if app.restore_dry_run {
             Span::styled(
                 " [x] ATIVADO (simula sem alterar o sistema)",
@@ -550,7 +611,7 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
 
         lines.push(Line::from(""));
         lines.push(Line::from(vec![Span::styled(
-            "👉 Pressione [Enter] ou [R] para restaurar este snapshot agora.",
+            "👉 Pressione [Enter] ou [R] para restaurar. (A TUI fechará e continuará no terminal).",
             Style::default()
                 .fg(Color::Green)
                 .add_modifier(Modifier::BOLD),

@@ -112,16 +112,20 @@ fn handle_restore(
         .target_config
         .unwrap_or_else(|| home.join(".config/zen"));
 
-    if let Some(archive) = args.archive {
-        execute_restore(
-            container,
-            &archive,
-            &config,
-            &home,
-            args.target_custom,
-            args.install_packages,
-            args.dry_run,
-        )
+    if args.archive.is_some() || args.from_staging.is_some() {
+        let archive = args
+            .archive
+            .unwrap_or_else(|| PathBuf::from("snapshot.tar.zst"));
+        let params = RestoreExecutionParams {
+            archive: &archive,
+            config: &config,
+            home: &home,
+            target_custom: args.target_custom,
+            from_staging: args.from_staging,
+            install_packages: args.install_packages,
+            dry_run: args.dry_run,
+        };
+        execute_restore(container, params)
     } else {
         // No archive passed -> launch interactive TUI directly in Restore mode!
         handle_interactive(
@@ -194,17 +198,21 @@ fn handle_interactive(
         }
         Some(TuiAction::Restore {
             archive_path,
+            from_staging,
             install_packages,
             dry_run,
-        }) => execute_restore(
-            container,
-            &archive_path,
-            &config,
-            &home,
-            target_custom,
-            install_packages,
-            dry_run,
-        ),
+        }) => {
+            let params = RestoreExecutionParams {
+                archive: &archive_path,
+                config: &config,
+                home: &home,
+                target_custom,
+                from_staging,
+                install_packages,
+                dry_run,
+            };
+            execute_restore(container, params)
+        }
         None => {
             println!(
                 "{}",
@@ -595,19 +603,45 @@ fn execute_backup(
     Ok(())
 }
 
-fn execute_restore(
-    container: &AppContainer,
-    archive: &Path,
-    config: &Path,
-    home: &Path,
+struct RestoreExecutionParams<'a> {
+    archive: &'a Path,
+    config: &'a Path,
+    home: &'a Path,
     target_custom: Option<PathBuf>,
+    from_staging: Option<PathBuf>,
     install_packages: bool,
     dry_run: bool,
+}
+
+fn execute_restore(
+    container: &AppContainer,
+    params: RestoreExecutionParams<'_>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     println!(
         "{}",
         style("▶ Iniciando restauração do sistema...").cyan().bold()
     );
+
+    // If package installation is requested and not dry run, validate or refresh sudo credentials cleanly
+    if params.install_packages && !params.dry_run {
+        println!(
+            "{}",
+            style("🔑 Privilégios de administrador necessários para instalar pacotes.").yellow().bold()
+        );
+        let sudo_status = std::process::Command::new("sudo")
+            .arg("-v")
+            .status();
+        match sudo_status {
+            Ok(status) if status.success() => {
+                println!("{}", style("✔ Autenticação administrativa validada.").green());
+            }
+            _ => {
+                eprintln!("{}", style("✖ Falha ou cancelamento na autenticação com sudo.").red().bold());
+                return Err("Autenticação com sudo necessária para instalar pacotes.".into());
+            }
+        }
+    }
+
     let pb = ProgressBar::new_spinner();
     pb.set_style(
         ProgressStyle::default_spinner()
@@ -615,13 +649,22 @@ fn execute_restore(
             .template("{spinner:.green} {msg}")?,
     );
     pb.enable_steady_tick(Duration::from_millis(80));
-    pb.set_message("Extraindo snapshot e normalizando navegador...");
 
-    let mut req =
-        RestoreRequest::new(archive, config, home).with_packages(install_packages, dry_run);
+    if params.from_staging.is_some() {
+        pb.set_message("Restaurando a partir do staging em cache (modo instantâneo)...");
+    } else {
+        pb.set_message("Extraindo snapshot e normalizando navegador...");
+    }
 
-    if let Some(custom) = target_custom {
+    let mut req = RestoreRequest::new(params.archive, params.config, params.home)
+        .with_packages(params.install_packages, params.dry_run);
+
+    if let Some(custom) = params.target_custom {
         req = req.with_custom_base(custom);
+    }
+
+    if let Some(staging) = params.from_staging {
+        req = req.with_staging_override(staging);
     }
 
     let report = container.restore_use_case.execute(req)?;
@@ -775,6 +818,15 @@ fn handle_verify(
 }
 
 fn default_home() -> PathBuf {
+    if let Ok(sudo_user) = std::env::var("SUDO_USER") {
+        if !sudo_user.is_empty() && sudo_user != "root" {
+            let sudo_home = PathBuf::from(format!("/home/{}", sudo_user));
+            if sudo_home.is_dir() {
+                return sudo_home;
+            }
+        }
+    }
+
     std::env::var("HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|_| PathBuf::from("/home/eduardorwll"))

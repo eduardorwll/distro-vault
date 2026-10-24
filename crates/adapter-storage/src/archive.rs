@@ -90,17 +90,17 @@ impl ZipSlipGuard {
         let canonical_target = if target_dir.exists() {
             target_dir
                 .canonicalize()
-                .map_err(|e| DomainError::SecurityViolation {
-                    path: format!("Failed to canonicalize target_dir {:?}: {}", target_dir, e),
+                .map_err(|e| DomainError::ManifestError {
+                    message: format!("Failed to canonicalize target_dir {:?}: {}", target_dir, e),
                 })?
         } else {
-            fs::create_dir_all(target_dir).map_err(|e| DomainError::SecurityViolation {
-                path: format!("Failed to create target_dir {:?}: {}", target_dir, e),
+            fs::create_dir_all(target_dir).map_err(|e| DomainError::ManifestError {
+                message: format!("Failed to create target_dir {:?}: {}", target_dir, e),
             })?;
             target_dir
                 .canonicalize()
-                .map_err(|e| DomainError::SecurityViolation {
-                    path: format!("Failed to canonicalize newly created target_dir: {}", e),
+                .map_err(|e| DomainError::ManifestError {
+                    message: format!("Failed to canonicalize newly created target_dir: {}", e),
                 })?
         };
 
@@ -153,19 +153,30 @@ impl ZipSlipGuard {
 
             if let Some(parent) = safe_destination.parent() {
                 if !parent.exists() {
-                    fs::create_dir_all(parent).map_err(|e| DomainError::SecurityViolation {
-                        path: format!("Failed to create parent dir {:?}: {}", parent, e),
+                    fs::create_dir_all(parent).map_err(|e| DomainError::ManifestError {
+                        message: format!("Failed to create parent dir {:?}: {}", parent, e),
                     })?;
                 }
             }
 
+            if (safe_destination.exists() || safe_destination.is_symlink())
+                && !safe_destination.is_dir()
+            {
+                let _ = fs::remove_file(&safe_destination);
+            }
+
             entry
                 .unpack(&safe_destination)
-                .map_err(|e| DomainError::SecurityViolation {
-                    path: format!(
-                        "Failed to unpack {:?} into {:?}: {}",
-                        entry_path, safe_destination, e
-                    ),
+                .map_err(|e| {
+                    let cause = std::error::Error::source(&e)
+                        .map(|s| format!(" ({})", s))
+                        .unwrap_or_default();
+                    DomainError::ManifestError {
+                        message: format!(
+                            "Failed to unpack {:?} into {:?}: {}{}",
+                            entry_path, safe_destination, e, cause
+                        ),
+                    }
                 })?;
         }
 

@@ -95,6 +95,10 @@ pub struct RestoreArgs {
     /// Override target base folder for restored custom directories
     #[arg(long)]
     pub target_custom: Option<PathBuf>,
+
+    /// Fast-path restoration using an already extracted staging directory (skips archive decompression)
+    #[arg(long)]
+    pub from_staging: Option<PathBuf>,
 }
 
 #[derive(Debug, Args, Clone)]

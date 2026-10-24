@@ -267,3 +267,36 @@ fn test_selection_filter_excludes_items_deterministically() {
         .iter()
         .any(|s| s.name == "clean-code"));
 }
+
+#[test]
+fn test_transcribe_path_to_target_home() {
+    use application::transcribe_path_to_target_home;
+    use std::path::{Path, PathBuf};
+
+    let target_home = Path::new("/home/newuser");
+
+    // Re-rooting /home/<olduser>/...
+    let original = Path::new("/home/olduser/Documents/eduardorwll");
+    let transcribed = transcribe_path_to_target_home(original, target_home);
+    assert_eq!(
+        transcribed,
+        PathBuf::from("/home/newuser/Documents/eduardorwll")
+    );
+
+    let original_ssh = Path::new("/home/archuser/.ssh");
+    let transcribed_ssh = transcribe_path_to_target_home(original_ssh, target_home);
+    assert_eq!(transcribed_ssh, PathBuf::from("/home/newuser/.ssh"));
+
+    // Relative path
+    let rel = Path::new("Projects/distro-vault");
+    let transcribed_rel = transcribe_path_to_target_home(rel, target_home);
+    assert_eq!(
+        transcribed_rel,
+        PathBuf::from("/home/newuser/Projects/distro-vault")
+    );
+
+    // System path outside /home
+    let sys = Path::new("/opt/custom_app");
+    let transcribed_sys = transcribe_path_to_target_home(sys, target_home);
+    assert_eq!(transcribed_sys, PathBuf::from("/opt/custom_app"));
+}
