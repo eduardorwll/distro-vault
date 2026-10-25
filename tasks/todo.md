@@ -254,3 +254,25 @@ Status: 🟢 Todas as Fases (1 a 14) Concluídas com Sucesso (43 testes passando
   - **Status:** Concluído. Injetado `config_adapter` em `AppContainer` (`di.rs`), carregando as preferências do usuário no startup interativo (`main.rs`), alimentando múltiplos `input_dirs` em `populate_snapshots`, persistindo alterações defensivamente ao sair e aplicando nos destinos de backups e sub-dumps.
   - **Verificação:** `cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings`.
   - **Arquivos:** `crates/adapter-cli/src/di.rs`, `crates/adapter-cli/src/main.rs`, `crates/adapter-cli/src/tui/runner.rs`.
+
+---
+
+## Fase 16: Lançamento Oficial v1.1.1, Expansão Exaustiva da Documentação e Auditoria de Segurança
+- [x] **Task 16.1: Elevação de Versão no Workspace para 1.1.1**
+  - **Status:** Concluído. `Cargo.toml` elevado para `1.1.1` e propagado para os 7 crates internos em `Cargo.lock`.
+  - **Verificação:** `cargo check --workspace`
+  - **Arquivos:** `Cargo.toml`, `Cargo.lock`
+- [x] **Task 16.2: Reescrita e Expansão Completa do `README.md`**
+  - **Status:** Concluído. Documentação aprofundada com arquitetura hexagonal atualizada no Mermaid, mockups ASCII dos novos modais da TUI (`[O]` e `[C]`), tabela completa de atalhos, guia declarativo de `~/.config/distro-vault/config.toml` e 3 cenários práticos passo a passo.
+  - **Arquivos:** `README.md`
+- [x] **Task 16.3: Sincronização dos Registros Vivos de Arquitetura**
+  - **Status:** Concluído. `tasks/todo.md`, `estado_atual.md` e `estado_arquitetural_atual.md` sincronizados para a versão 1.1.1.
+  - **Arquivos:** `tasks/todo.md`, `estado_atual.md`, `estado_arquitetural_atual.md`
+- [x] **Task 16.4: Auditoria de Segurança Pré-Commit e Validação Global**
+  - **Status:** Concluído. 43 testes de unidade e integração aprovados, Zero Warnings no Clippy (`--all-targets -- -D warnings`) e validação de ausência total de credenciais e tokens no repositório.
+  - **Verificação:** `cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings`
+- [x] **Task 16.5: Compilação de Release Otimizada e Deploy Local**
+  - **Status:** Concluído. Binários standalone compilados com `cargo build --release` e sincronizados em `bin/distro-vault` e `~/distro-vault`.
+  - **Arquivos:** `bin/distro-vault`, `~/distro-vault`
+- [x] **Task 16.6: Sincronização Git e Publicação da Release v1.1.1 no GitHub**
+  - **Status:** Concluído. Push em `master` e `main`, e criação da release oficial `v1.1.1` com binário compilado anexado.

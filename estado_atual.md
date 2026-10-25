@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
 Data: 25 de Outubro de 2026
-Status: 🟢 Versão 1.1.0 Oficial Implementada | Todas as Fases (1 a 15) Concluídas com Sucesso | 43 Testes Passando | Zero Warnings Policy Rigorosamente Mantida | Persistência Declarativa TOML (~/.config/distro-vault/config.toml) | TUI Ratatui Desinchaçada com Modais Flutuantes (Opções [O] e Gerenciador de Diretórios [C]), Alternância de Densidade [V], Árvore Hierárquica em Altura Total e Slicing de Snapshots
+Status: 🟢 Versão 1.1.1 Oficial Publicada | Todas as Fases (1 a 16) Concluídas com Sucesso | 43 Testes Passando | Zero Warnings Policy Rigorosamente Mantida | Persistência Declarativa TOML (~/.config/distro-vault/config.toml) | TUI Ratatui Desinchaçada com Modais Flutuantes (Opções [O] e Gerenciador de Diretórios [C]), Alternância de Densidade [V], Árvore Hierárquica em Altura Total e Slicing de Snapshots | Documentação Completa e Cenários Práticos Entregues
 
 ---
 

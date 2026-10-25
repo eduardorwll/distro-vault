@@ -5,7 +5,7 @@
 [![Rust 2021](https://img.shields.io/badge/rust-2021-orange.svg?style=flat-square&logo=rust)](https://www.rust-lang.org/)
 [![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg?style=flat-square)](LICENSE)
 [![Zero Clippy Warnings](https://img.shields.io/badge/clippy-zero%20warnings-brightgreen.svg?style=flat-square)](Cargo.toml)
-[![Release v1.0.0](https://img.shields.io/badge/release-v1.0.0-success.svg?style=flat-square)](https://github.com/eduardorwll/distro-vault/releases/tag/v1.0.0)
+[![Release v1.1.1](https://img.shields.io/badge/release-v1.1.1-success.svg?style=flat-square)](https://github.com/eduardorwll/distro-vault/releases/tag/v1.1.1)
 
 ![Arquitetura da Aplicação](docs/architecture.svg)
 
@@ -54,7 +54,7 @@ Seja saltando de um Arch Linux / Omarchy para um Fedora, Debian ou Ubuntu, o `di
 
 A TUI interativa é desenvolvida com **Ratatui 0.30** e **Crossterm 0.29**, operando em modo raw com proteção RAII (`TerminalGuard`) contra quebra de terminal.
 
-Na versão 1.1.0, a interface foi completamente **desinchaçada (anti-bloat)**: as caixas estáticas redundantes foram eliminadas da coluna direita, dedicando 100% da altura para a árvore hierárquica interativa, com novos submenus modais flutuantes (`[O]` Opções e `[C]` Pastas) e alternância de densidade compacta (`[V]`).
+Na versão 1.1+, a interface foi completamente **desinchaçada (anti-bloat)**: as caixas estáticas redundantes foram eliminadas da coluna direita, dedicando 100% da altura para a árvore hierárquica interativa, com novos submenus modais flutuantes (`[O]` Opções e `[C]` Pastas) e alternância de densidade compacta (`[V]`).
 
 ```text
 ┌──────────────────────── distro-vault :: [F2] 📦 NOVO BACKUP  •  [F3] 🔄 RECUPERAÇÃO ────────────────────────┐
@@ -70,6 +70,45 @@ Na versão 1.1.0, a interface foi completamente **desinchaçada (anti-bloat)**: 
 │ │                                    │ │   [x] ▼ Diretórios Customizados (3 pastas)                       │ │
 │ └────────────────────────────────────┘ └──────────────────────────────────────────────────────────────────┘ │
 └────────── [↑/↓] Navegar Árvore  [Enter/→] Drop  [Espaço] Marcar  [Enter/R] RESTAURAR  [S] SUB-DUMP  [O] Opções  [C] Pastas  [V] Densidade ──┘
+```
+
+### Submenus Modais Flutuantes (Anti-Bloat Architecture)
+
+Para evitar poluição visual e perda de área de visualização em terminais compactos, todos os seletores secundários foram desacoplados em janelas modais flutuantes centralizadas que utilizam o widget `Clear` do Ratatui para evitar vazamento de caracteres em background:
+
+#### 1. Modal de Opções de Execução (`[O]`)
+Pressione `[O]` no modo Restore para abrir o painel de parâmetros operacionais:
+```text
+┌────────────────────────────── ⚙️ Opções & Parâmetros de Execução ──────────────────────────────┐
+│ Defina os parâmetros operacionais antes de iniciar a restauração ou sub-dump:                 │
+│                                                                                               │
+│   [P] Instalar Pacotes Nativos: [X] ATIVADO (pacman / flatpak / apt / dnf)                    │
+│   [D] Simulação Dry-Run:       [ ] RESTAURAÇÃO REAL NO SISTEMA                                │
+│   [V] Densidade da Árvore:    [ ] MODO EXPANDIDO (Detalhes & Sublabels)                       │
+│                                                                                               │
+│                     [P/D/V] Alternar Opções  •  [Esc/Enter/Q] Fechar Janela                   │
+└───────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+#### 2. Modal de Gerenciador de Diretórios & Configuração (`[C]`)
+Pressione `[C]` no modo Restore para gerenciar caminhos persistidos em `~/.config/distro-vault/config.toml`:
+```text
+┌────────────────── 📁 Gerenciador de Diretórios (~/.config/distro-vault/config.toml) ──────────────────┐
+│ ┌─ [1] Diretório Padrão de Saída (Dumps & Slices) [Tecla O p/ Explorador] ──────────────────────────┐ │
+│ │   📁 /home/usuario/Antigravity/backups                                                             │ │
+│ └────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+│ ┌─ [2] Diretórios de Entrada para Varredura (2) [+/A: Adicionar | D/Del: Remover] ──────────────────┐ │
+│ │  ▶ 📂 /home/usuario/Antigravity/backups                                                            │ │
+│ │    📂 /mnt/storage/vault-dumps                                                                     │ │
+│ └────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+│ ┌─ [3] Densidade Padrão da Interface [Espaço para Alternar] ─────────────────────────────────────────┐ │
+│ │    [X] MODO COMPACTO (Alta Densidade de Itens)                                                     │ │
+│ └────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+│ ┌────────────────────────────────────────────────────────────────────────────────────────────────────┐ │
+│ │                     ▶ [S / Enter] SALVAR E APLICAR PREFERÊNCIAS NO DISCO ◀                         │ │
+│ └────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
+│           [Tab/↑/↓] Campo  •  [O] Mudar Saída  •  [+/A] Add Entrada  •  [D/Del] Remover  •  [S] Salvar         │
+└───────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ### Controles Universais da TUI
@@ -209,9 +248,11 @@ graph TD
         TUI["TUI Interativa (Ratatui 0.30, Crossterm 0.29)"]
         TREE["RestoreTreeState (Menus Drop & Checkboxes)"]
         EXPL["FileExplorerState (Navegador Modal)"]
+        MODALS["OptionsModalState & ConfigModalState"]
         CLI --- TUI
         TUI --- TREE
         TUI --- EXPL
+        TUI --- MODALS
     end
 
     subgraph App["Application Layer (Casos de Uso)"]
@@ -223,13 +264,13 @@ graph TD
     end
 
     subgraph Core["Core Domain Layer (Regras Puras - Zero I/O)"]
-        ENTITIES["Entities (Manifest, ZenProfile, AgentGovernance, SshKeyEntry, GitConfigEntry)"]
-        VO["Value Objects (Checksum, DistroFamily, UnixMode, PackageName)"]
-        PORTS["Ports Traits (BrowserPort, StoragePort, SystemPort, SshPort, GitConfigPort, PackagePort)"]
+        ENTITIES["Entities (Manifest, ZenProfile, AgentGovernance, SshKeyEntry, GitConfigEntry, VaultConfig)"]
+        VO["Value Objects (Checksum, DistroFamily, UnixMode, PackageName, SkillCategory)"]
+        PORTS["Ports Traits (BrowserPort, StoragePort, SystemPort, SshPort, GitConfigPort, ConfigPort, PackagePort)"]
     end
 
     subgraph Driven["Driven Adapters (Infraestrutura)"]
-        SYS["adapter-system (Pacman, Flatpak, DNF, APT, SSH, Git)"]
+        SYS["adapter-system (Pacman, Flatpak, DNF, APT, SSH, Git, TomlConfigAdapter)"]
         BRW["adapter-browser (Zen mozLz4 codec, CityHash64 normalizer)"]
         AGT["adapter-agents (Agent Governance, symlink dereferencer)"]
         STR["adapter-storage (Tar, Zstd, ZipSlipGuard, CustomDirsHandler)"]
@@ -245,13 +286,13 @@ graph TD
 
 | Crate | Responsabilidade |
 | :--- | :--- |
-| `crates/domain` | Entidades puras, Value Objects, contratos de Portas (traits) e erros tipados. **Zero I/O e zero dependências de infraestrutura.** |
+| `crates/domain` | Entidades puras (`VaultConfig`, `Manifest`, `SelectionFilter`), Value Objects, contratos de Portas (`ConfigPort`, `StoragePort`, `BrowserPort`) e erros tipados. **Zero I/O e zero dependências de infraestrutura.** |
 | `crates/application` | Casos de uso e orquestração dos fluxos de Backup, Restore, Slice, Inspect e Verify. |
 | `crates/adapter-browser` | Codec Mozilla LZ4 nativo (`mozLz40\0`) e normalizador CityHash64 de `profiles.ini` e `installs.ini`. |
-| `crates/adapter-system` | Integração com o sistema operacional, `/etc/os-release`, detecção de `/proc`, chaves SSH e gerenciadores de pacotes. |
+| `crates/adapter-system` | Integração com o sistema operacional, `/etc/os-release`, monitor `/proc`, chaves SSH, identidade Git global, gerenciadores de pacotes e persistência declarativa TOML (`TomlConfigAdapter`). |
 | `crates/adapter-agents` | Scanner de regras de IA (`AGENTS.md`) e 19 skills com desreferenciamento de symlinks para independência de ambiente. |
 | `crates/adapter-storage` | Motor de compactação e streaming `.tar.zst` com sanitização Zip-Slip e preservação de permissões POSIX. |
-| `crates/adapter-cli` | Composition Root, CLI com Clap 4.5 e interface TUI rica em Ratatui. |
+| `crates/adapter-cli` | Composition Root, CLI com Clap 4.5 e interface TUI rica em Ratatui com arquitetura desinchaçada e modais flutuantes. |
 
 ---
 
@@ -267,6 +308,38 @@ graph TD
 
 ---
 
+## 💡 Cenários Práticos de Uso
+
+### 1. Migração Cross-Distro Completa (Arch Linux ➔ Fedora / Ubuntu)
+```bash
+# Na máquina de origem (Arch Linux): crie um snapshot completo
+distro-vault backup -o ~/meu-sistema.tar.zst
+
+# Na nova máquina (Fedora): copie o arquivo e inicie a restauração
+distro-vault restore ~/meu-sistema.tar.zst --install-packages
+```
+*O algoritmo interno remapeia `/home/usuario_antigo` para `/home/novo_usuario`, regenera os hashes CityHash64 do Zen Browser e reinstala os pacotes desktop equivalentes via Flatpak / DNF.*
+
+### 2. Slicing e Compartilhamento Seguro (Remoção de Segredos)
+Precisa compartilhar suas configurações de desenvolvimento ou dotfiles sem expor chaves privadas SSH e sessões bancárias do navegador?
+```bash
+# Na TUI: Abra o dump com `distro-vault restore`, desmarque Chaves SSH e Zen Browser e aperte [S]
+# Ou via CLI de forma atômica e automatizada:
+distro-vault slice /backups/snapshot-completo.tar.zst \
+  -o ~/dotfiles-compartilhaveis.tar.zst \
+  --no-ssh \
+  --no-zen
+```
+
+### 3. Armazenamento em Múltiplos Discos / SSD Externo
+Configure seu SSD externo ou partição de dados para ser detectado automaticamente:
+1. Abra a TUI com `distro-vault` e pressione `[C]` (Pastas).
+2. Pressione `[O]` para selecionar seu drive externo como `output_dir`.
+3. Pressione `[+]` e aponte para pastas antigas de backup para adicionar em `input_dirs`.
+4. Pressione `[S]` para salvar em `~/.config/distro-vault/config.toml`. Pronto!
+
+---
+
 ## 🗺️ Roadmap de Evolução
 
 - [x] **v1.0.0 (Lançamento Oficial):**
@@ -275,6 +348,9 @@ graph TD
   - Persistência em `~/.config/distro-vault/config.toml` via `TomlConfigAdapter`.
   - Desinchaço da TUI (anti-bloat) com 100% da altura da coluna dedicada à árvore hierárquica.
   - Submenu modal de parâmetros `[O]`, gerenciador modal de diretórios `[C]` e alternância de densidade `[V]`.
+- [x] **v1.1.1 (Expansão de Documentação & Hardening):**
+  - Reescrita completa da documentação com diagramas de arquitetura, mockups visuais da TUI e cenários passo a passo.
+  - Auditoria de segurança pré-commit e validação global estrita.
 - [ ] **v1.2.0 (Próximos Passos):**
   - Sincronização remota automatizada com backends SSH/SFTP e S3.
   - Agendador integrado via timers Systemd (`distro-vault schedule`).

@@ -4,7 +4,7 @@ version = 4
 
 [[package]]
 name = "adapter-agents"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "domain",
  "serde",
@@ -16,7 +16,7 @@ dependencies = [
 
 [[package]]
 name = "adapter-browser"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "domain",
  "lz4_flex",
@@ -30,7 +30,7 @@ dependencies = [
 
 [[package]]
 name = "adapter-cli"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "adapter-agents",
  "adapter-browser",
@@ -51,7 +51,7 @@ dependencies = [
 
 [[package]]
 name = "adapter-storage"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "domain",
  "serde",
@@ -66,7 +66,7 @@ dependencies = [
 
 [[package]]
 name = "adapter-system"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "domain",
  "serde",
@@ -161,7 +161,7 @@ checksum = "330a5ed07fa54e4702c9d6c4174f74427fc0ef6e214bbd677ae50a5099946470"
 
 [[package]]
 name = "application"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "adapter-agents",
  "adapter-browser",
@@ -549,7 +549,7 @@ dependencies = [
 
 [[package]]
 name = "domain"
-version = "1.1.0"
+version = "1.1.1"
 dependencies = [
  "mockall",
  "serde",
