@@ -11,7 +11,7 @@ members = [
 resolver = "2"
 
 [workspace.package]
-version = "1.0.0"
+version = "1.1.0"
 edition = "2021"
 authors = ["Eduardo <eduardo@local>"]
 license = "MIT OR Apache-2.0"
@@ -30,6 +30,7 @@ adapter-storage = { path = "crates/adapter-storage" }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 serde_yaml = "0.9"
+toml = "0.8"
 
 # Error Handling & Resilience
 thiserror = "1.0"

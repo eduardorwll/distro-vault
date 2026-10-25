@@ -6,6 +6,7 @@ pub mod manifest;
 pub mod package;
 pub mod selection_filter;
 pub mod ssh_key;
+pub mod vault_config;
 pub mod zen_profile;
 
 pub use agent_governance::{AgentGovernance, QualityGates, RuleEntry, SkillEntry};
@@ -16,4 +17,5 @@ pub use manifest::Manifest;
 pub use package::{PackageEntry, PackageScope, PackageSource};
 pub use selection_filter::SelectionFilter;
 pub use ssh_key::{SshFileType, SshKeyEntry};
+pub use vault_config::VaultConfig;
 pub use zen_profile::{Container, SessionInfo, Space, ZenProfile};

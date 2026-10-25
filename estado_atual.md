@@ -1,7 +1,7 @@
 # Estado Atual — distro-vault
 
-Data: 24 de Outubro de 2026
-Status: 🟢 Versão 1.0.0 Oficial Publicada | Todas as Fases (1 a 14) Concluídas com Sucesso | 43 Testes Passando | Zero Warnings Policy Mantida | CLI & TUI Ratatui com Menus Drop Hierárquicos de Restore, Geração de Sub-Dumps (Slice), SSH, Git Global Config, Transcrição Cross-Distro e Explorador Unificado | Fase 15 (Roadmap Futuro v1.1.0+) Mapeada
+Data: 25 de Outubro de 2026
+Status: 🟢 Versão 1.1.0 Oficial Implementada | Todas as Fases (1 a 15) Concluídas com Sucesso | 43 Testes Passando | Zero Warnings Policy Rigorosamente Mantida | Persistência Declarativa TOML (~/.config/distro-vault/config.toml) | TUI Ratatui Desinchaçada com Modais Flutuantes (Opções [O] e Gerenciador de Diretórios [C]), Alternância de Densidade [V], Árvore Hierárquica em Altura Total e Slicing de Snapshots
 
 ---
 
@@ -10,40 +10,36 @@ Status: 🟢 Versão 1.0.0 Oficial Publicada | Todas as Fases (1 a 14) Concluíd
 ### Fase 1: Core Domain & Ports (`crates/domain`)
 - [x] Arquitetura Hexagonal pura com isolamento total de I/O.
 - [x] Value Objects: `ProfileId`, `PackageName`, `DistroFamily`, `Checksum`, `UnixMode`, `SkillCategory`.
-- [x] Entidades: `Manifest`, `ZenProfile`, `PackageEntry`, `AppImageEntry`, `AgentGovernance`, `CustomDirectoryEntry`, `SelectionFilter`, `SshKeyEntry`.
-- [x] Portas Hexagonais: `BrowserPort`, `PackagePort`, `StoragePort`, `AgentPort`, `SystemPort`, `SshPort`.
+- [x] Entidades: `Manifest`, `ZenProfile`, `PackageEntry`, `AppImageEntry`, `AgentGovernance`, `CustomDirectoryEntry`, `SelectionFilter`, `SshKeyEntry`, `GitConfigEntry`, `VaultConfig`.
+- [x] Portas Hexagonais: `BrowserPort`, `PackagePort`, `StoragePort`, `AgentPort`, `SystemPort`, `SshPort`, `GitConfigPort`, `ConfigPort`.
 
 ### Fase 2: Low-Level Adapters (Módulos Profundos)
 - [x] **`crates/adapter-browser`:** MozLZ4 Codec com verificação de magic header `mozLz40\0`, tamanho LE e bomb guard (128 MB), normalizador CityHash64 v1 (UTF-16LE) em `installs.ini` e `profiles.ini` com sweep & bind para `Default=1`, e trait `BrowserPort` (8 testes passando).
 - [x] **`crates/adapter-storage`:** Streaming `.tar.zst` (zstd level 3) com `ZipSlipGuard` (rejeição de escapes `..`, caminhos absolutos, symlinks perigosos e dispositivos especiais), modos POSIX (`0700`/`0600`), integridade SHA-256 e pastas customizadas em `custom/<slug>` (3 testes passando).
 - [x] **`crates/adapter-agents`:** Scanner de regras e skills com parsing YAML frontmatter e desreferenciação física de links simbólicos para portabilidade fora do Omarchy (3 testes passando).
-- [x] **`crates/adapter-system`:** Parser `/etc/os-release`, monitor `/proc`, verificação de `libfuse2`, scanner e restaurador POSIX de chaves SSH (`0700`/`0600`), e dispatchers para `pacman`, `paru`/`yay` e `flatpak` (5 testes passando).
+- [x] **`crates/adapter-system`:** Parser `/etc/os-release`, monitor `/proc`, verificação de `libfuse2`, scanner e restaurador POSIX de chaves SSH (`0700`/`0600`), scanner de Git config global, adaptador de configuração TOML `TomlConfigAdapter` com fallback resiliente e dispatchers para `pacman`, `aur`, `dnf`, `apt` e `flatpak` (7 testes passando).
 
 ### Fase 3: Application Use Cases & Pipelines (`crates/application`)
-- [x] **`BackupPipelineUseCase` (`backup.rs`):** Orquestração completa do snapshot: lock check com encerramento gracioso via `/proc`, agregação de navegadores, pacotes, agentes, chaves SSH e pastas customizadas, aplicação do `SelectionFilter` e geração atômica com checksum SHA-256.
-- [x] **`RestorePipelineUseCase` (`restore.rs`):** Orquestração da restauração reordenada priorizando dados do usuário (Zen Browser, Agentes, Chaves SSH com 0700/0600, Pastas Customizadas com transcrição canônica cross-distro para `$HOME`, antes de pacotes de sistema). Suporte a `staging_override` e criação de staging em disco (`~/.cache`).
-- [x] **`InspectSnapshotUseCase` (`inspect.rs`):** Leitura de metadados em alta velocidade lendo apenas o `manifest.json` do topo do stream Zstandard sem descompactar o arquivo.
+- [x] **`BackupPipelineUseCase` (`backup.rs`):** Orquestração completa do snapshot com suporte a Git config global, chaves SSH, agentes, Zen Browser e pacotes de sistema.
+- [x] **`RestorePipelineUseCase` (`restore.rs`):** Restauração hierárquica granular com suporte a filtros detalhados (`SelectionFilter`).
+- [x] **`SliceSnapshotUseCase` (`slice.rs`):** Geração de sub-dumps a partir de snapshots existentes com poda atômica do manifesto e re-empacotamento com novo checksum SHA-256.
+- [x] **`InspectSnapshotUseCase` (`inspect.rs`):** Leitura de metadados em alta velocidade lendo apenas o `manifest.json` do topo do stream Zstandard.
 - [x] **`VerifyIntegrityUseCase` (`verify.rs`):** Validação de integridade criptográfica SHA-256 e teste estrutural de blocos.
 
-### Fase 4: CLI Adapter & Composition Root (`crates/adapter-cli`)
-- [x] Subcomandos Clap 4.5: `backup`, `restore`, `inspect`, `verify`.
-- [x] Flags expandidas: `--from-staging`, `--target-home`, `--target-config`, `--target-custom`, `--install-packages`, `--dry-run`.
-- [x] Resolução inteligente de `$HOME` via `SUDO_USER` prevenindo poluição em `/root` quando executado via `sudo`.
-- [x] Validação limpa e antecipada de `sudo -v` antes de iniciar spinners de progresso.
+### Fase 15: Personalização de I/O, Persistência TOML e Desinchaço da TUI (v1.1.0)
+- [x] **`VaultConfig` & `ConfigPort` no Domínio:** Entidade com `input_dirs`, `output_dir`, `auto_install_packages`, `compact_view` e `staging_root`.
+- [x] **`TomlConfigAdapter`:** Persistência transparente e atômica em `~/.config/distro-vault/config.toml` com permissões POSIX `0644`.
+- [x] **TUI Desinchaçada (Anti-Bloat):** Eliminação de painéis estáticos secundários na tela de Restore, dedicando 100% da coluna à árvore hierárquica interativa.
+- [x] **Modal de Parâmetros de Execução `[O]`:** Submenu flutuante com toggles diretos para instalação de pacotes nativos (`[P]`), simulação Dry-Run (`[D]`) e densidade da árvore (`[V]`).
+- [x] **Modal de Gerenciador de Diretórios `[C]`:** Gerenciamento visual do diretório padrão de saída (`[O]`), inclusão (`[+]`/`[A]`) e remoção (`[D]`/`[Del]`) de diretórios de entrada, alternância de densidade e persistência com `[S]` / `Enter`.
+- [x] **Modo Compacto de Alta Densidade `[V]`:** Ocultação dinâmica de subtítulos/caminhos secundários na árvore, permitindo visualizar o triplo de nós simultaneamente sem necessidade de scroll.
 
-### Fase 6 & 8: TUI Interativa com Ratatui (`crates/adapter-cli/src/tui/`)
-- [x] 8 abas navegáveis categorizando pacotes, skills, AppImages, pastas customizadas, Zen spaces e Chaves SSH.
-- [x] Modo de Recuperação (`TuiMode::Restore`) com alertas visuais de necessidade de `sudo`, detalhamento POSIX de chaves SSH, preview de transcrição de caminhos e detecção em tempo real de staging acelerado em cache.
-- [x] Gerenciamento RAII com `TerminalGuard` garantindo restauração limpa do terminal.
+---
 
-### Fase 9: Navegador Interativo Unificado de Arquivos e Diretórios (Explorer Modal)
-- [x] Modal interativo unificado (`FileExplorerState` e `render_file_explorer`) reutilizado tanto para adicionar pastas customizadas para backup quanto para escanear/selecionar diretórios e arquivos de snapshot para restauração.
-- [x] Navegação intuitiva no sistema de arquivos do usuário (`↑/↓/j/k`, `Enter` para abrir, `Backspace` para subir, `Espaço/S` para confirmar seleção, `Esc/Q` para fechar).
-- [x] Descoberta automática de backups adicionais (`scan_and_add_backup_folder`) para inclusão imediata na lista de snapshots disponíveis.
-
-### Fase 11: Suporte a Backup e Restauração da Configuração Global do Git
-- [x] Entidade `GitConfigEntry` e contrato `GitConfigPort` implementados de forma desacoplada no domínio.
-- [x] Adaptador de sistema `LinuxGitConfigAdapter` varrendo `~/.gitconfig` e `~/.config/git/config`, extraindo metadados informativos de identidade do autor (`user.name`, `user.email`) e restaurando com permissão `0644`.
+## 2. Métricas de Qualidade e Compilação
+- `cargo test --workspace` -> **43 testes passando (100% de sucesso)**
+- `cargo clippy --workspace --all-targets -- -D warnings` -> **Zero Warnings Policy rigorosamente mantida**
+- Binário de release compilado e sincronizado em `bin/distro-vault` e `/home/eduardorwll/distro-vault`.stema `LinuxGitConfigAdapter` varrendo `~/.gitconfig` e `~/.config/git/config`, extraindo metadados informativos de identidade do autor (`user.name`, `user.email`) e restaurando com permissão `0644`.
 - [x] Implantação automática no `$HOME` da máquina alvo executada na fase de recuperação prioritária de dados do usuário (junto com SSH e perfis).
 - [x] Exibição de identidade Git no painel de inspeção de snapshots da TUI e logs detalhados no CLI.
 

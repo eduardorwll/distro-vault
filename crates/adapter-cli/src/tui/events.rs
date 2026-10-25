@@ -2,6 +2,7 @@ use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use std::path::PathBuf;
 
 use super::app::{InputTarget, RestoreFocus, TuiApp, TuiMode};
+use super::config_modal::ConfigField;
 use super::explorer::{ExplorerSelection, ExplorerTarget};
 
 pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
@@ -80,6 +81,99 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
             }
             KeyCode::Char(c) => {
                 app.input_buffer.push(c);
+            }
+            _ => {}
+        }
+        return;
+    }
+
+    // 2. Options / Parameters Modal handling
+    if app.options_modal.is_open {
+        match key.code {
+            KeyCode::Char('p') | KeyCode::Char('P') => {
+                app.toggle_restore_install_packages();
+            }
+            KeyCode::Char('d') | KeyCode::Char('D') => {
+                app.toggle_restore_dry_run();
+            }
+            KeyCode::Char('v') | KeyCode::Char('V') => {
+                app.toggle_compact_view();
+            }
+            KeyCode::Esc
+            | KeyCode::Char('q')
+            | KeyCode::Char('Q')
+            | KeyCode::Char('o')
+            | KeyCode::Char('O')
+            | KeyCode::Enter => {
+                app.options_modal.close();
+            }
+            _ => {}
+        }
+        return;
+    }
+
+    // 3. I/O Directories & Configuration Modal handling
+    if app.config_modal.is_open {
+        match key.code {
+            KeyCode::Tab | KeyCode::Down | KeyCode::Char('j') => {
+                app.config_modal.next_field();
+            }
+            KeyCode::BackTab | KeyCode::Up | KeyCode::Char('k') => {
+                app.config_modal.prev_field();
+            }
+            KeyCode::Right | KeyCode::Char('l') => {
+                if app.config_modal.focused_field == ConfigField::InputDirsList {
+                    app.config_modal.next_input_dir();
+                }
+            }
+            KeyCode::Left | KeyCode::Char('h') => {
+                if app.config_modal.focused_field == ConfigField::InputDirsList {
+                    app.config_modal.prev_input_dir();
+                }
+            }
+            KeyCode::Char('d') | KeyCode::Delete | KeyCode::Char('-') => {
+                if app.config_modal.focused_field == ConfigField::InputDirsList {
+                    app.config_modal.remove_selected_input_dir();
+                }
+            }
+            KeyCode::Char('o') | KeyCode::Char('O') => {
+                let start = app.config_modal.pending_output_dir.clone();
+                app.file_explorer.open(&start, ExplorerTarget::OutputDir);
+            }
+            KeyCode::Char('+') | KeyCode::Char('a') | KeyCode::Char('A') => {
+                let start = app.vault_config.output_dir.clone();
+                app.file_explorer.open(&start, ExplorerTarget::InputDir);
+            }
+            KeyCode::Char('v') | KeyCode::Char('V') => {
+                app.config_modal.toggle_compact_view();
+            }
+            KeyCode::Char('s') | KeyCode::Char('S') => {
+                app.apply_config_modal();
+                app.status_message = Some("Preferências salvas com sucesso!".into());
+            }
+            KeyCode::Enter => match app.config_modal.focused_field {
+                ConfigField::SaveAndClose => {
+                    app.apply_config_modal();
+                    app.status_message = Some("Preferências salvas com sucesso!".into());
+                }
+                ConfigField::OutputDir => {
+                    let start = app.config_modal.pending_output_dir.clone();
+                    app.file_explorer.open(&start, ExplorerTarget::OutputDir);
+                }
+                ConfigField::InputDirsList => {
+                    let start = app.vault_config.output_dir.clone();
+                    app.file_explorer.open(&start, ExplorerTarget::InputDir);
+                }
+                ConfigField::CompactViewToggle => {
+                    app.config_modal.toggle_compact_view();
+                }
+            },
+            KeyCode::Esc
+            | KeyCode::Char('q')
+            | KeyCode::Char('Q')
+            | KeyCode::Char('c')
+            | KeyCode::Char('C') => {
+                app.config_modal.close();
             }
             _ => {}
         }
@@ -173,6 +267,18 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
             KeyCode::Char('d') | KeyCode::Char('D') => {
                 app.toggle_restore_dry_run();
             }
+            KeyCode::Char('o') | KeyCode::Char('O') => {
+                app.toggle_options_modal();
+            }
+            KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
+                app.should_quit = true;
+            }
+            KeyCode::Char('c') | KeyCode::Char('C') => {
+                app.toggle_config_modal();
+            }
+            KeyCode::Char('v') | KeyCode::Char('V') => {
+                app.toggle_compact_view();
+            }
             KeyCode::Char('a') | KeyCode::Char('A') => {
                 let start = app.default_backups_dir.clone();
                 app.file_explorer.open(&start, ExplorerTarget::SnapshotOrFolder);
@@ -189,9 +295,6 @@ pub fn handle_key_event(app: &mut TuiApp, key: KeyEvent) {
                 } else {
                     app.should_quit = true;
                 }
-            }
-            KeyCode::Char('c') if key.modifiers.contains(KeyModifiers::CONTROL) => {
-                app.should_quit = true;
             }
             _ => {}
         },
@@ -226,6 +329,20 @@ fn apply_explorer_selection(app: &mut TuiApp, target: ExplorerTarget, sel: Explo
                     count
                 ));
             }
+        },
+        ExplorerTarget::OutputDir => match sel {
+            ExplorerSelection::Directory(path) => {
+                app.config_modal.set_output_dir(path.clone());
+                app.status_message = Some(format!("Destino selecionado: {}", path.display()));
+            }
+            ExplorerSelection::SnapshotFile(_) => {}
+        },
+        ExplorerTarget::InputDir => match sel {
+            ExplorerSelection::Directory(path) => {
+                app.config_modal.add_input_dir(path.clone());
+                app.status_message = Some(format!("Pasta de busca adicionada: {}", path.display()));
+            }
+            ExplorerSelection::SnapshotFile(_) => {}
         },
     }
 }

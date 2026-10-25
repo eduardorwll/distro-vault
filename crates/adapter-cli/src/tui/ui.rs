@@ -7,6 +7,7 @@ use ratatui::{
 };
 
 use super::app::{InputTarget, RestoreFocus, TuiApp, TuiMode, TuiRow};
+use super::config_modal::ConfigField;
 use super::explorer::{ExplorerEntryKind, ExplorerTarget, FileExplorerState};
 use super::restore_tree::VisibleTreeNode;
 
@@ -72,11 +73,11 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
             ),
             TuiMode::Restore => match app.restore_focus {
                 RestoreFocus::SnapshotsList => Span::styled(
-                    " [↑/↓] Snapshots  [Tab] Focar Árvore  [P] Pacotes  [D] Dry-Run  [A] Arquivo  [S] NOVO SUB-DUMP  [R] RESTAURAR  [Q] Sair ",
+                    " [↑/↓] Snapshots  [Tab] Focar Árvore  [Enter/R] RESTAURAR  [S] SUB-DUMP  [O] Opções  [C] Pastas  [V] Densidade  [Q] Sair ",
                     Style::default().fg(Color::DarkGray),
                 ),
                 RestoreFocus::ItemTree => Span::styled(
-                    " [↑/↓] Navegar Árvore  [Enter/→] Abrir/Fechar Drop  [Espaço] Marcar/Desmarcar  [S] NOVO SUB-DUMP  [Tab] Voltar  [R] RESTAURAR  [Q] Sair ",
+                    " [↑/↓] Navegar Árvore  [Enter/→] Drop  [Espaço] Marcar  [Enter/R] RESTAURAR  [S] SUB-DUMP  [O] Opções  [C] Pastas  [V] Densidade  [Tab] Voltar ",
                     Style::default().fg(Color::Cyan),
                 ),
             },
@@ -96,6 +97,16 @@ pub fn draw(f: &mut Frame, app: &mut TuiApp) {
     // 6. Unified Interactive File & Directory Explorer Modal
     if app.file_explorer.is_open {
         render_file_explorer(f, &mut app.file_explorer);
+    }
+
+    // 7. Execution Options / Parameters Modal (Anti-Bloat)
+    if app.options_modal.is_open {
+        render_options_modal(f, app);
+    }
+
+    // 8. I/O Directories & Settings Modal
+    if app.config_modal.is_open {
+        render_config_modal(f, app);
     }
 }
 
@@ -369,9 +380,8 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
         let right_chunks = Layout::default()
             .direction(Direction::Vertical)
             .constraints([
-                Constraint::Length(4), // Metadados do Snapshot
-                Constraint::Min(8),    // Árvore de Seleção Granular com Drop/Collapse
-                Constraint::Length(4), // Opções de Restauração & Execução
+                Constraint::Length(3), // Metadados concisos do Snapshot
+                Constraint::Min(8),    // Árvore de Seleção Granular ocupando toda a altura
             ])
             .split(cols[1]);
 
@@ -400,6 +410,7 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                 Span::styled(format!("  ({:.2} MB)", size_mb), Style::default().fg(Color::Gray)),
                 Span::styled("  •  Origem: ", Style::default().fg(Color::Yellow)),
                 Span::styled(distro_line, Style::default().fg(Color::White)),
+                Span::styled("   [O] Opções  [C] Pastas", Style::default().fg(Color::Cyan)),
             ]),
             Line::from(vec![if staging_detected.is_some() {
                 Span::styled(
@@ -408,7 +419,7 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                 )
             } else {
                 Span::styled(
-                    " 📦 Arquivo Compactado Zstandard (.tar.zst) pronto para extração seletiva.",
+                    " 📦 Zstandard (.tar.zst)  •  [Enter/R] RESTAURAR  •  💾 [S] SUB-DUMP",
                     Style::default().fg(Color::DarkGray),
                 )
             }]),
@@ -422,11 +433,17 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
         let (tree_border_color, tree_title) = match app.restore_focus {
             RestoreFocus::ItemTree => (
                 Color::Cyan,
-                " 🗂️ Seleção Granular do Dump [Foco Ativo: [Espaço] Marcar • [Enter/→] Abrir Drop • [Tab] Voltar] ",
+                format!(
+                    " 🗂️ Seleção Granular do Dump [Foco Ativo: [Espaço] Marcar • [Enter/→] Drop • [V] {} • [Tab] Voltar] ",
+                    if app.vault_config.compact_view { "Modo Compacto" } else { "Modo Detalhado" }
+                ),
             ),
             RestoreFocus::SnapshotsList => (
                 Color::DarkGray,
-                " 🗂️ Seleção Granular do Dump [Pressione Tab para Interagir com os Menus Drop] ",
+                format!(
+                    " 🗂️ Seleção Granular do Dump [Tab: Focar • O: Opções • C: Pastas • V: {}] ",
+                    if app.vault_config.compact_view { "Compacto" } else { "Detalhado" }
+                ),
             ),
         };
 
@@ -498,16 +515,21 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
                                 Span::styled("[ ] ", Style::default().fg(Color::DarkGray))
                             };
                             let sub = item.sublabel.as_deref().unwrap_or("");
-                            let line = Line::from(vec![
-                                Span::styled(branch, Style::default().fg(Color::DarkGray)),
-                                check_box,
-                                Span::styled(&item.label, Style::default().fg(Color::White)),
-                                if !sub.is_empty() {
-                                    Span::styled(format!("  ({})", sub), Style::default().fg(Color::Gray))
-                                } else {
-                                    Span::raw("")
-                                },
-                            ]);
+                            let spans = if app.vault_config.compact_view || sub.is_empty() {
+                                vec![
+                                    Span::styled(branch, Style::default().fg(Color::DarkGray)),
+                                    check_box,
+                                    Span::styled(&item.label, Style::default().fg(Color::White)),
+                                ]
+                            } else {
+                                vec![
+                                    Span::styled(branch, Style::default().fg(Color::DarkGray)),
+                                    check_box,
+                                    Span::styled(&item.label, Style::default().fg(Color::White)),
+                                    Span::styled(format!("  ({})", sub), Style::default().fg(Color::Gray)),
+                                ]
+                            };
+                            let line = Line::from(spans);
                             let bg = if is_cursor {
                                 Color::Rgb(35, 45, 60)
                             } else {
@@ -539,62 +561,6 @@ fn draw_restore_mode(f: &mut Frame, app: &mut TuiApp, sub_area: Rect, main_area:
             right_chunks[1],
             &mut app.restore_tree.list_state,
         );
-
-        // Chunk 2: Options
-        let pkg_indicator = if app.restore_install_packages {
-            Span::styled(
-                "[x] ATIVADO",
-                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
-            )
-        } else {
-            Span::styled("[ ] DESATIVADO", Style::default().fg(Color::DarkGray))
-        };
-        let dry_indicator = if app.restore_dry_run {
-            Span::styled(
-                "[x] ATIVADO (Simulação)",
-                Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
-            )
-        } else {
-            Span::styled("[ ] DESATIVADO (Execução Real)", Style::default().fg(Color::DarkGray))
-        };
-
-        let options_lines = vec![
-            Line::from(vec![
-                Span::styled(
-                    " [P] Pacotes: ",
-                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
-                ),
-                pkg_indicator,
-                Span::styled(
-                    "   •   [D] Dry-Run: ",
-                    Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
-                ),
-                dry_indicator,
-            ]),
-            Line::from(vec![
-                Span::styled(
-                    " 👉 [Enter/R] RESTAURAR ",
-                    Style::default().fg(Color::Green).add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    "(Recupera no sistema)  •  ",
-                    Style::default().fg(Color::Gray),
-                ),
-                Span::styled(
-                    "💾 [S] SALVAR SUB-DUMP ",
-                    Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
-                ),
-                Span::styled(
-                    "(Gera novo .tar.zst apenas com itens marcados)",
-                    Style::default().fg(Color::Gray),
-                ),
-            ]),
-        ];
-
-        let options_block = Block::default()
-            .borders(Borders::ALL)
-            .title(" ⚙️ Parâmetros de Execução ");
-        f.render_widget(Paragraph::new(options_lines).block(options_block), right_chunks[2]);
     } else {
         let empty_p = Paragraph::new(vec![
             Line::from(""),
@@ -794,6 +760,14 @@ fn render_file_explorer(f: &mut Frame, explorer: &mut FileExplorerState) {
             " 📂 Navegador: Selecionar Arquivo (.tar.zst) ou Pasta de Backups ",
             "[Espaço/S] Escanear Todos os Backups Desta Pasta",
         ),
+        ExplorerTarget::OutputDir => (
+            " 📁 Navegador: Selecionar Diretório Alvo para Backups/Slices ",
+            "[Espaço/S] Definir Como Diretório Padrão de Saída",
+        ),
+        ExplorerTarget::InputDir => (
+            " 📂 Navegador: Selecionar Diretório de Origem de Snapshots ",
+            "[Espaço/S] Adicionar Diretório à Lista de Varredura",
+        ),
     };
 
     let block = Block::default()
@@ -904,5 +878,234 @@ fn render_file_explorer(f: &mut Frame, explorer: &mut FileExplorerState) {
     f.render_widget(
         Paragraph::new(help_line).alignment(Alignment::Center),
         inner_chunks[2],
+    );
+}
+
+fn render_options_modal(f: &mut Frame, app: &TuiApp) {
+    let area = centered_rect(60, 35, f.area());
+    f.render_widget(Clear, area);
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Span::styled(
+            " ⚙️ Opções & Parâmetros de Execução ",
+            Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD),
+        ))
+        .style(Style::default().bg(Color::Rgb(18, 22, 28)).fg(Color::White));
+
+    let inner = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(2), // Intro
+            Constraint::Length(6), // Toggles list
+            Constraint::Length(2), // Footer
+        ])
+        .margin(1)
+        .split(area);
+
+    f.render_widget(block, area);
+
+    let intro = Paragraph::new(Line::from(vec![
+        Span::styled(
+            "Defina os parâmetros operacionais antes de iniciar a restauração ou sub-dump:",
+            Style::default().fg(Color::DarkGray),
+        ),
+    ]));
+    f.render_widget(intro, inner[0]);
+
+    let (pkg_check, pkg_color) = if app.restore_install_packages {
+        ("[X] ATIVADO", Color::Green)
+    } else {
+        ("[ ] DESATIVADO", Color::DarkGray)
+    };
+
+    let (dry_check, dry_color) = if app.restore_dry_run {
+        ("[X] MODO SIMULAÇÃO (DRY-RUN)", Color::Yellow)
+    } else {
+        ("[ ] RESTAURAÇÃO REAL NO SISTEMA", Color::White)
+    };
+
+    let (view_check, view_color) = if app.vault_config.compact_view {
+        ("[X] MODO COMPACTO (Alta Densidade)", Color::Cyan)
+    } else {
+        ("[ ] MODO EXPANDIDO (Detalhes & Sublabels)", Color::White)
+    };
+
+    let items = vec![
+        ListItem::new(Line::from(vec![
+            Span::styled("  [P] ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled("Instalar Pacotes Nativos: ", Style::default().fg(Color::White)),
+            Span::styled(pkg_check, Style::default().fg(pkg_color).add_modifier(Modifier::BOLD)),
+            Span::styled(" (pacman / flatpak / apt / dnf)", Style::default().fg(Color::DarkGray)),
+        ])),
+        ListItem::new(Line::from(vec![
+            Span::styled("  [D] ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled("Simulação Dry-Run:       ", Style::default().fg(Color::White)),
+            Span::styled(dry_check, Style::default().fg(dry_color).add_modifier(Modifier::BOLD)),
+        ])),
+        ListItem::new(Line::from(vec![
+            Span::styled("  [V] ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)),
+            Span::styled("Densidade da Árvore:    ", Style::default().fg(Color::White)),
+            Span::styled(view_check, Style::default().fg(view_color).add_modifier(Modifier::BOLD)),
+        ])),
+    ];
+
+    let list = List::new(items);
+    f.render_widget(list, inner[1]);
+
+    let help = Paragraph::new(Line::from(vec![
+        Span::styled(
+            " [P/D/V] Alternar Opções  •  [Esc/Enter/Q] Fechar Janela ",
+            Style::default().fg(Color::DarkGray),
+        ),
+    ])).alignment(Alignment::Center);
+    f.render_widget(help, inner[2]);
+}
+
+fn render_config_modal(f: &mut Frame, app: &TuiApp) {
+    let area = centered_rect(75, 70, f.area());
+    f.render_widget(Clear, area);
+
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .title(Span::styled(
+            " 📁 Gerenciador de Diretórios & Configuração (~/.config/distro-vault/config.toml) ",
+            Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD),
+        ))
+        .style(Style::default().bg(Color::Rgb(18, 22, 28)).fg(Color::White));
+
+    let inner = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(4), // Output Dir Box
+            Constraint::Min(8),    // Input Dirs List
+            Constraint::Length(3), // Compact View Box
+            Constraint::Length(3), // Save / Action Buttons
+            Constraint::Length(2), // Help Footer
+        ])
+        .margin(1)
+        .split(area);
+
+    f.render_widget(block, area);
+
+    let modal = &app.config_modal;
+
+    // Field 1: Output Directory
+    let output_border_style = if modal.focused_field == ConfigField::OutputDir {
+        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+    let output_block = Block::default()
+        .borders(Borders::ALL)
+        .title(" [1] Diretório Padrão de Saída (Dumps & Slices) [Tecla O p/ Explorador] ")
+        .border_style(output_border_style);
+    let output_text = Paragraph::new(Line::from(vec![
+        Span::styled("  📁 ", Style::default().fg(Color::Cyan)),
+        Span::styled(
+            modal.pending_output_dir.display().to_string(),
+            Style::default().fg(Color::White).add_modifier(Modifier::BOLD),
+        ),
+    ])).block(output_block);
+    f.render_widget(output_text, inner[0]);
+
+    // Field 2: Input Dirs List
+    let input_border_style = if modal.focused_field == ConfigField::InputDirsList {
+        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+    let input_block = Block::default()
+        .borders(Borders::ALL)
+        .title(format!(
+            " [2] Diretórios de Entrada para Varredura de Snapshots ({}) [+/A: Adicionar | D/Del: Remover] ",
+            modal.pending_input_dirs.len()
+        ))
+        .border_style(input_border_style);
+
+    let input_items: Vec<ListItem> = if modal.pending_input_dirs.is_empty() {
+        vec![ListItem::new(Line::from(vec![
+            Span::styled("    Nenhum diretório configurado. Pressione [+] ou [A] para adicionar.", Style::default().fg(Color::DarkGray)),
+        ]))]
+    } else {
+        modal
+            .pending_input_dirs
+            .iter()
+            .enumerate()
+            .map(|(idx, dir)| {
+                let is_selected = modal.focused_field == ConfigField::InputDirsList && idx == modal.input_dir_cursor;
+                let (prefix, style) = if is_selected {
+                    (" ▶ 📂 ", Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD))
+                } else {
+                    ("   📂 ", Style::default().fg(Color::White))
+                };
+                ListItem::new(Line::from(vec![
+                    Span::styled(prefix, style),
+                    Span::styled(dir.display().to_string(), style),
+                ]))
+            })
+            .collect()
+    };
+    let input_list = List::new(input_items).block(input_block);
+    f.render_widget(input_list, inner[1]);
+
+    // Field 3: Compact View Toggle
+    let compact_border_style = if modal.focused_field == ConfigField::CompactViewToggle {
+        Style::default().fg(Color::Yellow).add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+    let compact_block = Block::default()
+        .borders(Borders::ALL)
+        .title(" [3] Densidade Padrão da Interface [Espaço para Alternar] ")
+        .border_style(compact_border_style);
+    let (compact_status, compact_color) = if modal.pending_compact_view {
+        ("[X] MODO COMPACTO (Alta Densidade de Itens)", Color::Cyan)
+    } else {
+        ("[ ] MODO EXPANDIDO (Visualização Clássica com Subtítulos)", Color::White)
+    };
+    let compact_text = Paragraph::new(Line::from(vec![
+        Span::styled("   ", Style::default()),
+        Span::styled(compact_status, Style::default().fg(compact_color).add_modifier(Modifier::BOLD)),
+    ])).block(compact_block);
+    f.render_widget(compact_text, inner[2]);
+
+    // Field 4: Save & Apply Button
+    let save_border_style = if modal.focused_field == ConfigField::SaveAndClose {
+        Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+    } else {
+        Style::default().fg(Color::DarkGray)
+    };
+    let save_block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(save_border_style);
+    let save_text = Paragraph::new(Line::from(vec![
+        Span::styled(
+            if modal.focused_field == ConfigField::SaveAndClose {
+                " ▶ [S / Enter] SALVAR E APLICAR PREFERÊNCIAS NO DISCO ◀ "
+            } else {
+                "   [S / Enter] SALVAR E APLICAR PREFERÊNCIAS NO DISCO   "
+            },
+            if modal.focused_field == ConfigField::SaveAndClose {
+                Style::default().fg(Color::Green).add_modifier(Modifier::BOLD)
+            } else {
+                Style::default().fg(Color::White)
+            },
+        ),
+    ]))
+    .alignment(Alignment::Center)
+    .block(save_block);
+    f.render_widget(save_text, inner[3]);
+
+    // Field 5: Footer Help
+    let help_line = Line::from(vec![
+        Span::styled(
+            " [Tab/↑/↓] Campo  •  [O] Mudar Saída  •  [+/A] Add Entrada  •  [D/Del] Remover  •  [S] Salvar  •  [Esc] Cancelar ",
+            Style::default().fg(Color::DarkGray),
+        ),
+    ]);
+    f.render_widget(
+        Paragraph::new(help_line).alignment(Alignment::Center),
+        inner[4],
     );
 }

@@ -74,6 +74,9 @@ graph TD
     - Desacoplamento estrito exigindo apenas a porta `StoragePort`. Extração em staging temporário protegido por RAII `StagingCleanupGuard`.
     - Poda do `Manifest` e filtragem atômica de arquivos com recálculo determinístico de `total_files`, `total_size_bytes` e geração de novo checksum criptográfico SHA-256.
     - Acionado via CLI (`distro-vault slice`) ou diretamente na TUI através do atalho `[S] Salvar Sub-Dump`.
-13. **Planejamento de Extensão Arquitetural (v1.1.0+):**
-    - **Porta de Configuração do Usuário (`ConfigPort`):** Mapeamento e persistência declarativa em TOML (`~/.config/distro-vault/config.toml`) para customização de diretórios base de entrada e saída.
-    - **Ergonomia e De-bloating da TUI:** Segregação modular entre modos de visualização (compacto vs detalhado) e extração de parâmetros de execução em submenus modais independentes.
+13. **Subsistema de Configuração Declarativa e Ergonomia da TUI (v1.1.0):**
+    - **Porta e Entidade de Configuração (`ConfigPort` & `VaultConfig`):** Entidade no Core Domain (`crates/domain/src/entities/vault_config.rs`) com suporte a múltiplos diretórios de entrada (`input_dirs`), diretório de saída customizado (`output_dir`), opções padrão e modo compacto. Porta hexagonal isolada (`crates/domain/src/ports/config_port.rs`).
+    - **Adaptador TOML Resiliente (`TomlConfigAdapter`):** Implementado em `crates/adapter-system/src/config.rs` persistindo em `~/.config/distro-vault/config.toml` com permissões POSIX `0644`. Criação automática de diretórios pais e recuperação transparente com fallback em caso de arquivo malformado.
+    - **Arquitetura TUI Desinchaçada (Anti-Bloat):** Eliminação de caixas estáticas redundantes na coluna direita do modo Restore, liberando 100% da altura para a árvore hierárquica `RestoreTreeState`.
+    - **Hierarquia de Modais Flutuantes com Overlay Limpo:** Modais `OptionsModalState` (`[O]`) e `ConfigModalState` (`[C]`) utilizam o widget `Clear` do Ratatui sobre caixas flutuantes centralizadas, prevenindo vazamento de caracteres de widgets em background.
+    - **Alternância de Densidade Visual (`[V]`):** Ocultação dinâmica de sublabels de caminho nos nós da árvore hierárquica, triplicando o número de nós visíveis simultaneamente sem scroll.

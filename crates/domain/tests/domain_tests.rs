@@ -358,3 +358,43 @@ fn test_selection_filter_granular_restore_options() {
     filter.toggle_custom_dir("my-docs".to_string());
     assert!(filter.is_custom_dir_included("my-docs"));
 }
+
+#[test]
+fn test_vault_config_defaults_and_manipulation() {
+    use domain::entities::VaultConfig;
+    use std::path::{Path, PathBuf};
+
+    let home = Path::new("/home/testuser");
+    let mut config = VaultConfig::default_for_home(home);
+
+    assert_eq!(config.output_dir, PathBuf::from("/home/testuser/Antigravity/backups"));
+    assert_eq!(config.input_dirs.len(), 2);
+    assert!(config.auto_install_packages);
+    assert!(!config.compact_view);
+
+    // Test add and remove input dirs
+    let added = config.add_input_dir("/mnt/external/backups");
+    assert!(added);
+    assert_eq!(config.input_dirs.len(), 3);
+
+    // Duplicate add should return false
+    let added_dup = config.add_input_dir("/mnt/external/backups");
+    assert!(!added_dup);
+    assert_eq!(config.input_dirs.len(), 3);
+
+    // Set new output dir
+    config.set_output_dir("/mnt/external/new_backups");
+    assert_eq!(config.output_dir, PathBuf::from("/mnt/external/new_backups"));
+    assert!(config.input_dirs.contains(&PathBuf::from("/mnt/external/new_backups")));
+
+    // Remove input dir
+    let removed = config.remove_input_dir(Path::new("/home/testuser/Antigravity/backups"));
+    assert!(removed);
+    assert!(!config.input_dirs.contains(&PathBuf::from("/home/testuser/Antigravity/backups")));
+
+    // Toggles
+    config.toggle_compact_view();
+    assert!(config.compact_view);
+    config.toggle_auto_install_packages();
+    assert!(!config.auto_install_packages);
+}

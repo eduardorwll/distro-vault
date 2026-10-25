@@ -14,7 +14,8 @@ use application::{BackupRequest, RestoreRequest, SliceSnapshotRequest};
 use domain::entities::custom_directory::CustomDirectoryEntry;
 use domain::entities::package::{PackageCategory, PackageScope};
 use domain::entities::selection_filter::SelectionFilter;
-use domain::ports::{AgentPort, BrowserPort, SshPort, StoragePort};
+use domain::entities::VaultConfig;
+use domain::ports::{AgentPort, BrowserPort, ConfigPort, SshPort, StoragePort};
 use domain::value_objects::{PackageName, SkillCategory};
 
 fn main() {
@@ -154,6 +155,15 @@ fn handle_interactive(
     let mut tui_app = TuiApp::new();
     tui_app.set_mode(initial_mode);
 
+    // Load persisted configuration
+    let vault_config = container
+        .config_adapter
+        .load_config()
+        .unwrap_or_else(|_| VaultConfig::default_for_home(&home));
+    tui_app.vault_config = vault_config.clone();
+    tui_app.restore_install_packages = vault_config.auto_install_packages;
+    tui_app.default_backups_dir = vault_config.output_dir.clone();
+
     // 1. Scan packages (User vs Low-Level System vs Dependencies)
     let (user_pkgs, sys_pkgs, dep_pkgs) = scan_package_categories(container);
     tui_app.user_packages = user_pkgs;
@@ -174,21 +184,25 @@ fn handle_interactive(
         let _ = tui_app.add_custom_directory(&dir.to_string_lossy());
     }
 
-    // 6. Discover existing backups in ./backups/ and fallback ~/Antigravity/backups/
-    let backups_dir = default_backups_dir();
-    tui_app.default_backups_dir = backups_dir.clone();
+    // 6. Discover existing backups across configured input_dirs and default output_dir
+    let backups_dir = tui_app.default_backups_dir.clone();
     populate_snapshots(&mut tui_app, container, &home, &backups_dir);
 
     // Run TUI loop
-    match run_tui(tui_app)? {
+    let tui_action = run_tui(&mut tui_app)?;
+    // Defensively persist configuration on exit
+    let _ = container.config_adapter.save_config(&tui_app.vault_config);
+
+    match tui_action {
         Some(TuiAction::Backup {
             filter,
             custom_dirs,
         }) => {
             let output_archive = {
-                let _ = std::fs::create_dir_all(&backups_dir);
+                let out_dir = &tui_app.vault_config.output_dir;
+                let _ = std::fs::create_dir_all(out_dir);
                 let timestamp = chrono_timestamp_slug();
-                backups_dir.join(format!("distro-vault-{}.tar.zst", timestamp))
+                out_dir.join(format!("distro-vault-{}.tar.zst", timestamp))
             };
             execute_backup(
                 container,
@@ -513,9 +527,20 @@ fn populate_snapshots(
     home: &Path,
     backups_dir: &Path,
 ) {
-    let mut scan_dirs = vec![backups_dir.to_path_buf()];
+    let mut scan_dirs = Vec::new();
+    for d in &tui_app.vault_config.input_dirs {
+        if !scan_dirs.contains(d) {
+            scan_dirs.push(d.clone());
+        }
+    }
+    if !scan_dirs.contains(&backups_dir.to_path_buf()) {
+        scan_dirs.push(backups_dir.to_path_buf());
+    }
     let legacy_backups_dir = home.join("Antigravity/backups");
-    if legacy_backups_dir != backups_dir && legacy_backups_dir.exists() {
+    if legacy_backups_dir != backups_dir
+        && legacy_backups_dir.exists()
+        && !scan_dirs.contains(&legacy_backups_dir)
+    {
         scan_dirs.push(legacy_backups_dir);
     }
 

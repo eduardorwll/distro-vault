@@ -1,3 +1,4 @@
+pub mod config;
 pub mod git_config;
 pub mod os_release;
 pub mod packages;
@@ -10,6 +11,7 @@ use domain::errors::DomainError;
 use domain::ports::SystemPort;
 use domain::value_objects::DistroFamily;
 
+pub use config::TomlConfigAdapter;
 pub use git_config::LinuxGitConfigAdapter;
 pub use os_release::OsReleaseParser;
 pub use packages::{AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, PacmanAdapter};

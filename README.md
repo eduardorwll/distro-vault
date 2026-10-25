@@ -54,10 +54,12 @@ Seja saltando de um Arch Linux / Omarchy para um Fedora, Debian ou Ubuntu, o `di
 
 A TUI interativa é desenvolvida com **Ratatui 0.30** e **Crossterm 0.29**, operando em modo raw com proteção RAII (`TerminalGuard`) contra quebra de terminal.
 
+Na versão 1.1.0, a interface foi completamente **desinchaçada (anti-bloat)**: as caixas estáticas redundantes foram eliminadas da coluna direita, dedicando 100% da altura para a árvore hierárquica interativa, com novos submenus modais flutuantes (`[O]` Opções e `[C]` Pastas) e alternância de densidade compacta (`[V]`).
+
 ```text
 ┌──────────────────────── distro-vault :: [F2] 📦 NOVO BACKUP  •  [F3] 🔄 RECUPERAÇÃO ────────────────────────┐
-│ ┌─ 📁 Snapshots Locais ──────────────┐ ┌─ 🗂️ Seleção Granular do Dump ─────────────────────────────────────┐ │
-│ │ ▶ distro-vault-20261024.tar.zst    │ │   [x] ▼ Pacotes do Sistema (152 selecionados)                    │ │
+│ ┌─ 📁 Snapshots Locais ──────────────┐ ┌─ 🗂️ Itens do Snapshot [V: Modo Compacto] ──────────────────────────┐ │
+│ │ ▶ distro-vault-20261025.tar.zst    │ │   [x] ▼ Pacotes do Sistema (152 selecionados)                    │ │
 │ │   distro-vault-subset.tar.zst      │ │       ├── [x] alacritty • Terminal Emulator                      │ │
 │ │                                    │ │       └── [x] ripgrep • Fast search CLI                          │ │
 │ │                                    │ │   [x] ▼ Chaves SSH (2 chaves)                                    │ │
@@ -65,12 +67,9 @@ A TUI interativa é desenvolvida com **Ratatui 0.30** e **Crossterm 0.29**, oper
 │ │                                    │ │       └── [x] 📜 id_ed25519.pub (0644)                           │ │
 │ │                                    │ │   [x] ▼ Configuração Global Git (1 arquivo)                      │ │
 │ │                                    │ │   [x] ▼ Navegador Zen (3 spaces, 18 abas)                         │ │
+│ │                                    │ │   [x] ▼ Diretórios Customizados (3 pastas)                       │ │
 │ └────────────────────────────────────┘ └──────────────────────────────────────────────────────────────────┘ │
-│ ┌─ ⚙️ Parâmetros ──────────────────────────────────────────────────────────────────────────────────────────┐ │
-│ │  [P] Pacotes: [x] ATIVADO   •   [D] Dry-Run: [ ] DESATIVADO                                             │ │
-│ │  👉 [Enter/R] RESTAURAR  •  💾 [S] SALVAR SUB-DUMP (Gera novo .tar.zst)                                │ │
-│ └─────────────────────────────────────────────────────────────────────────────────────────────────────────┘ │
-└────────────────────────── [Tab] Focar Árvore  [Espaço] Marcar  [S] Sub-Dump  [R] Restaurar  [Q] Sair ───────┘
+└────────── [↑/↓] Navegar Árvore  [Enter/→] Drop  [Espaço] Marcar  [Enter/R] RESTAURAR  [S] SUB-DUMP  [O] Opções  [C] Pastas  [V] Densidade ──┘
 ```
 
 ### Controles Universais da TUI
@@ -83,13 +82,43 @@ A TUI interativa é desenvolvida com **Ratatui 0.30** e **Crossterm 0.29**, oper
 | `↑` / `↓` / `j` / `k` | Listas | Navegação vertical entre linhas, itens ou nós da árvore. |
 | `Enter` / `→` / `←` / `e` | Árvore | Expande ou recolhe o menu drop da categoria selecionada. |
 | `Espaço` / `x` | Listas / Árvore | Alterna o estado de seleção (`[x]` ↔ `[ ]`) do item ou da categoria em lote. |
+| `O` | Modo Recuperação | Abre o **Modal de Parâmetros de Execução** (`[P]` Pacotes, `[D]` Dry-Run, `[V]` Densidade). |
+| `C` | Modo Recuperação | Abre o **Modal de Gerenciamento de Pastas** (configuração de diretórios de entrada e saída). |
+| `V` | Modo Recuperação | Alterna instantaneamente a **Densidade Visual** (Modo Compacto de Alta Densidade vs Expandido). |
 | `A` | Backup / Restore | Abre o **Explorador Unificado de Arquivos** para adicionar pastas ou carregar dumps. |
-| `P` | Modo Recuperação | Alterna a reinstalação automática de pacotes do sistema (SIM / NÃO). |
-| `D` | Modo Recuperação | Alterna o modo de simulação **Dry-Run** (LIGADO / DESLIGADO). |
 | `R` / `F10` | Modo Recuperação | Executa a restauração completa dos componentes selecionados no sistema. |
-| `S` | Modo Recuperação | **Salva um novo Sub-Dump (`.tar.zst`)** contendo exclusivamente os itens marcados. |
-| `Enter` / `F10` | Modo Backup | Inicia a criação do snapshot declarativo no disco. |
+| `S` | Modo Recuperação | **Salva um novo Sub-Dump (`.tar.zst`)** contendo exclusivamente os itens marcados na pasta de saída. |
+| `Enter` / `F10` | Modo Backup | Inicia a criação do snapshot declarativo no diretório de saída configurado. |
 | `Esc` / `Q` | Global | Fecha modais abertos ou encerra a aplicação com restauração limpa do terminal. |
+
+---
+
+## ⚙️ Arquivo de Configuração Declarativa (`config.toml`)
+
+O `distro-vault` persiste automaticamente as preferências do usuário em `~/.config/distro-vault/config.toml` com permissões seguras POSIX `0644`.
+
+Exemplo de configuração gerada:
+
+```toml
+# Diretório padrão onde novos snapshots e sub-dumps derivados serão gravados
+output_dir = "/home/usuario/Antigravity/backups"
+
+# Lista de diretórios locais varridos automaticamente em busca de snapshots existentes
+input_dirs = [
+    "/home/usuario/Antigravity/backups",
+    "/home/usuario/backups",
+    "/mnt/storage/vault-dumps"
+]
+
+# Reinstalação de pacotes ativada por padrão no modo de restauração
+auto_install_packages = true
+
+# Densidade da árvore na interface TUI (true = compacto sem subtítulos, false = detalhado)
+compact_view = false
+
+# Raiz opcional para staging acelerado
+staging_root = "/home/usuario/.cache/distro-vault/staging"
+```
 
 ---
 
@@ -238,17 +267,17 @@ graph TD
 
 ---
 
-## 🗺️ Roadmap Futuro (v1.1.0+)
+## 🗺️ Roadmap de Evolução
 
-Conforme planejado na governança do projeto, as próximas iterações focarão no refinamento ergonômico e flexibilidade de I/O:
-
-- [ ] **Personalização Dinâmica de Diretórios de Entrada & Saída:**
-  - Modal interativo na TUI para alterar em tempo de execução os caminhos de escaneamento de snapshots (entrada) e diretório padrão de gravação (saída).
-  - Persistência das preferências do usuário em arquivo de configuração `~/.config/distro-vault/config.toml`.
-- [ ] **Desinchaço e Separação Ergonômica dos Menus na TUI:**
-  - Redesenho visual para reduzir a densidade textual nos cabeçalhos e rodapés ("anti-bloat").
-  - Extração dos parâmetros de execução (`[P] Pacotes`, `[D] Dry-Run`) para um submenu modal dedicado de configurações.
-  - Alternância entre visualização compacta e expandida na árvore hierárquica de componentes.
+- [x] **v1.0.0 (Lançamento Oficial):**
+  - Pipelines de backup/restore declarativo, codec nativo mozLz4, normalizador CityHash64 do Zen Browser, governança de agentes, subcomando `slice`, árvore hierárquica e explorador unificado de arquivos.
+- [x] **v1.1.0 (Ergonomia & Personalização de I/O):**
+  - Persistência em `~/.config/distro-vault/config.toml` via `TomlConfigAdapter`.
+  - Desinchaço da TUI (anti-bloat) com 100% da altura da coluna dedicada à árvore hierárquica.
+  - Submenu modal de parâmetros `[O]`, gerenciador modal de diretórios `[C]` e alternância de densidade `[V]`.
+- [ ] **v1.2.0 (Próximos Passos):**
+  - Sincronização remota automatizada com backends SSH/SFTP e S3.
+  - Agendador integrado via timers Systemd (`distro-vault schedule`).
 
 ---
 

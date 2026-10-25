@@ -237,10 +237,20 @@ Status: 🟢 Todas as Fases (1 a 14) Concluídas com Sucesso (43 testes passando
 
 ---
 
-## Fase 15: Roadmap Futuro (v1.1.0+) — Personalização de Diretórios de I/O e Refinamento Ergonômico da TUI
-- [ ] **Task 15.1: Seletor Interativo e Personalização de Diretórios de Entrada & Saída**
-  - **Descrição:** Adicionar modal e interface na TUI para alterar em tempo de execução os diretórios base de leitura de backups e diretório alvo de geração de novos snapshots/sub-dumps.
-  - **Persistência:** Salvar preferências em `~/.config/distro-vault/config.toml`.
-- [ ] **Task 15.2: Desinchaço e Separação Ergonômica dos Menus na TUI**
-  - **Descrição:** Redesenho visual dos painéis da TUI para eliminar densidade textual nos cabeçalhos e rodapés, promovendo uma interface mais minimalista e limpa.
-  - **Submenus Modais:** Extrair os parâmetros de execução (`[P] Pacotes`, `[D] Dry-Run`) para um submenu modal dedicado de configurações, liberando área útil para a visualização da árvore hierárquica.
+## Fase 15: Personalização de Diretórios de I/O, Persistência TOML e Refinamento Ergonômico da TUI (v1.1.0)
+- [x] **Task 15.1: Entidade `VaultConfig` e Porta `ConfigPort` no Domínio (`crates/domain`)**
+  - **Status:** Concluído. Entidade pura `VaultConfig` (`output_dir`, `input_dirs`, `auto_install_packages`, `compact_view`, `staging_root`) com métodos construtores, saneamento de caminhos e trait `ConfigPort` em `crates/domain/src/ports/config_port.rs`.
+  - **Verificação:** `cargo test -p domain` (15 testes passando).
+  - **Arquivos:** `crates/domain/src/entities/vault_config.rs`, `crates/domain/src/ports/config_port.rs`, `crates/domain/tests/domain_tests.rs`.
+- [x] **Task 15.2: Adaptador de Persistência `TomlConfigAdapter` em `adapter-system`**
+  - **Status:** Concluído. Implementado em `crates/adapter-system/src/config.rs` persistindo em `~/.config/distro-vault/config.toml` com permissões POSIX `0644`, criação defensiva de diretórios pais e fallback gracioso em caso de arquivo corrompido.
+  - **Verificação:** `cargo test -p adapter-system` (7 testes passando).
+  - **Arquivos:** `crates/adapter-system/src/config.rs`, `crates/adapter-system/src/lib.rs`, `crates/adapter-system/tests/system_tests.rs`.
+- [x] **Task 15.3: Desinchaço da TUI (Anti-Bloat) e Modais Ergonômicos Flutuantes**
+  - **Status:** Concluído. Removida caixa estática inferior de parâmetros da coluna direita do Restore mode, liberando 100% da altura para a árvore hierárquica. Implementado modal flutuante de opções `[O]` (`OptionsModalState`), modal completo de gerenciamento de diretórios de entrada/saída `[C]` (`ConfigModalState`), e alternância de densidade compacta vs detalhada via `[V]`.
+  - **Verificação:** `cargo test -p adapter-cli` (3 testes passando).
+  - **Arquivos:** `crates/adapter-cli/src/tui/config_modal.rs`, `crates/adapter-cli/src/tui/ui.rs`, `crates/adapter-cli/src/tui/events.rs`, `crates/adapter-cli/src/tui/app.rs`.
+- [x] **Task 15.4: Injeção no Composition Root e Ciclo de Vida da Aplicação**
+  - **Status:** Concluído. Injetado `config_adapter` em `AppContainer` (`di.rs`), carregando as preferências do usuário no startup interativo (`main.rs`), alimentando múltiplos `input_dirs` em `populate_snapshots`, persistindo alterações defensivamente ao sair e aplicando nos destinos de backups e sub-dumps.
+  - **Verificação:** `cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings`.
+  - **Arquivos:** `crates/adapter-cli/src/di.rs`, `crates/adapter-cli/src/main.rs`, `crates/adapter-cli/src/tui/runner.rs`.

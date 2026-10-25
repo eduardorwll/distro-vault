@@ -10,6 +10,10 @@ pub enum ExplorerTarget {
     CustomDir,
     /// Select a .tar.zst snapshot archive OR a folder containing backups to scan
     SnapshotOrFolder,
+    /// Select a directory to set as default output directory
+    OutputDir,
+    /// Select a directory to add as scanned input directory
+    InputDir,
 }
 
 /// The kind of entry listed in the explorer

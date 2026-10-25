@@ -47,7 +47,7 @@ impl Drop for TerminalGuard {
 }
 
 /// Runs the interactive TUI event loop, returning the selected TuiAction if confirmed
-pub fn run_tui(mut app: TuiApp) -> io::Result<Option<TuiAction>> {
+pub fn run_tui(app: &mut TuiApp) -> io::Result<Option<TuiAction>> {
     enable_raw_mode()?;
     execute!(stdout(), EnterAlternateScreen)?;
     let _guard = TerminalGuard;
@@ -56,11 +56,11 @@ pub fn run_tui(mut app: TuiApp) -> io::Result<Option<TuiAction>> {
     let mut terminal = Terminal::new(backend)?;
 
     loop {
-        terminal.draw(|f| draw(f, &mut app))?;
+        terminal.draw(|f| draw(f, app))?;
 
         if event::poll(Duration::from_millis(50))? {
             if let Event::Key(key) = event::read()? {
-                handle_key_event(&mut app, key);
+                handle_key_event(app, key);
             }
         }
 
@@ -68,7 +68,7 @@ pub fn run_tui(mut app: TuiApp) -> io::Result<Option<TuiAction>> {
             let filter = app.build_selection_filter();
             return Ok(Some(TuiAction::Backup {
                 filter: Box::new(filter),
-                custom_dirs: app.custom_dirs,
+                custom_dirs: app.custom_dirs.clone(),
             }));
         }
 

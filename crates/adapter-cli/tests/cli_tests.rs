@@ -279,3 +279,63 @@ fn test_tui_app_state_and_filter_generation() {
     app.toggle_mode();
     assert_eq!(app.mode, adapter_cli::tui::TuiMode::Backup);
 }
+
+#[test]
+fn test_options_and_config_modal_interactions() {
+    let mut app = TuiApp::new();
+
+    // 1. Options Modal State
+    assert!(!app.options_modal.is_open);
+    app.toggle_options_modal();
+    assert!(app.options_modal.is_open);
+    app.toggle_options_modal();
+    assert!(!app.options_modal.is_open);
+
+    // 2. Compact View Toggle
+    assert!(!app.vault_config.compact_view);
+    app.toggle_compact_view();
+    assert!(app.vault_config.compact_view);
+    app.toggle_compact_view();
+    assert!(!app.vault_config.compact_view);
+
+    // 3. Config Modal State
+    use adapter_cli::tui::ConfigField;
+    use std::path::PathBuf;
+
+    assert!(!app.config_modal.is_open);
+    app.toggle_config_modal();
+    assert!(app.config_modal.is_open);
+    assert_eq!(app.config_modal.focused_field, ConfigField::OutputDir);
+
+    // Navigate fields
+    app.config_modal.next_field();
+    assert_eq!(app.config_modal.focused_field, ConfigField::InputDirsList);
+    app.config_modal.next_field();
+    assert_eq!(app.config_modal.focused_field, ConfigField::CompactViewToggle);
+    app.config_modal.next_field();
+    assert_eq!(app.config_modal.focused_field, ConfigField::SaveAndClose);
+    app.config_modal.next_field();
+    assert_eq!(app.config_modal.focused_field, ConfigField::OutputDir);
+    app.config_modal.prev_field();
+    assert_eq!(app.config_modal.focused_field, ConfigField::SaveAndClose);
+
+    // Manipulate config modal values
+    let new_out = PathBuf::from("/tmp/custom_backups");
+    app.config_modal.set_output_dir(new_out.clone());
+    assert_eq!(app.config_modal.pending_output_dir, new_out);
+
+    let new_in = PathBuf::from("/tmp/custom_inputs");
+    app.config_modal.add_input_dir(new_in.clone());
+    assert!(app.config_modal.pending_input_dirs.contains(&new_in));
+
+    app.config_modal.toggle_compact_view();
+    assert!(app.config_modal.pending_compact_view);
+
+    // Apply modal changes
+    app.apply_config_modal();
+    assert!(!app.config_modal.is_open);
+    assert_eq!(app.vault_config.output_dir, new_out);
+    assert_eq!(app.default_backups_dir, new_out);
+    assert!(app.vault_config.input_dirs.contains(&new_in));
+    assert!(app.vault_config.compact_view);
+}

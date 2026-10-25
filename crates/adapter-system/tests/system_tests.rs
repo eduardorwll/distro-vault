@@ -258,3 +258,43 @@ fn test_git_config_scan_and_restore() {
     let content = fs::read_to_string(target_home.join(".gitconfig")).unwrap();
     assert!(content.contains("name = Eduardo"));
 }
+
+#[test]
+fn test_toml_config_adapter_persistence_and_fallback() {
+    use adapter_system::TomlConfigAdapter;
+    use domain::ports::ConfigPort;
+    use std::path::PathBuf;
+
+    let tmp = tempdir().unwrap();
+    let fake_home = tmp.path().join("home_user");
+    let config_file = fake_home.join(".config/distro-vault/config.toml");
+
+    let adapter = TomlConfigAdapter::new(&config_file, &fake_home);
+    assert_eq!(adapter.config_path(), config_file.as_path());
+
+    // 1. Initial load should create default config file
+    let loaded = adapter.load_config().expect("Initial load failed");
+    assert_eq!(loaded.output_dir, fake_home.join("Antigravity/backups"));
+    assert!(config_file.exists());
+
+    // 2. Modify and save config
+    let mut modified = loaded.clone();
+    modified.set_output_dir(PathBuf::from("/custom/out_dir"));
+    modified.add_input_dir(PathBuf::from("/custom/in_dir"));
+    modified.compact_view = true;
+    modified.auto_install_packages = false;
+
+    adapter.save_config(&modified).expect("Save config failed");
+
+    // 3. Reload and verify persistence
+    let reloaded = adapter.load_config().expect("Reload failed");
+    assert_eq!(reloaded.output_dir, PathBuf::from("/custom/out_dir"));
+    assert!(reloaded.input_dirs.contains(&PathBuf::from("/custom/in_dir")));
+    assert!(reloaded.compact_view);
+    assert!(!reloaded.auto_install_packages);
+
+    // 4. Test corrupted config fallback
+    fs::write(&config_file, "INVALID_TOML[[[corrupted = true").unwrap();
+    let fallback = adapter.load_config().expect("Corrupted config should fallback safely");
+    assert_eq!(fallback.output_dir, fake_home.join("Antigravity/backups"));
+}

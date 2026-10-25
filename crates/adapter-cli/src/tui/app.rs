@@ -7,8 +7,10 @@ use domain::entities::manifest::Manifest;
 use domain::entities::selection_filter::SelectionFilter;
 use domain::value_objects::PackageName;
 
+use super::config_modal::{ConfigModalState, OptionsModalState};
 use super::explorer::FileExplorerState;
 use super::restore_tree::RestoreTreeState;
+use domain::entities::VaultConfig;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum RestoreFocus {
@@ -104,6 +106,10 @@ pub struct TuiApp {
     pub restore_dry_run: bool,
     pub should_start_restore: bool,
     pub should_start_slice: bool,
+    // Settings & Anti-Bloat Modals
+    pub vault_config: VaultConfig,
+    pub options_modal: OptionsModalState,
+    pub config_modal: ConfigModalState,
     // Input / Modal fields
     pub input_mode: bool,
     pub input_target: InputTarget,
@@ -152,6 +158,9 @@ impl TuiApp {
             restore_dry_run: false,
             should_start_restore: false,
             should_start_slice: false,
+            vault_config: VaultConfig::default(),
+            options_modal: OptionsModalState::new(),
+            config_modal: ConfigModalState::new(),
             input_mode: false,
             input_target: InputTarget::CustomDir,
             input_buffer: String::new(),
@@ -239,6 +248,34 @@ impl TuiApp {
 
     pub fn toggle_restore_dry_run(&mut self) {
         self.restore_dry_run = !self.restore_dry_run;
+    }
+
+    pub fn toggle_options_modal(&mut self) {
+        self.options_modal.toggle();
+    }
+
+    pub fn toggle_config_modal(&mut self) {
+        if self.config_modal.is_open {
+            self.config_modal.close();
+        } else {
+            self.config_modal.open(
+                &self.vault_config.input_dirs,
+                &self.vault_config.output_dir,
+                self.vault_config.compact_view,
+            );
+        }
+    }
+
+    pub fn toggle_compact_view(&mut self) {
+        self.vault_config.toggle_compact_view();
+    }
+
+    pub fn apply_config_modal(&mut self) {
+        self.vault_config.input_dirs = self.config_modal.pending_input_dirs.clone();
+        self.vault_config.output_dir = self.config_modal.pending_output_dir.clone();
+        self.vault_config.compact_view = self.config_modal.pending_compact_view;
+        self.default_backups_dir = self.vault_config.output_dir.clone();
+        self.config_modal.close();
     }
 
     pub fn add_snapshot_file(&mut self, path: PathBuf, manifest: Option<Manifest>) {

@@ -5,7 +5,7 @@ use adapter_browser::ZenBrowserAdapter;
 use adapter_storage::ZstdStorageAdapter;
 use adapter_system::{
     AptAdapter, AurAdapter, DnfAdapter, FlatpakAdapter, LinuxGitConfigAdapter, LinuxSshAdapter,
-    LinuxSystemAdapter, PacmanAdapter,
+    LinuxSystemAdapter, PacmanAdapter, TomlConfigAdapter,
 };
 use application::{
     BackupPipelineUseCase, InspectSnapshotUseCase, RestorePipelineUseCase, SliceSnapshotUseCase,
@@ -27,6 +27,7 @@ pub struct AppContainer {
     pub system_adapter: Arc<LinuxSystemAdapter>,
     pub ssh_adapter: Arc<LinuxSshAdapter>,
     pub git_config_adapter: Arc<LinuxGitConfigAdapter>,
+    pub config_adapter: Arc<TomlConfigAdapter>,
     pub package_ports: Vec<Arc<dyn PackagePort>>,
 }
 
@@ -38,6 +39,11 @@ impl AppContainer {
         let system = Arc::new(LinuxSystemAdapter::new());
         let ssh = Arc::new(LinuxSshAdapter::new());
         let git_config = Arc::new(LinuxGitConfigAdapter::new());
+
+        let home = std::env::var("HOME")
+            .map(std::path::PathBuf::from)
+            .unwrap_or_else(|_| std::path::PathBuf::from("."));
+        let config_adapter = Arc::new(TomlConfigAdapter::default_for_home(&home));
 
         let pacman: Arc<dyn PackagePort> = Arc::new(PacmanAdapter::new());
         let aur: Arc<dyn PackagePort> = Arc::new(AurAdapter::new());
@@ -82,6 +88,7 @@ impl AppContainer {
             system_adapter: system,
             ssh_adapter: ssh,
             git_config_adapter: git_config,
+            config_adapter,
             package_ports,
         }
     }
