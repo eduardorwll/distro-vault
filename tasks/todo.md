@@ -276,3 +276,20 @@ Status: 🟢 Todas as Fases (1 a 14) Concluídas com Sucesso (43 testes passando
   - **Arquivos:** `bin/distro-vault`, `~/distro-vault`
 - [x] **Task 16.6: Sincronização Git e Publicação da Release v1.1.1 no GitHub**
   - **Status:** Concluído. Push em `master` e `main`, e criação da release oficial `v1.1.1` com binário compilado anexado.
+
+---
+
+## Fase 17: Conformidade de Licença de Software Aberto (Licença MIT)
+- [x] **Task 17.1: Criação do Arquivo Canônico `LICENSE`**
+  - **Status:** Concluído. Criado na raiz do repositório contendo os termos da licença MIT padrão da OSI com Copyright 2026 Eduardo.
+  - **Arquivos:** `LICENSE`
+- [x] **Task 17.2: Atualização dos Metadados em `Cargo.toml` e `Cargo.lock`**
+  - **Status:** Concluído. Campo `license = "MIT"` configurado no workspace e sincronizado no lockfile.
+  - **Verificação:** `cargo check --workspace`
+  - **Arquivos:** `Cargo.toml`, `Cargo.lock`
+- [x] **Task 17.3: Sincronização da Documentação e Badges no `README.md`**
+  - **Status:** Concluído. Badge e rodapé ajustados para a licença MIT.
+  - **Arquivos:** `README.md`
+- [x] **Task 17.4: Validação Global e Push para Branches Principais**
+  - **Status:** Concluído. Suíte com 43 testes aprovados, Zero Warnings mantido e branches `master` e `main` sincronizadas.
+  - **Verificação:** `cargo test --workspace && cargo clippy --workspace --all-targets -- -D warnings`

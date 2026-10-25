@@ -3,7 +3,7 @@
 > **Sistema de Alta Performance em Rust para Backup Declarativo, Restauração Cirúrgica, Slicing de Snapshots e Transição sem Atrito entre Distribuições Linux (Distro Hopping).**
 
 [![Rust 2021](https://img.shields.io/badge/rust-2021-orange.svg?style=flat-square&logo=rust)](https://www.rust-lang.org/)
-[![License: MIT OR Apache-2.0](https://img.shields.io/badge/license-MIT%20OR%20Apache--2.0-blue.svg?style=flat-square)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](LICENSE)
 [![Zero Clippy Warnings](https://img.shields.io/badge/clippy-zero%20warnings-brightgreen.svg?style=flat-square)](Cargo.toml)
 [![Release v1.1.1](https://img.shields.io/badge/release-v1.1.1-success.svg?style=flat-square)](https://github.com/eduardorwll/distro-vault/releases/tag/v1.1.1)
 
@@ -381,4 +381,4 @@ cargo build --release
 
 ## 📄 Licença
 
-Distribuído sob licença dupla **MIT** ou **Apache-2.0**. Consulte [LICENSE](LICENSE) para mais detalhes.
+Distribuído sob a licença **MIT**. Consulte [LICENSE](LICENSE) para mais detalhes.
